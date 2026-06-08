@@ -41,6 +41,23 @@ Fathly is a household budgeting MVP for checking whether monthly deposits into a
    npm run dev
    ```
 
+## Mock Demo
+
+You can preview the product UI without OAuth, Postgres, or a `.env` file:
+
+```bash
+npm install
+npm run dev
+```
+
+Then open:
+
+```text
+http://localhost:3000/demo
+```
+
+The demo uses static mock data and does not save changes.
+
 ## Scripts
 
 - `npm run dev` starts the Next.js dev server.

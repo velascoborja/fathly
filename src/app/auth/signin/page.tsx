@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { BadgeEuroIcon } from "lucide-react"
 
 import { auth } from "@/auth"
@@ -30,9 +31,12 @@ export default async function SignInPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <form action={signInWithGoogle}>
+          <form action={signInWithGoogle} className="flex flex-col gap-3">
             <Button className="w-full" size="lg">
               {dictionary.actions.signIn}
+            </Button>
+            <Button render={<Link href="/demo" />} className="w-full" size="lg" variant="outline">
+              View mock demo
             </Button>
           </form>
         </CardContent>
