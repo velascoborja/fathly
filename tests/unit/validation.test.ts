@@ -4,7 +4,7 @@ import { commitmentSchema, depositSchema } from "@/lib/validations/budget"
 
 describe("budget validation", () => {
   it("accepts valid deposits", () => {
-    expect(depositSchema.safeParse({ name: "Borja", amount: 1800 }).success).toBe(true)
+    expect(depositSchema.safeParse({ name: "Member deposit", amount: 1800 }).success).toBe(true)
   })
 
   it("rejects missing commitment categories", () => {

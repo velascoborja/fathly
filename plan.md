@@ -5,7 +5,7 @@
 - Build a new root-level Next.js App Router MVP in this repo, preserving `mvp.md` and `DESIGN.md`.
 - Product focus: one active household budget that answers whether shared-account monthly deposits cover shared commitments.
 - No Excel import or seeded financial data. The workbook is product reference only.
-- Visual target: approved generated dashboard concept at `/Users/velasb3/.codex/generated_images/019ea775-4030-7730-a5b9-a15b946fc86e/ig_0df925853de3b67b016a26c8a040e4819188ebfeb4295d3db0.png`.
+- Visual target: the approved generated dashboard concept from planning.
 - UI supports Spanish and English from day one; default locale is Spanish, with an English toggle. Currency is EUR.
 
 ## Key Changes

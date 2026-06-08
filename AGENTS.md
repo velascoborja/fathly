@@ -1,4 +1,6 @@
-@/Users/velasb3/.codex/RTK.md
+# Local Agent Instructions
+
+- Always prefix shell commands with `rtk`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
