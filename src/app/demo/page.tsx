@@ -49,7 +49,7 @@ export default async function DemoPage() {
           </span>
           <span className="text-lg font-bold">{dictionary.appName}</span>
         </Link>
-        <Button render={<Link href="/auth/signin" />} variant="outline">
+        <Button nativeButton={false} render={<Link href="/auth/signin" />} variant="outline">
           <ArrowLeftIcon data-icon="inline-start" />
           Sign in
         </Button>

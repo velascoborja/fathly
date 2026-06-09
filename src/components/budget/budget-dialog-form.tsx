@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2Icon, PlusIcon } from "lucide-react"
 import { type Resolver, useForm } from "react-hook-form"
@@ -44,6 +44,7 @@ export function BudgetDialogForm(props: BudgetDialogFormProps) {
 }
 
 function DepositDialog(props: DepositDialogProps) {
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const form = useForm<DepositInput>({
     resolver: zodResolver(depositSchema) as unknown as Resolver<DepositInput>,
@@ -64,6 +65,7 @@ function DepositDialog(props: DepositDialogProps) {
       try {
         await props.action(formData)
         form.reset()
+        setOpen(false)
         toast.success(title)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Could not save.")
@@ -74,7 +76,7 @@ function DepositDialog(props: DepositDialogProps) {
   const errors = form.formState.errors
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button />}>
         <PlusIcon data-icon="inline-start" />
         {title}
@@ -119,6 +121,7 @@ function DepositDialog(props: DepositDialogProps) {
 }
 
 function CommitmentDialog(props: CommitmentDialogProps) {
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const form = useForm<CommitmentInput>({
     resolver: zodResolver(commitmentSchema) as unknown as Resolver<CommitmentInput>,
@@ -145,6 +148,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
       try {
         await props.action(formData)
         form.reset()
+        setOpen(false)
         toast.success(title)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Could not save.")
@@ -155,7 +159,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
   const errors = form.formState.errors
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button />}>
         <PlusIcon data-icon="inline-start" />
         {title}

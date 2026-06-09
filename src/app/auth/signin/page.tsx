@@ -32,10 +32,10 @@ export default async function SignInPage() {
         </CardHeader>
         <CardContent>
           <form action={signInWithGoogle} className="flex flex-col gap-3">
-            <Button className="w-full" size="lg">
+            <Button className="w-full" size="lg" type="submit">
               {dictionary.actions.signIn}
             </Button>
-            <Button render={<Link href="/demo" />} className="w-full" size="lg" variant="outline">
+            <Button nativeButton={false} render={<Link href="/demo" />} className="w-full" size="lg" variant="outline">
               View mock demo
             </Button>
           </form>

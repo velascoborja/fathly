@@ -137,7 +137,7 @@ export default async function DashboardPage() {
                   <span className="font-mono text-sm">{formatCurrency(item.monthlyCents, locale)}</span>
                 </div>
               ))}
-              <Button render={<a href="/monthly-bills" />} variant="outline">
+              <Button nativeButton={false} render={<a href="/monthly-bills" />} variant="outline">
                 <ArrowUpRightIcon data-icon="inline-end" />
                 {dictionary.nav.monthlyBills}
               </Button>
