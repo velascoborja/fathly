@@ -1,152 +1,201 @@
-# Design System Inspired by Hugging Face
+# CreateSpace Design System
 
-## 1. Visual Theme & Atmosphere
+## Overview
 
-Hugging Face is the GitHub of AI — a warm, community-first ML platform built around model cards, datasets, and collaborative research. The emoji mascot and yellow-orange palette give it a distinctly friendly personality that sets it apart from corporate AI. The design scales from simple model cards to complex code notebooks.
+CreateSpace is a colorful, expressive, and grid-heavy design system designed for multi-disciplinary creative agency websites. It combines bold color blocks with asymmetric layouts and glassmorphism-inspired panels to create a dynamic, portfolio-first experience. The system embraces contrast, layering, and confident typography to showcase creative work across disciplines -- from branding and illustration to motion and product design.
 
-**Key Characteristics:**
-- Yellow-orange on white — warm and welcoming
-- Community-first: stars, likes, downloads front and center
-- Source Sans for approachable readability
-- Open-source personality in every design decision
+---
 
-## 2. Color Palette & Roles
+## Colors
 
-### Primary
-- **Brand Yellow** (`#FFD21E`): Brand highlight, hero accents
-- **Orange** (`#FF9D00`): CTAs, links, active states
+- **Color Primary** (#E11D48): Primary actions, hero accents
+- **Color Secondary** (#2563EB): Secondary actions, links
+- **Color Tertiary** (#FACC15): Highlights, badges, callouts
+- **Surface Base** (#FFFFFF): Page background
+- **Surface Glass** (#FFFFFF at 65%): Frosted glass panels
+- **Color Success** (#16A34A): Form success
+- **Color Warning** (#D97706): Deadline warnings
+- **Color Error** (#DC2626): Validation errors
+- **Color Info** (#2563EB): Informational callouts
 
-### Accent Colors
-- **Blue** (`#3B82F6`): External links, dataset indicators
+## Typography
 
-### Neutral Scale
-- **Text Primary** (`#1C1C1C`): Headings, body
-- **Text Secondary** (`#6B7280`): Metadata, captions
-- **Text Muted** (`#9CA3AF`): Placeholders
+- **Headline Font**: Poppins
+- **Body Font**: DM Sans
+- **Mono Font**: Fira Code
 
-### Surface & Borders
-- **Background** (`#FFFFFF`): Page background
-- **Surface** (`#F9FAFB`): Cards, sidebar
-- **Surface Warm** (`#FFF9E6`): Highlighted model cards
-- **Border** (`#E5E7EB`): Dividers, card borders
+- **text-hero**: Poppins 72px extra-bold, 1.05 line height
+- **text-h1**: Poppins 48px bold, 1.1 line height
+- **text-h2**: Poppins 32px semibold, 1.2 line height
+- **text-h3**: Poppins 24px semibold, 1.3 line height
+- **text-body-lg**: DM Sans 18px regular, 1.6 line height
+- **text-body**: DM Sans 16px regular, 1.6 line height
+- **text-caption**: DM Sans 13px medium, 1.5 line height
+- **text-mono**: Fira Code 14px regular, 1.5 line height
 
-### Semantic / Status
-- **Success** (`#10B981`): Download success, passing tests
-- **Error** (`#EF4444`): Errors, broken models
-- **Warning** (`#F59E0B`): Deprecated models
-- **New** (`#FFD21E`): New model indicators
+---
 
-## 3. Typography Rules
+## Spacing
 
-### Font Family
-Primary: Source Sans 3, fallback: system-ui, sans-serif. Code: Source Code Pro
+Base unit: **8px**.
+- **space-1**: 4px - Tight inline gaps
+- **space-2**: 8px - Icon/label spacing
+- **space-3**: 16px - Within component groups
+- **space-4**: 24px - Card inner padding
+- **space-5**: 32px - Between components
+- **space-6**: 48px - Section internal padding
+- **space-8**: 64px - Between sections
+- **space-10**: 80px - Hero-level vertical rhythm
 
-### Hierarchy
-| Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
-|------|------|------|--------|-------------|----------------|-------|
-| H1 | Source Sans | 36px | 700 | 1.2 | -0.01em | Page titles |
-| H2 | Source Sans | 26px | 600 | 1.3 | 0 | Section headings |
-| H3 | Source Sans | 20px | 600 | 1.4 | 0 | Card headings |
-| Body | Source Sans | 16px | 400 | 1.6 | 0 | Model card prose |
-| Small | Source Sans | 14px | 400 | 1.5 | 0 | Metadata, tags |
-| Code | Source Code Pro | 14px | 400 | 1.6 | 0 | Code samples |
+## Border Radius
 
-### Principles
-- Source Sans has warmth that matches the community-first brand
-- Model card readability is paramount — 16px with 1.6 line-height
+- **radius-sm** (4px): Small elements, tags
+- **radius-md** (8px): Buttons, inputs, chips
+- **radius-lg** (16px): Feature cards, panels
+- **radius-xl** (24px): Hero cards, modals
+- **radius-pill** (9999px): Pills, toggles
 
-## 4. Component Stylings
+## Elevation (Glassmorphism-Inspired)
+
+- **shadow-glass**: 8px offset, 32px blur, #000000 at 8%. Frosted panels.
+- **shadow-md**: 4px offset, 16px blur, #000000 at 10%. Raised cards.
+- **shadow-lg**: 12px offset, 40px blur, #000000 at 15%. Modals, popovers.
+- **shadow-color**: 8px offset, 24px blur, #E11D48 at 25%. Primary accent glow.
+- **shadow-focus**: 3px ring #2563EB at 35%. Focus ring.
+
+Glass panels also apply `backdrop-filter: blur(16px)` and a `1px #FFFFFF at 30%` border.
+
+## Components
 
 ### Buttons
-- **Primary**: bg `#FF9D00`, text `#FFFFFF`, padding `9px 18px`, radius `8px`, font 15px/600
-- **Secondary**: bg `#FFFFFF`, border `1px solid #E5E7EB`, text `#1C1C1C`
-- **Like**: heart icon + count, bg `#FFF9E6`, border `1px solid #FFD21E`
 
-### Cards & Containers
-- bg `#FFFFFF`, border `1px solid #E5E7EB`, radius `10px`, padding `16px`
-- Hover: border `#FF9D00`, box-shadow `0 2px 8px rgba(255,157,0,0.1)`
+Buttons use `border-radius: 8px` with bold color fills and smooth 150ms transitions.
 
-### Inputs & Forms
-- Border `1px solid #E5E7EB`, radius `8px`, padding `9px 14px`
-- Focus: border `#FF9D00`
+#### Variants
 
-### Navigation
-- Top nav `#FFFFFF`, height 56px, border-bottom `#E5E7EB`
-- Left sidebar on model pages, 220px
+| Variant     | Background  | Text Color  | Border          |
+| ----------- | ----------- | ----------- | --------------- |
+| Primary     | #E11D48     | #FFFFFF     | none            |
+| Secondary   | #2563EB     | #FFFFFF     | none            |
+| Ghost       | transparent | #E11D48     | 1.5px #E11D48   |
+| Destructive | #DC2626     | #FFFFFF     | none            |
 
-## 5. Layout Principles
+#### Sizes
 
-### Spacing System
-- **4px** — Tag gaps
-- **8px** — Stat icon-label gaps
-- **12px** — Card inner spacing
-- **16px** — Card padding
-- **24px** — Section gaps
-- **32px** — Model grid gaps
-- **48px** — Page sections
+| Size   | Height | Padding (h) | Font Size | Min Width |
+| ------ | ------ | ----------- | --------- | --------- |
+| Small  | 32px   | 14px        | 13px      | 72px      |
+| Medium | 40px   | 20px        | 14px      | 100px     |
+| Large  | 48px   | 28px        | 16px      | 140px     |
 
-### Grid & Container
-- Max width 1200px. Model grid: 3-column, 16px gutters.
+#### Disabled State
 
-### Whitespace Philosophy
-Community content needs space to breathe — cards are not dense.
+0.4 opacity, `not-allowed` cursor.
+- No hover elevation or color shift
 
-### Border Radius Scale
-- **None** (0px): Code block edges
-- **Sm** (4px): Task type badges, tags
-- **Md** (8px): Buttons, inputs
-- **Lg** (10px): Model cards
-- **Full** (9999px): Avatars, like button
+### Cards
 
-## 6. Depth & Elevation
+| Property      | Value                         |
+| ------------- | ----------------------------- |
+| Background    | surface-raised or surface-glass |
+| Border        | 1px border-default            |
+| Border Radius | 16px                          |
+| Padding       | 24px                          |
+| Shadow        | shadow-glass                  |
+| Hover         | Scale 1.02, shadow-md         |
 
-| Level | Treatment | Use |
-|-------|-----------|-----|
-| Flat | `none` | Page background |
-| Raised | `0 1px 3px rgba(0,0,0,0.08)` | Model cards |
-| Overlay | `0 4px 12px rgba(0,0,0,0.12)` | Dropdowns |
-| Modal | `0 8px 32px rgba(0,0,0,0.15)` | Dialogs |
+Glass variant applies `backdrop-filter: blur(16px)` with translucent background.
 
-## 7. Do's and Don'ts
+### Inputs
 
-### Do
-- Use the emoji mascot for personality in empty states and onboarding
-- Show download count, likes, and last-updated prominently on every card
-- Use yellow for brand moments and highlights; orange for interactive
+| State    | Border Color | Background | Shadow                        |
+| -------- | ------------ | ---------- | ----------------------------- |
+| Default  | #D1D5DB      | #FFFFFF    | none                          |
+| Hover    | #9CA3AF      | #FFFFFF    | none                          |
+| Focus    | #2563EB      | #FFFFFF    | shadow-focus                  |
+| Error    | #DC2626      | #FEF2F2    | 3px ring #DC2626 at 20%       |
+| Disabled | #E5E7EB      | #F3F4F6    | none                          |
 
-### Don't
-- Don't remove the yellow — it's the most recognisable element of the brand
-- Don't use dark backgrounds for main content
-- Don't hide community stats — they're core to trust
+Inputs use a 1.5px border, 8px border radius, 40px height, and 14px DM Sans font size.
 
-## 8. Responsive Behavior
+### Chips
 
-### Breakpoints
-| Name | Width | Key Changes |
-|------|-------|-------------|
-| Mobile | 0–767px | Single column model list |
-| Tablet | 768–1023px | 2-column grid |
-| Desktop | 1024px+ | 3-column grid + sidebar |
+#### Filter Chips
 
-### Touch Targets
-Minimum 44×44px. Like and download buttons are 44px.
+| State    | Background | Text Color | Border      |
+| -------- | ---------- | ---------- | ----------- |
+| Default  | #F3F4F6    | #1F2937    | 1px #E5E7EB |
+| Selected | #E11D48    | #FFFFFF    | 1px #E11D48 |
+| Hover    | #E5E7EB    | #1F2937    | 1px #D1D5DB |
 
-### Collapsing Strategy
-Sidebar hides on mobile. Grid goes single column. Model card stats remain visible.
+#### Status Chips
 
-## 9. Agent Prompt Guide
+| Type      | Background | Text Color | Icon    |
+| --------- | ---------- | ---------- | ------- |
+| Active    | #DBEAFE    | #1E40AF    | Pulse   |
+| Complete  | #DCFCE7    | #166534    | Check   |
+| In Review | #FEF3C7    | #92400E    | Clock   |
+| Archived  | #F3F4F6    | #6B7280    | Archive |
 
-### Quick Color Reference
-- Brand: Yellow (`#FFD21E`)
-- CTA/Interactive: Orange (`#FF9D00`)
-- Background: White (`#FFFFFF`)
-- Text: `#1C1C1C`
-- Border: `#E5E7EB`
-- Card hover border: Orange (`#FF9D00`)
+Chips use a 9999px border radius, 13px DM Sans 500 text, and 30px height.
 
-### Iteration Guide
-1. Orange is the interactive color; yellow is the brand accent — never swap
-2. Model cards always show: name, task type, downloads, likes, updated date
-3. Community stats are never hidden — they build trust
-4. Source Sans (not Inter) is the brand typeface
-5. Card border-radius is 10px — rounder than most developer tools
+### Lists
+
+| Property          | Value      |
+| ----------------- | ---------- |
+| Row height        | 48px       |
+| Padding           | 16px horizontal |
+| Divider           | 1px #E5E7EB |
+| Hover background  | #F3F4F6    |
+| Active background | #FFF1F2    |
+| Border radius     | 8px container |
+| Icon size         | 20px, 12px gap from label |
+
+### Checkboxes
+
+| State     | Fill    | Border        | Check Color |
+| --------- | ------- | ------------- | ----------- |
+| Unchecked | #FFFFFF | 1.5px #D1D5DB | --          |
+| Checked   | #E11D48 | 1.5px #E11D48 | #FFFFFF     |
+| Disabled  | #F3F4F6 | 1.5px #E5E7EB | #9CA3AF     |
+
+20px, 4px border radius. 150ms ease transition.
+
+### Radio Buttons
+
+| State      | Fill    | Border        | Dot Color |
+| ---------- | ------- | ------------- | --------- |
+| Unselected | #FFFFFF | 1.5px #D1D5DB | --        |
+| Selected   | #FFFFFF | 1.5px #2563EB | #2563EB   |
+| Disabled   | #F3F4F6 | 1.5px #E5E7EB | #9CA3AF   |
+
+20px. 10px dot diameter, shadow-focus focus ring.
+
+### Tooltips
+
+| Property      | Value          |
+| ------------- | -------------- |
+| Background    | #1F2937        |
+| Text color    | #FFFFFF        |
+| Font size     | 13px DM Sans   |
+| Padding       | 8px 14px       |
+| Border radius | 8px            |
+| Max width     | 240px          |
+| Arrow         | 6px triangle   |
+| Delay         | 200ms show, 50ms hide |
+| Shadow        | shadow-md      |
+
+---
+
+## Do's and Don'ts
+
+1. **Do** use bold, full-bleed color blocks to create energy and visual rhythm across sections.
+2. **Don't** use more than two brand colors in a single component -- reserve tertiary yellow for accents only.
+3. **Do** embrace asymmetric grid layouts to showcase creative work in unexpected, dynamic ways.
+4. **Do** use expressive, large-scale typography for section headers and project titles.
+5. **Don't** let glassmorphism panels obscure important content -- ensure sufficient contrast behind frosted layers.
+6. **Do** adopt a portfolio-first layout where project imagery dominates above-the-fold content.
+7. **Don't** over-animate. Transitions should be smooth (150-300ms) but not theatrical.
+8. **Do** maintain consistent gutter widths (16px or 24px) even in asymmetric layouts for underlying structural coherence.
+9. **Don't** default to safe, symmetrical layouts -- the system's identity is rooted in confident visual tension.
+10. **Do** test glassmorphism panels across browsers; provide an opaque fallback for unsupported environments.

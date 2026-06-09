@@ -27,6 +27,7 @@
 .DS_Store
 *.pem
 .cache/
+.superpowers/
 
 # debug
 npm-debug.log*
