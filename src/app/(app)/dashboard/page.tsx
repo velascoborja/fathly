@@ -51,13 +51,13 @@ export default async function DashboardPage() {
   return (
     <>
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-        <div className="flex min-h-[420px] flex-col justify-between overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground shadow-[0_8px_24px_rgba(225,29,72,0.25)] md:p-8">
+        <div className="fathly-hero flex min-h-[420px] flex-col justify-between p-6 md:p-8">
           <div className="flex flex-col gap-5">
             <div>
-              <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-normal md:text-6xl">
+              <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-[0.03em] drop-shadow-sm md:text-6xl">
                 {dictionary.dashboard.title}
               </h1>
-              <p className="mt-2 max-w-2xl text-base text-white/80 md:text-lg">{dictionary.dashboard.subtitle}</p>
+              <p className="mt-2 max-w-2xl text-base font-medium text-white/85 md:text-lg">{dictionary.dashboard.subtitle}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <HeroMetric label={dictionary.dashboard.deposits} value={formatCurrency(summary.monthlyDepositsCents, locale)} />
@@ -67,31 +67,33 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-white/25 bg-white/15 p-5 backdrop-blur-xl">
+          <div className="mt-8 rounded-3xl border border-white/35 border-l-[6px] border-l-accent bg-white/18 p-5 shadow-[0_4px_20px_rgba(255,210,63,0.22)] backdrop-blur">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-white/75">
+                <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-accent-light">
                   {summary.coverageCents >= 0 ? dictionary.dashboard.covered : dictionary.dashboard.shortBy}
                 </p>
                 <p className="mt-1 font-heading text-4xl font-extrabold md:text-5xl">
                   {formatCurrency(Math.abs(summary.coverageCents), locale)}
                 </p>
-                <p className="mt-1 text-sm text-white/75">{dictionary.dashboard.remaining}</p>
+                <p className="mt-1 text-sm font-medium text-white/80">{dictionary.dashboard.remaining}</p>
               </div>
-              <Badge className="w-fit bg-white text-primary hover:bg-white">
+              <Badge className="w-fit bg-cream text-primary-dark shadow-[0_4px_20px_rgba(255,210,63,0.35)] hover:bg-cream">
                 {formatCurrency(summary.coverageCents, locale)}
               </Badge>
             </div>
-            <Progress className="mt-5 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-track]]:bg-white/25" value={summary.coverageRatio * 100} />
+            <Progress className="mt-5 [&_[data-slot=progress-indicator]]:bg-accent [&_[data-slot=progress-track]]:h-2 [&_[data-slot=progress-track]]:bg-white/25" value={summary.coverageRatio * 100} />
           </div>
         </div>
 
         <div className="grid gap-5">
           <BudgetCommandPanel dictionary={dictionary} />
-          <Card className="fathly-card">
+          <Card className="fathly-card border-l-sky-blue">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-heading text-2xl font-bold">
-                <SparklesIcon className="size-5 text-primary" />
+                <span className="flex size-9 items-center justify-center rounded-full bg-sky-blue/15 text-sky-blue">
+                  <SparklesIcon className="size-5" />
+                </span>
                 {dictionary.dashboard.breakdown}
               </CardTitle>
               <CardDescription>{dictionary.dashboard.liveUpdateHint}</CardDescription>
@@ -104,7 +106,7 @@ export default async function DashboardPage() {
       </section>
 
       {!hasData && (
-        <Card className="fathly-card border-accent bg-white/80">
+        <Card className="fathly-card border-accent border-l-accent bg-cream">
           <CardContent className="p-6">
             <Empty>
               <EmptyHeader>
@@ -125,10 +127,12 @@ export default async function DashboardPage() {
         savings={savings}
       />
 
-      <Card className="fathly-card">
+      <Card className="fathly-card border-l-primary-dark">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-heading text-2xl font-bold">
-            <SettingsIcon className="size-5 text-secondary" />
+            <span className="flex size-9 items-center justify-center rounded-full bg-primary-bg text-primary-dark">
+              <SettingsIcon className="size-5" />
+            </span>
             {dictionary.nav.settings}
           </CardTitle>
           <CardDescription>{dictionary.settings.householdCardDescription}</CardDescription>
@@ -147,7 +151,7 @@ export default async function DashboardPage() {
 
 function BudgetCommandPanel({ dictionary }: { dictionary: Dictionary }) {
   return (
-    <Card className="fathly-card">
+    <Card className="fathly-card border-l-accent bg-[linear-gradient(135deg,#ffffff_0%,#fff8e7_100%)] shadow-[0_4px_20px_rgba(255,210,63,0.24)]">
       <CardHeader>
         <CardTitle className="font-heading text-2xl font-bold">{dictionary.dashboard.commandCenter}</CardTitle>
         <CardDescription>{dictionary.dashboard.commandBody}</CardDescription>
@@ -201,7 +205,7 @@ function BudgetDataSection({
   return (
     <section className="flex flex-col gap-4">
       <div>
-        <h2 className="font-heading text-3xl font-bold">{dictionary.dashboard.budgetData}</h2>
+        <h2 className="fathly-section-title text-3xl">{dictionary.dashboard.budgetData}</h2>
         <p className="mt-2 text-muted-foreground">{dictionary.dashboard.budgetDataBody}</p>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
@@ -304,7 +308,7 @@ function DataLane({
   return (
     <div aria-label={label} className="relative">
       <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
-        <span className={tone}>{icon}</span>
+        <span className={`flex size-9 items-center justify-center rounded-full bg-cream shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${tone}`}>{icon}</span>
         <div className="[&_[data-slot=button]]:h-8 [&_[data-slot=button]]:text-xs">{action}</div>
       </div>
       {children}
@@ -314,9 +318,9 @@ function DataLane({
 
 function HeroMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/15 p-4 backdrop-blur-xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/70">{label}</p>
-      <p className="mt-2 font-heading text-2xl font-bold">{value}</p>
+    <div className="rounded-3xl border border-white/30 border-l-[6px] border-l-accent bg-cream/18 p-4 shadow-[0_4px_20px_rgba(43,168,162,0.18)] backdrop-blur">
+      <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-accent-light">{label}</p>
+      <p className="mt-2 font-heading text-2xl font-extrabold">{value}</p>
     </div>
   )
 }

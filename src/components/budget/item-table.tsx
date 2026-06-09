@@ -115,7 +115,7 @@ export function CommitmentTable({
             ) : groupByCategory
               ? categoryGroups.map((group) => (
                   <Fragment key={group.category}>
-                    <TableRow className="bg-muted/60 hover:bg-muted/60">
+                    <TableRow className="bg-cream hover:bg-cream">
                       <TableCell className="font-semibold" colSpan={hideFrequency ? 1 : 2}>
                         {group.category}
                       </TableCell>

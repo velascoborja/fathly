@@ -29,18 +29,18 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
 
   return (
     <div className="min-h-svh text-foreground">
-      <header className="sticky top-0 z-30 border-b border-white/70 bg-white/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-primary/20 bg-primary-bg/95 shadow-[0_2px_8px_rgba(0,0,0,0.08)] backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <AppIcon className="size-10 shrink-0 fathly-color-shadow" />
+            <AppIcon className="size-11 shrink-0 fathly-color-shadow" />
             <div className="min-w-0">
-              <p className="font-heading text-xl font-extrabold leading-tight">{dictionary.appName}</p>
-              <p className="truncate text-sm font-medium text-muted-foreground">{householdName}</p>
+              <p className="fathly-ribbon text-sm leading-tight">{dictionary.appName}</p>
+              <p className="mt-1 truncate text-sm font-bold text-primary-dark">{householdName}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 md:justify-end">
-            <div className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-white/80 px-2 py-1">
+            <div className="flex min-w-0 items-center gap-2 rounded-full border border-primary/30 bg-cream px-2 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <Avatar className="size-8">
                 <AvatarImage alt={avatarLabel} src={user.image ?? undefined} />
                 <AvatarFallback>{avatarLabel.slice(0, 2).toUpperCase()}</AvatarFallback>

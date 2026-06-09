@@ -5,7 +5,7 @@ import { Cell, Pie, PieChart, Tooltip } from "recharts"
 import { formatCurrency } from "@/lib/budget/format"
 import type { Locale } from "@/lib/i18n/dictionaries"
 
-const colors = ["#E11D48", "#2563EB", "#FACC15", "#16A34A", "#D97706", "#DC2626"]
+const colors = ["#2BA8A2", "#FFD23F", "#EF6C4A", "#5DADE2", "#27AE60", "#FFE47A"]
 
 type CommitmentChartProps = {
   data: {
@@ -22,7 +22,7 @@ export function CommitmentChart({ data, locale }: CommitmentChartProps) {
     fill: colors[index % colors.length],
   }))
   if (!chartData.length) {
-    return <div className="flex aspect-video items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">No data</div>
+    return <div className="flex aspect-video items-center justify-center rounded-3xl bg-cream text-sm font-bold text-muted-foreground">No data</div>
   }
 
   return (

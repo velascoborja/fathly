@@ -19,12 +19,12 @@ export default async function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-muted p-4">
-      <Card className="fathly-card w-full max-w-md">
+    <main className="flex min-h-svh items-center justify-center bg-background p-4">
+      <Card className="fathly-card w-full max-w-md border-l-accent bg-[linear-gradient(135deg,#ffffff_0%,#fff8e7_100%)]">
         <CardHeader className="gap-4 text-center">
-          <AppIcon className="mx-auto size-12 rounded-xl" size={48} />
+          <AppIcon className="mx-auto size-14" size={56} />
           <div>
-            <CardTitle className="text-3xl font-bold">{dictionary.appName}</CardTitle>
+            <CardTitle className="fathly-ribbon mx-auto text-lg">{dictionary.appName}</CardTitle>
             <CardDescription className="mt-2">{dictionary.dashboard.subtitle}</CardDescription>
           </div>
         </CardHeader>

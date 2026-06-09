@@ -38,11 +38,11 @@ export default async function DemoPage() {
 
   return (
     <main className="min-h-svh">
-      <header className="sticky top-0 z-30 border-b border-white/70 bg-white/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-primary/20 bg-primary-bg/95 shadow-[0_2px_8px_rgba(0,0,0,0.08)] backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 md:px-6">
           <Link className="flex items-center gap-3" href="/auth/signin">
-            <AppIcon className="size-10 fathly-color-shadow" />
-            <span className="font-heading text-xl font-extrabold">{dictionary.appName}</span>
+            <AppIcon className="size-11 fathly-color-shadow" />
+            <span className="fathly-ribbon text-sm">{dictionary.appName}</span>
           </Link>
           <Button nativeButton={false} render={<Link href="/auth/signin" />} variant="outline">
             <ArrowLeftIcon data-icon="inline-start" />
@@ -53,14 +53,14 @@ export default async function DemoPage() {
 
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-5 md:px-6 md:py-8">
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          <div className="flex min-h-[420px] flex-col justify-between overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground shadow-[0_8px_24px_rgba(225,29,72,0.25)] md:p-8">
+          <div className="fathly-hero flex min-h-[420px] flex-col justify-between p-6 md:p-8">
             <div className="flex flex-col gap-5">
               <div>
-                <Badge className="mb-4 w-fit bg-white text-primary hover:bg-white">Mock demo</Badge>
-                <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-normal md:text-6xl">
+                <Badge className="mb-4 w-fit bg-cream text-primary-dark shadow-[0_4px_20px_rgba(255,210,63,0.35)] hover:bg-cream">Mock demo</Badge>
+                <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-[0.03em] drop-shadow-sm md:text-6xl">
                   {dictionary.dashboard.title}
                 </h1>
-                <p className="mt-2 max-w-2xl text-base text-white/80 md:text-lg">{dictionary.dashboard.subtitle}</p>
+                <p className="mt-2 max-w-2xl text-base font-medium text-white/85 md:text-lg">{dictionary.dashboard.subtitle}</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <HeroMetric label={dictionary.dashboard.deposits} value={formatCurrency(summary.monthlyDepositsCents, locale)} />
@@ -69,19 +69,19 @@ export default async function DemoPage() {
                 <HeroMetric label={dictionary.dashboard.savings} value={formatCurrency(summary.savingsCents, locale)} />
               </div>
             </div>
-            <div className="mt-8 rounded-2xl border border-white/25 bg-white/15 p-5 backdrop-blur-xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.08em] text-white/75">
+            <div className="mt-8 rounded-3xl border border-white/35 border-l-[6px] border-l-accent bg-white/18 p-5 shadow-[0_4px_20px_rgba(255,210,63,0.22)] backdrop-blur">
+              <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-accent-light">
                 {summary.coverageCents >= 0 ? dictionary.dashboard.covered : dictionary.dashboard.shortBy}
               </p>
               <p className="mt-1 font-heading text-4xl font-extrabold md:text-5xl">
                 {formatCurrency(Math.abs(summary.coverageCents), locale)}
               </p>
-              <Progress className="mt-5 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-track]]:bg-white/25" value={summary.coverageRatio * 100} />
+              <Progress className="mt-5 [&_[data-slot=progress-indicator]]:bg-accent [&_[data-slot=progress-track]]:h-2 [&_[data-slot=progress-track]]:bg-white/25" value={summary.coverageRatio * 100} />
             </div>
           </div>
 
           <div className="grid gap-5">
-            <Card className="fathly-card">
+            <Card className="fathly-card border-l-accent bg-[linear-gradient(135deg,#ffffff_0%,#fff8e7_100%)] shadow-[0_4px_20px_rgba(255,210,63,0.24)]">
               <CardHeader>
                 <CardTitle className="font-heading text-2xl font-bold">{dictionary.dashboard.commandCenter}</CardTitle>
                 <CardDescription>{dictionary.dashboard.commandBody}</CardDescription>
@@ -96,10 +96,12 @@ export default async function DemoPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="fathly-card">
+            <Card className="fathly-card border-l-sky-blue">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-heading text-2xl font-bold">
-                  <SparklesIcon className="size-5 text-primary" />
+                  <span className="flex size-9 items-center justify-center rounded-full bg-sky-blue/15 text-sky-blue">
+                    <SparklesIcon className="size-5" />
+                  </span>
                   {dictionary.dashboard.breakdown}
                 </CardTitle>
               </CardHeader>
@@ -112,7 +114,7 @@ export default async function DemoPage() {
 
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="font-heading text-3xl font-bold">{dictionary.dashboard.budgetData}</h2>
+            <h2 className="fathly-section-title text-3xl">{dictionary.dashboard.budgetData}</h2>
             <p className="mt-2 text-muted-foreground">{dictionary.dashboard.budgetDataBody}</p>
           </div>
           <div className="grid gap-4 xl:grid-cols-2">
@@ -224,9 +226,9 @@ function DemoTable({
 
 function HeroMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/15 p-4 backdrop-blur-xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/70">{label}</p>
-      <p className="mt-2 font-heading text-2xl font-bold">{value}</p>
+    <div className="rounded-3xl border border-white/30 border-l-[6px] border-l-accent bg-cream/18 p-4 shadow-[0_4px_20px_rgba(43,168,162,0.18)] backdrop-blur">
+      <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-accent-light">{label}</p>
+      <p className="mt-2 font-heading text-2xl font-extrabold">{value}</p>
     </div>
   )
 }
