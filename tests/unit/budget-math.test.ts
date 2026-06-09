@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { calculateBudgetSummary, groupCommitmentsByCategory, monthlyAmountCents } from "@/lib/budget/math"
+import {
+  calculateBudgetSummary,
+  groupCommitmentsByCategory,
+  groupCommitmentsForTable,
+  monthlyAmountCents,
+} from "@/lib/budget/math"
 
 describe("budget math", () => {
   it("normalizes annual commitments to monthly cents", () => {
@@ -37,5 +42,16 @@ describe("budget math", () => {
         { amountCents: 50_000, category: "Paused", frequency: "MONTHLY", status: "PAUSED", type: "BILL" },
       ])
     ).toEqual({ Casa: 110_000 })
+  })
+
+  it("groups commitments for table display with category totals", () => {
+    const mortgage = { amountCents: 90_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" } as const
+    const community = { amountCents: 15_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" } as const
+    const power = { amountCents: 12_000, category: "Suministros", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" } as const
+
+    expect(groupCommitmentsForTable([mortgage, power, community])).toEqual([
+      { category: "Casa", totalCents: 105_000, commitments: [mortgage, community] },
+      { category: "Suministros", totalCents: 12_000, commitments: [power] },
+    ])
   })
 })

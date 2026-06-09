@@ -27,6 +27,8 @@ export default async function MonthlyBillsPage() {
       <CommitmentTable
         commitments={commitments}
         dictionary={dictionary}
+        groupByCategory
+        hideFrequency
         locale={locale}
         onDelete={deleteCommitment}
         title={dictionary.nav.monthlyBills}

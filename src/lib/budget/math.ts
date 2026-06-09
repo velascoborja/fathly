@@ -54,3 +54,21 @@ export function groupCommitmentsByCategory(commitments: BudgetCommitment[]) {
       return groups
     }, {})
 }
+
+export function groupCommitmentsForTable<T extends BudgetCommitment>(commitments: T[]) {
+  const groups = new Map<string, { category: string; totalCents: number; commitments: T[] }>()
+
+  for (const commitment of commitments) {
+    const group = groups.get(commitment.category) ?? {
+      category: commitment.category,
+      totalCents: 0,
+      commitments: [],
+    }
+
+    group.totalCents += monthlyAmountCents(commitment)
+    group.commitments.push(commitment)
+    groups.set(commitment.category, group)
+  }
+
+  return Array.from(groups.values())
+}

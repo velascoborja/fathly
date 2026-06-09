@@ -27,8 +27,10 @@ export default async function AnnualCostsPage() {
       <CommitmentTable
         commitments={commitments}
         dictionary={dictionary}
+        hideFrequency
         locale={locale}
         onDelete={deleteCommitment}
+        showProratedAmount
         title={dictionary.nav.annualCosts}
       />
     </>
