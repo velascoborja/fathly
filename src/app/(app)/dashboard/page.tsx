@@ -33,9 +33,9 @@ export default async function DashboardPage() {
   return (
     <>
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div className="flex flex-col gap-2">
+        <div>
           <h1 className="text-3xl font-bold tracking-normal md:text-4xl">{dictionary.dashboard.title}</h1>
-          <p className="max-w-2xl text-muted-foreground">{dictionary.dashboard.subtitle}</p>
+          <p className="mt-2 max-w-2xl text-muted-foreground">{dictionary.dashboard.subtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <BudgetDialogForm action={createDeposit} dictionary={dictionary} kind="deposit" />

@@ -40,6 +40,15 @@ export const dictionaries = {
       emptyTitle: "Empieza con vuestros ingresos compartidos",
       emptyBody: "Añade lo que cada persona ingresa en la cuenta común y después registra facturas, gastos anuales y ahorro.",
     },
+    deposits: {
+      subtitle: "Registra las aportaciones mensuales que cada persona ingresa en la cuenta común.",
+    },
+    monthlyBills: {
+      subtitle: "Añade y revisa los gastos mensuales compartidos de la casa.",
+    },
+    annualCosts: {
+      subtitle: "Registra los gastos anuales para prorratearlos mes a mes en el presupuesto familiar.",
+    },
     forms: {
       name: "Nombre",
       amount: "Importe",
@@ -97,6 +106,15 @@ export const dictionaries = {
       largest: "Largest expenses",
       emptyTitle: "Start with shared deposits",
       emptyBody: "Add what each person puts into the shared account, then register bills, annual costs, and savings.",
+    },
+    deposits: {
+      subtitle: "Track the monthly contributions each person adds to the shared account.",
+    },
+    monthlyBills: {
+      subtitle: "Add and review the household's shared monthly expenses.",
+    },
+    annualCosts: {
+      subtitle: "Track annual costs so they are prorated month by month in the household budget.",
     },
     forms: {
       name: "Name",

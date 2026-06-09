@@ -13,7 +13,7 @@ export default async function SettingsPage() {
     <>
       <section>
         <h1 className="text-3xl font-bold">{dictionary.nav.settings}</h1>
-        <p className="text-muted-foreground">{dictionary.household}</p>
+        <p className="mt-2 text-muted-foreground">{dictionary.household}</p>
       </section>
       <Card className="fathly-card max-w-2xl">
         <CardHeader>

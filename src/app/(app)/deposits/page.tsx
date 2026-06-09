@@ -14,7 +14,7 @@ export default async function DepositsPage() {
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h1 className="text-3xl font-bold">{dictionary.nav.deposits}</h1>
-          <p className="text-muted-foreground">{dictionary.dashboard.emptyBody}</p>
+          <p className="mt-2 text-muted-foreground">{dictionary.deposits.subtitle}</p>
         </div>
         <BudgetDialogForm action={createDeposit} dictionary={dictionary} kind="deposit" />
       </section>

@@ -15,7 +15,7 @@ export default async function SavingsPage() {
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h1 className="text-3xl font-bold">{dictionary.nav.savings}</h1>
-          <p className="text-muted-foreground">{dictionary.dashboard.savings}</p>
+          <p className="mt-2 text-muted-foreground">{dictionary.dashboard.savings}</p>
         </div>
         <BudgetDialogForm
           action={createCommitment}
