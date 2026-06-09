@@ -8,6 +8,6 @@ test("dashboard redirects anonymous visitors to sign-in", async ({ page }) => {
 
 test("mock demo renders without authentication", async ({ page }) => {
   await page.goto("/demo")
-  await expect(page.getByRole("heading", { name: /cuenta compartida mensual|monthly shared account/i })).toBeVisible()
+  await expect(page.getByRole("heading", { name: /resumen mensual|monthly summary/i })).toBeVisible()
   await expect(page.getByText(/mock demo/i)).toBeVisible()
 })

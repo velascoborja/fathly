@@ -1,6 +1,7 @@
 import Link from "next/link"
-import { ArrowLeftIcon, BadgeEuroIcon } from "lucide-react"
+import { ArrowLeftIcon } from "lucide-react"
 
+import { AppIcon } from "@/components/app/app-icon"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { SummaryCard } from "@/components/budget/summary-card"
 import { Badge } from "@/components/ui/badge"
@@ -44,9 +45,7 @@ export default async function DemoPage() {
     <main className="min-h-svh bg-background">
       <header className="flex h-14 items-center justify-between border-b px-4 md:px-6">
         <Link className="flex items-center gap-3" href="/auth/signin">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-[#FFD21E] text-[#1C1C1C]">
-            <BadgeEuroIcon />
-          </span>
+          <AppIcon className="size-9" />
           <span className="text-lg font-bold">{dictionary.appName}</span>
         </Link>
         <Button nativeButton={false} render={<Link href="/auth/signin" />} variant="outline">

@@ -4,15 +4,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTransition } from "react"
 import {
-  BadgeEuroIcon,
   CalendarDaysIcon,
   ChartPieIcon,
   CircleDollarSignIcon,
   HomeIcon,
+  MoreHorizontalIcon,
   PiggyBankIcon,
   SettingsIcon,
 } from "lucide-react"
 
+import { AppIcon } from "@/components/app/app-icon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,7 +28,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { setLocaleAction, signOutUser } from "@/server/actions"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
@@ -63,9 +64,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
       <Sidebar className="border-sidebar-border" collapsible="offcanvas">
         <SidebarHeader className="border-b border-sidebar-border p-4">
           <Link className="flex items-center gap-3" href="/dashboard">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#FFD21E] text-lg font-bold text-[#1C1C1C]">
-              F
-            </span>
+            <AppIcon className="size-9" />
             <span className="flex flex-col leading-tight">
               <span className="text-lg font-bold">{dictionary.appName}</span>
               <span className="text-xs text-muted-foreground">{householdName}</span>
@@ -120,18 +119,53 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="min-h-svh bg-background">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger />
-            <BadgeEuroIcon className="text-primary" />
-            <span className="font-semibold">{dictionary.dashboard.title}</span>
-          </div>
-          <div className="hidden rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-secondary-foreground sm:block">
-            EUR
-          </div>
-        </header>
-        <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-6 p-4 md:p-6">{children}</main>
+        <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-6 p-4 pb-24 md:p-6">{children}</main>
+        <MobileBottomNav dictionary={dictionary} pathname={pathname} />
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+function MobileBottomNav({ dictionary, pathname }: { dictionary: Dictionary; pathname: string }) {
+  const { setOpenMobile } = useSidebar()
+  const directItems = [
+    { href: "/dashboard", label: dictionary.nav.dashboard, icon: ChartPieIcon },
+    { href: "/deposits", label: dictionary.nav.deposits, icon: CircleDollarSignIcon },
+    { href: "/monthly-bills", label: dictionary.nav.monthlyBills, icon: HomeIcon },
+  ]
+  const moreIsActive = ["/annual-costs", "/savings", "/settings"].includes(pathname)
+
+  return (
+    <nav
+      aria-label="Primary mobile navigation"
+      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-background/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden"
+    >
+      {directItems.map((item) => {
+        const isActive = pathname === item.href
+
+        return (
+          <Link
+            aria-current={isActive ? "page" : undefined}
+            className="flex min-w-0 flex-col items-center gap-1 rounded-md px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground data-active:text-primary"
+            data-active={isActive ? true : undefined}
+            href={item.href}
+            key={item.href}
+          >
+            <item.icon className="size-5" />
+            <span className="max-w-full truncate">{item.label}</span>
+          </Link>
+        )
+      })}
+      <button
+        aria-current={moreIsActive ? "page" : undefined}
+        className="flex min-w-0 flex-col items-center gap-1 rounded-md px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground data-active:text-primary"
+        data-active={moreIsActive ? true : undefined}
+        onClick={() => setOpenMobile(true)}
+        type="button"
+      >
+        <MoreHorizontalIcon className="size-5" />
+        <span className="max-w-full truncate">{dictionary.nav.more}</span>
+      </button>
+    </nav>
   )
 }

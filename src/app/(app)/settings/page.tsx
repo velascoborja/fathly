@@ -1,5 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { HouseholdNameForm } from "@/components/app/household-name-form"
 import { getServerDictionary } from "@/lib/i18n/server"
+import { updateHouseholdName } from "@/server/actions"
 import { getActiveHouseholdContext } from "@/server/household"
 
 export const dynamic = "force-dynamic"
@@ -15,10 +17,15 @@ export default async function SettingsPage() {
       </section>
       <Card className="fathly-card max-w-2xl">
         <CardHeader>
-          <CardTitle>{context.household.name}</CardTitle>
-          <CardDescription>{dictionary.dashboard.subtitle}</CardDescription>
+          <CardTitle>{dictionary.settings.householdCardTitle}</CardTitle>
+          <CardDescription>{dictionary.settings.householdCardDescription}</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 text-sm">
+        <CardContent className="flex flex-col gap-5 text-sm">
+          <HouseholdNameForm
+            action={updateHouseholdName}
+            dictionary={dictionary}
+            householdName={context.household.name}
+          />
           <div className="flex justify-between border-b pb-3">
             <span className="text-muted-foreground">Plan</span>
             <span className="font-medium">{context.plan.name}</span>

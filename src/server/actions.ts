@@ -8,6 +8,7 @@ import { signIn, signOut } from "@/auth"
 import { centsFromDecimalInput } from "@/lib/budget/format"
 import { isLocale } from "@/lib/i18n/dictionaries"
 import { commitmentSchema, depositSchema } from "@/lib/validations/budget"
+import { householdNameSchema } from "@/lib/validations/household"
 import { prisma } from "@/lib/prisma"
 import { getActiveHouseholdContext } from "@/server/household"
 
@@ -35,6 +36,28 @@ export async function setLocaleAction(locale: string) {
     maxAge: 60 * 60 * 24 * 365,
   })
 
+  revalidatePath("/", "layout")
+}
+
+export async function updateHouseholdName(formData: FormData) {
+  const parsed = householdNameSchema.safeParse(formData.get("name"))
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid household name.")
+  }
+
+  const context = await getActiveHouseholdContext()
+
+  await prisma.household.update({
+    where: {
+      id: context.household.id,
+    },
+    data: {
+      name: parsed.data,
+    },
+  })
+
+  revalidatePath("/settings")
   revalidatePath("/", "layout")
 }
 
