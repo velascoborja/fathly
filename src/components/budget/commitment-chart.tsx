@@ -1,12 +1,11 @@
 "use client"
 
-import { Cell, Pie, PieChart } from "recharts"
+import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/budget/format"
 import type { Locale } from "@/lib/i18n/dictionaries"
 
-const colors = ["#FF9D00", "#FFD21E", "#3B82F6", "#10B981", "#F59E0B", "#EF4444"]
+const colors = ["#E11D48", "#2563EB", "#FACC15", "#16A34A", "#D97706", "#DC2626"]
 
 type CommitmentChartProps = {
   data: {
@@ -22,37 +21,35 @@ export function CommitmentChart({ data, locale }: CommitmentChartProps) {
     amount: item.amountCents / 100,
     fill: colors[index % colors.length],
   }))
-  const config = data.reduce<ChartConfig>((acc, item, index) => {
-    acc[item.category] = {
-      label: item.category,
-      color: colors[index % colors.length],
-    }
-    return acc
-  }, {})
-
   if (!chartData.length) {
     return <div className="flex aspect-video items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">No data</div>
   }
 
   return (
-    <ChartContainer className="mx-auto aspect-square max-h-[280px]" config={config}>
-      <PieChart>
-        <ChartTooltip
-          content={
-            <ChartTooltipContent
-              formatter={(value, name) => (
-                <span className="font-mono">{`${name}: ${formatCurrency(Number(value) * 100, locale)}`}</span>
-              )}
-              hideLabel
-            />
-          }
+    <div className="mx-auto flex h-[280px] w-full max-w-[320px] items-center justify-center">
+      <PieChart height={280} width={280}>
+        <Tooltip
+          formatter={(value, name) => [
+            formatCurrency(Number(value) * 100, locale),
+            name,
+          ]}
         />
-        <Pie data={chartData} dataKey="amount" innerRadius={58} nameKey="category" strokeWidth={0}>
+        <Pie
+          cx="50%"
+          cy="50%"
+          data={chartData}
+          dataKey="amount"
+          innerRadius={62}
+          isAnimationActive={false}
+          nameKey="category"
+          outerRadius={108}
+          strokeWidth={0}
+        >
           {chartData.map((entry) => (
             <Cell fill={entry.fill} key={entry.category} />
           ))}
         </Pie>
       </PieChart>
-    </ChartContainer>
+    </div>
   )
 }

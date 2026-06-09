@@ -217,8 +217,4 @@ export async function goToDashboard() {
 
 function revalidateBudgetPaths() {
   revalidatePath("/dashboard")
-  revalidatePath("/deposits")
-  revalidatePath("/monthly-bills")
-  revalidatePath("/annual-costs")
-  revalidatePath("/savings")
 }

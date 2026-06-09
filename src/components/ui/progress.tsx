@@ -10,9 +10,15 @@ function Progress({
   value,
   ...props
 }: ProgressPrimitive.Root.Props) {
+  const normalizedValue = typeof value === "number" ? Math.round(value) : value
+
   return (
     <ProgressPrimitive.Root
-      value={value}
+      aria-valuetext={
+        props["aria-valuetext"] ??
+        (typeof normalizedValue === "number" ? `${normalizedValue}%` : undefined)
+      }
+      value={normalizedValue}
       data-slot="progress"
       className={cn("flex flex-wrap gap-3", className)}
       {...props}

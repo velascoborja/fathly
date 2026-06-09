@@ -23,10 +23,10 @@ export function DepositTable({
 }) {
   return (
     <Card className="fathly-card">
-      <CardHeader>
+      <CardHeader className="pr-44">
         <CardTitle>{dictionary.nav.deposits}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -37,16 +37,24 @@ export function DepositTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {deposits.map((deposit) => (
-              <TableRow key={deposit.id}>
-                <TableCell className="font-medium">{deposit.name}</TableCell>
-                <TableCell className="text-muted-foreground">{deposit.notes}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(deposit.amountCents, locale)}</TableCell>
-                <TableCell>
-                  <DeleteButton action={onDelete.bind(null, deposit.id)} label={`Delete ${deposit.name}`} />
+            {deposits.length === 0 ? (
+              <TableRow>
+                <TableCell className="text-muted-foreground" colSpan={4}>
+                  {dictionary.dashboard.emptyBody}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              deposits.map((deposit) => (
+                <TableRow key={deposit.id}>
+                  <TableCell className="font-medium">{deposit.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{deposit.notes}</TableCell>
+                  <TableCell className="text-right font-mono">{formatCurrency(deposit.amountCents, locale)}</TableCell>
+                  <TableCell>
+                    <DeleteButton action={onDelete.bind(null, deposit.id)} label={`Delete ${deposit.name}`} />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>
@@ -79,10 +87,10 @@ export function CommitmentTable({
 
   return (
     <Card className="fathly-card">
-      <CardHeader>
+      <CardHeader className="pr-44">
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -95,7 +103,16 @@ export function CommitmentTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {groupByCategory
+            {commitments.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  className="text-muted-foreground"
+                  colSpan={1 + Number(!groupByCategory) + Number(!hideFrequency) + 1 + Number(showProratedAmount) + 1}
+                >
+                  {dictionary.dashboard.emptyBody}
+                </TableCell>
+              </TableRow>
+            ) : groupByCategory
               ? categoryGroups.map((group) => (
                   <Fragment key={group.category}>
                     <TableRow className="bg-muted/60 hover:bg-muted/60">

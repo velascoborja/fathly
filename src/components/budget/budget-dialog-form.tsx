@@ -28,6 +28,7 @@ type DepositDialogProps = {
   kind: "deposit"
   dictionary: Dictionary
   action: (formData: FormData) => Promise<void>
+  triggerLabel?: string
 }
 
 type CommitmentDialogProps = {
@@ -35,6 +36,7 @@ type CommitmentDialogProps = {
   dictionary: Dictionary
   action: (formData: FormData) => Promise<void>
   defaults?: Partial<CommitmentInput>
+  triggerLabel?: string
 }
 
 type BudgetDialogFormProps = DepositDialogProps | CommitmentDialogProps
@@ -51,7 +53,7 @@ function DepositDialog(props: DepositDialogProps) {
     defaultValues: { name: "", amount: 0, notes: "" },
   })
 
-  const title = props.dictionary.actions.addDeposit
+  const title = props.triggerLabel ?? props.dictionary.actions.addDeposit
 
   function onSubmit(values: DepositInput) {
     const formData = new FormData()
@@ -134,7 +136,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
       notes: "",
     },
   })
-  const title = props.dictionary.actions.addBill
+  const title = props.triggerLabel ?? props.dictionary.actions.addBill
 
   function onSubmit(values: CommitmentInput) {
     const formData = new FormData()

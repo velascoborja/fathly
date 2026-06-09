@@ -1,21 +1,37 @@
-import { ArrowUpRightIcon } from "lucide-react"
+import {
+  CalendarDaysIcon,
+  CircleDollarSignIcon,
+  HomeIcon,
+  PiggyBankIcon,
+  SettingsIcon,
+  SparklesIcon,
+} from "lucide-react"
+import type { Commitment, Deposit } from "@prisma/client"
 
+import { HouseholdNameForm } from "@/components/app/household-name-form"
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
-import { SummaryCard } from "@/components/budget/summary-card"
+import { CommitmentTable, DepositTable } from "@/components/budget/item-table"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Progress } from "@/components/ui/progress"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { calculateBudgetSummary, groupCommitmentsByCategory, monthlyAmountCents } from "@/lib/budget/math"
+import { calculateBudgetSummary, groupCommitmentsByCategory } from "@/lib/budget/math"
 import { formatCurrency } from "@/lib/budget/format"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
-import { createCommitment, createDeposit } from "@/server/actions"
+import {
+  createCommitment,
+  createDeposit,
+  deleteCommitment,
+  deleteDeposit,
+  updateHouseholdName,
+} from "@/server/actions"
 import { getBudgetData } from "@/server/household"
+import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
 export const dynamic = "force-dynamic"
+
+type Dictionary = (typeof dictionaries)[Locale]
 
 export default async function DashboardPage() {
   const [data, dictionary, locale] = await Promise.all([getBudgetData(), getServerDictionary(), getLocale()])
@@ -23,28 +39,72 @@ export default async function DashboardPage() {
   const grouped = Object.entries(groupCommitmentsByCategory(data.commitments))
     .map(([category, amountCents]) => ({ category, amountCents }))
     .sort((a, b) => b.amountCents - a.amountCents)
-  const largest = data.commitments
-    .filter((commitment) => commitment.status === "ACTIVE")
-    .map((commitment) => ({ ...commitment, monthlyCents: monthlyAmountCents(commitment) }))
-    .sort((a, b) => b.monthlyCents - a.monthlyCents)
-    .slice(0, 5)
+  const monthlyBills = data.commitments.filter(
+    (commitment) => commitment.type === "BILL" && commitment.frequency === "MONTHLY"
+  )
+  const annualCosts = data.commitments.filter(
+    (commitment) => commitment.type === "BILL" && commitment.frequency === "ANNUAL"
+  )
+  const savings = data.commitments.filter((commitment) => commitment.type === "SAVINGS")
   const hasData = data.deposits.length > 0 || data.commitments.length > 0
 
   return (
     <>
-      <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <h1 className="text-3xl font-bold tracking-normal md:text-4xl">{dictionary.dashboard.title}</h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">{dictionary.dashboard.subtitle}</p>
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+        <div className="flex min-h-[420px] flex-col justify-between overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground shadow-[0_8px_24px_rgba(225,29,72,0.25)] md:p-8">
+          <div className="flex flex-col gap-5">
+            <div>
+              <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-normal md:text-6xl">
+                {dictionary.dashboard.title}
+              </h1>
+              <p className="mt-2 max-w-2xl text-base text-white/80 md:text-lg">{dictionary.dashboard.subtitle}</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <HeroMetric label={dictionary.dashboard.deposits} value={formatCurrency(summary.monthlyDepositsCents, locale)} />
+              <HeroMetric label={dictionary.dashboard.commitments} value={formatCurrency(summary.monthlyCommitmentsCents, locale)} />
+              <HeroMetric label={dictionary.dashboard.annual} value={formatCurrency(summary.annualProratedCents, locale)} />
+              <HeroMetric label={dictionary.dashboard.savings} value={formatCurrency(summary.savingsCents, locale)} />
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-white/25 bg-white/15 p-5 backdrop-blur-xl">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-white/75">
+                  {summary.coverageCents >= 0 ? dictionary.dashboard.covered : dictionary.dashboard.shortBy}
+                </p>
+                <p className="mt-1 font-heading text-4xl font-extrabold md:text-5xl">
+                  {formatCurrency(Math.abs(summary.coverageCents), locale)}
+                </p>
+                <p className="mt-1 text-sm text-white/75">{dictionary.dashboard.remaining}</p>
+              </div>
+              <Badge className="w-fit bg-white text-primary hover:bg-white">
+                {formatCurrency(summary.coverageCents, locale)}
+              </Badge>
+            </div>
+            <Progress className="mt-5 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-track]]:bg-white/25" value={summary.coverageRatio * 100} />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <BudgetDialogForm action={createDeposit} dictionary={dictionary} kind="deposit" />
-          <BudgetDialogForm action={createCommitment} dictionary={dictionary} kind="commitment" />
+
+        <div className="grid gap-5">
+          <BudgetCommandPanel dictionary={dictionary} />
+          <Card className="fathly-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-heading text-2xl font-bold">
+                <SparklesIcon className="size-5 text-primary" />
+                {dictionary.dashboard.breakdown}
+              </CardTitle>
+              <CardDescription>{dictionary.dashboard.liveUpdateHint}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CommitmentChart data={grouped} locale={locale} />
+            </CardContent>
+          </Card>
         </div>
       </section>
 
       {!hasData && (
-        <Card className="fathly-card border-[#FFD21E] bg-secondary">
+        <Card className="fathly-card border-accent bg-white/80">
           <CardContent className="p-6">
             <Empty>
               <EmptyHeader>
@@ -56,95 +116,207 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="fathly-card bg-secondary md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>{summary.coverageCents >= 0 ? dictionary.dashboard.covered : dictionary.dashboard.shortBy}</span>
-              <Badge variant={summary.coverageCents >= 0 ? "secondary" : "destructive"}>
-                {formatCurrency(Math.abs(summary.coverageCents), locale)}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div>
-              <p className="text-4xl font-bold">{formatCurrency(summary.coverageCents, locale)}</p>
-              <p className="text-sm text-muted-foreground">{dictionary.dashboard.remaining}</p>
-            </div>
-            <Progress value={summary.coverageRatio * 100} />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{formatCurrency(summary.monthlyDepositsCents, locale)}</span>
-              <span>{formatCurrency(summary.monthlyCommitmentsCents, locale)}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <SummaryCard label={dictionary.dashboard.deposits} value={formatCurrency(summary.monthlyDepositsCents, locale)} />
-        <SummaryCard label={dictionary.dashboard.commitments} value={formatCurrency(summary.monthlyCommitmentsCents, locale)} />
-        <SummaryCard label={dictionary.dashboard.annual} value={formatCurrency(summary.annualProratedCents, locale)} />
-        <SummaryCard label={dictionary.dashboard.savings} value={formatCurrency(summary.savingsCents, locale)} />
-      </section>
+      <BudgetDataSection
+        annualCosts={annualCosts}
+        deposits={data.deposits}
+        dictionary={dictionary}
+        locale={locale}
+        monthlyBills={monthlyBills}
+        savings={savings}
+      />
 
-      <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        <Card className="fathly-card">
-          <CardHeader>
-            <CardTitle>{dictionary.dashboard.commitments}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{dictionary.forms.name}</TableHead>
-                  <TableHead>{dictionary.forms.category}</TableHead>
-                  <TableHead>{dictionary.forms.frequency}</TableHead>
-                  <TableHead className="text-right">{dictionary.forms.amount}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.commitments.slice(0, 10).map((commitment) => (
-                  <TableRow key={commitment.id}>
-                    <TableCell className="font-medium">{commitment.name}</TableCell>
-                    <TableCell>{commitment.category}</TableCell>
-                    <TableCell>{commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatCurrency(monthlyAmountCents(commitment), locale)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-        <div className="flex flex-col gap-4">
-          <Card className="fathly-card">
-            <CardHeader>
-              <CardTitle>{dictionary.dashboard.breakdown}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CommitmentChart data={grouped} locale={locale} />
-            </CardContent>
-          </Card>
-          <Card className="fathly-card">
-            <CardHeader>
-              <CardTitle>{dictionary.dashboard.largest}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {largest.map((item) => (
-                <div className="flex items-center justify-between gap-3" key={item.id}>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.category}</p>
-                  </div>
-                  <span className="font-mono text-sm">{formatCurrency(item.monthlyCents, locale)}</span>
-                </div>
-              ))}
-              <Button nativeButton={false} render={<a href="/monthly-bills" />} variant="outline">
-                <ArrowUpRightIcon data-icon="inline-end" />
-                {dictionary.nav.monthlyBills}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      <Card className="fathly-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-heading text-2xl font-bold">
+            <SettingsIcon className="size-5 text-secondary" />
+            {dictionary.nav.settings}
+          </CardTitle>
+          <CardDescription>{dictionary.settings.householdCardDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HouseholdNameForm
+            action={updateHouseholdName}
+            dictionary={dictionary}
+            householdName={data.household.name}
+          />
+        </CardContent>
+      </Card>
     </>
+  )
+}
+
+function BudgetCommandPanel({ dictionary }: { dictionary: Dictionary }) {
+  return (
+    <Card className="fathly-card">
+      <CardHeader>
+        <CardTitle className="font-heading text-2xl font-bold">{dictionary.dashboard.commandCenter}</CardTitle>
+        <CardDescription>{dictionary.dashboard.commandBody}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        <BudgetDialogForm action={createDeposit} dictionary={dictionary} kind="deposit" />
+        <BudgetDialogForm action={createCommitment} dictionary={dictionary} kind="commitment" />
+        <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+          <BudgetDialogForm
+            action={createCommitment}
+            defaults={{ frequency: "MONTHLY", type: "BILL" }}
+            dictionary={dictionary}
+            kind="commitment"
+            triggerLabel={dictionary.actions.addMonthlyBill}
+          />
+          <BudgetDialogForm
+            action={createCommitment}
+            defaults={{ frequency: "ANNUAL", type: "BILL" }}
+            dictionary={dictionary}
+            kind="commitment"
+            triggerLabel={dictionary.actions.addAnnualCost}
+          />
+          <BudgetDialogForm
+            action={createCommitment}
+            defaults={{ category: "Ahorro", frequency: "MONTHLY", type: "SAVINGS" }}
+            dictionary={dictionary}
+            kind="commitment"
+            triggerLabel={dictionary.actions.addSavings}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function BudgetDataSection({
+  annualCosts,
+  deposits,
+  dictionary,
+  locale,
+  monthlyBills,
+  savings,
+}: {
+  annualCosts: Commitment[]
+  deposits: Deposit[]
+  dictionary: Dictionary
+  locale: Locale
+  monthlyBills: Commitment[]
+  savings: Commitment[]
+}) {
+  return (
+    <section className="flex flex-col gap-4">
+      <div>
+        <h2 className="font-heading text-3xl font-bold">{dictionary.dashboard.budgetData}</h2>
+        <p className="mt-2 text-muted-foreground">{dictionary.dashboard.budgetDataBody}</p>
+      </div>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <DataLane
+          action={<BudgetDialogForm action={createDeposit} dictionary={dictionary} kind="deposit" />}
+          icon={<CircleDollarSignIcon className="size-5" />}
+          label={dictionary.nav.deposits}
+          tone="text-primary"
+        >
+          <DepositTable deposits={deposits} dictionary={dictionary} locale={locale} onDelete={deleteDeposit} />
+        </DataLane>
+        <DataLane
+          action={
+            <BudgetDialogForm
+              action={createCommitment}
+              defaults={{ frequency: "MONTHLY", type: "BILL" }}
+              dictionary={dictionary}
+              kind="commitment"
+              triggerLabel={dictionary.actions.addMonthlyBill}
+            />
+          }
+          icon={<HomeIcon className="size-5" />}
+          label={dictionary.nav.monthlyBills}
+          tone="text-secondary"
+        >
+          <CommitmentTable
+            commitments={monthlyBills}
+            dictionary={dictionary}
+            groupByCategory
+            hideFrequency
+            locale={locale}
+            onDelete={deleteCommitment}
+            title={dictionary.nav.monthlyBills}
+          />
+        </DataLane>
+        <DataLane
+          action={
+            <BudgetDialogForm
+              action={createCommitment}
+              defaults={{ frequency: "ANNUAL", type: "BILL" }}
+              dictionary={dictionary}
+              kind="commitment"
+              triggerLabel={dictionary.actions.addAnnualCost}
+            />
+          }
+          icon={<CalendarDaysIcon className="size-5" />}
+          label={dictionary.nav.annualCosts}
+          tone="text-warning"
+        >
+          <CommitmentTable
+            commitments={annualCosts}
+            dictionary={dictionary}
+            hideFrequency
+            locale={locale}
+            onDelete={deleteCommitment}
+            showProratedAmount
+            title={dictionary.nav.annualCosts}
+          />
+        </DataLane>
+        <DataLane
+          action={
+            <BudgetDialogForm
+              action={createCommitment}
+              defaults={{ category: "Ahorro", frequency: "MONTHLY", type: "SAVINGS" }}
+              dictionary={dictionary}
+              kind="commitment"
+              triggerLabel={dictionary.actions.addSavings}
+            />
+          }
+          icon={<PiggyBankIcon className="size-5" />}
+          label={dictionary.nav.savings}
+          tone="text-success"
+        >
+          <CommitmentTable
+            commitments={savings}
+            dictionary={dictionary}
+            locale={locale}
+            onDelete={deleteCommitment}
+            title={dictionary.nav.savings}
+          />
+        </DataLane>
+      </div>
+    </section>
+  )
+}
+
+function DataLane({
+  action,
+  children,
+  icon,
+  label,
+  tone,
+}: {
+  action: React.ReactNode
+  children: React.ReactNode
+  icon: React.ReactNode
+  label: string
+  tone: string
+}) {
+  return (
+    <div aria-label={label} className="relative">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
+        <span className={tone}>{icon}</span>
+        <div className="[&_[data-slot=button]]:h-8 [&_[data-slot=button]]:text-xs">{action}</div>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function HeroMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/20 bg-white/15 p-4 backdrop-blur-xl">
+      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/70">{label}</p>
+      <p className="mt-2 font-heading text-2xl font-bold">{value}</p>
+    </div>
   )
 }
