@@ -38,8 +38,8 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
   return (
     <div className="min-h-svh text-foreground">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-3 px-4 py-3 md:grid-cols-3 md:items-center md:px-6">
+          <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
             <AppIcon className="size-11 shrink-0 fathly-color-shadow" />
             <div className="min-w-0">
               <p className="fathly-ribbon text-sm leading-tight">{dictionary.appName}</p>
@@ -47,28 +47,32 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 md:justify-end">
-            <nav aria-label="Primary navigation" className="flex items-center gap-1 rounded-full border border-border bg-muted p-1">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href
+          <nav
+            aria-label="Primary navigation"
+            className="flex w-fit items-center gap-1 rounded-full border border-border bg-muted p-1 md:justify-self-center"
+          >
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
 
-                return (
-                  <Button
-                    key={item.href}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(isActive && "border-primary/40 bg-card text-primary shadow-[0_2px_8px_rgba(0,0,0,0.08)]")}
-                    nativeButton={false}
-                    render={<Link href={item.href} />}
-                    size="sm"
-                    variant="ghost"
-                  >
-                    <Icon data-icon="inline-start" />
-                    {item.label}
-                  </Button>
-                )
-              })}
-            </nav>
+              return (
+                <Button
+                  key={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(isActive && "border-primary/40 bg-card text-primary shadow-[0_2px_8px_rgba(0,0,0,0.08)]")}
+                  nativeButton={false}
+                  render={<Link href={item.href} />}
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Icon data-icon="inline-start" />
+                  {item.label}
+                </Button>
+              )
+            })}
+          </nav>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-self-end">
             <div className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-muted px-2 py-1">
               <Avatar className="size-8">
                 <AvatarImage alt={avatarLabel} src={user.image ?? undefined} />

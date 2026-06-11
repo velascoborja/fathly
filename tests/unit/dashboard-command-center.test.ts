@@ -15,4 +15,20 @@ describe("dashboard monthly overview", () => {
     expect(source).toContain("CommitmentChart")
     expect(source).toContain("getCommitmentBreakdown")
   })
+
+  it("places income above the expense chart in the left dashboard column", () => {
+    expect(source.indexOf("<IncomePanel")).toBeLessThan(source.indexOf("<CommitmentChart"))
+  })
+
+  it("uses green income and red expense emphasis for faster scanning", () => {
+    expect(source).toContain("border-success/35")
+    expect(source).toContain("text-success")
+    expect(source).toContain("border-destructive/35")
+    expect(source).toContain("text-destructive")
+  })
+
+  it("sorts income rows from highest to lowest amount", () => {
+    expect(source).toContain("const sortedDeposits = deposits.toSorted((a, b) => b.amountCents - a.amountCents)")
+    expect(source).toContain("sortedDeposits.map")
+  })
 })

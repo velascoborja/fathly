@@ -6,9 +6,11 @@ describe("dictionaries", () => {
   it("uses expenses nomenclature for budget commitments", () => {
     expect(dictionaries.es.dashboard.title).toBe("Resumen mensual")
     expect(dictionaries.es.dashboard.subtitle).toBe("Resumen del mes teniendo en cuenta ingresos, gastos y ahorro.")
+    expect(dictionaries.es.dashboard.covered).toBe("del presupuesto usado")
+    expect(dictionaries.es.dashboard.deposits).toBe("Ingresos")
     expect(dictionaries.es.dashboard.commitments).toBe("Gastos")
     expect(dictionaries.es.dashboard.breakdown).toBe("Distribución por gasto")
-    expect(dictionaries.es.dashboard.monthOutflows).toBe("Gastos del mes")
+    expect(dictionaries.es.dashboard.monthOutflows).toBe("Gastos")
     expect(dictionaries.es.dashboard.marginRemaining).toBe("Margen restante")
     expect(dictionaries.es.dashboard.largest).toBe("Mayores gastos")
     expect(dictionaries.es.dashboard).not.toHaveProperty("commandCenter")
@@ -17,6 +19,7 @@ describe("dictionaries", () => {
 
     expect(dictionaries.en.dashboard.title).toBe("Monthly summary")
     expect(dictionaries.en.dashboard.subtitle).toBe("Review the month across income, expenses, and savings.")
+    expect(dictionaries.en.dashboard.covered).toBe("of budget used")
     expect(dictionaries.en.dashboard.commitments).toBe("Shared expenses")
     expect(dictionaries.en.dashboard.breakdown).toBe("Breakdown by expense")
     expect(dictionaries.en.dashboard.monthOutflows).toBe("Monthly outflows")

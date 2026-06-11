@@ -2,7 +2,7 @@
 
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
-import { formatCurrency } from "@/lib/budget/format"
+import { formatCurrency, formatWholeCurrency } from "@/lib/budget/format"
 import type { Locale } from "@/lib/i18n/dictionaries"
 
 const CHART_COLORS = [
@@ -25,9 +25,11 @@ type CommitmentChartProps = {
     amountCents: number
   }[]
   locale: Locale
+  wholeCurrency?: boolean
 }
 
-export function CommitmentChart({ data, locale }: CommitmentChartProps) {
+export function CommitmentChart({ data, locale, wholeCurrency = false }: CommitmentChartProps) {
+  const formatAmount = wholeCurrency ? formatWholeCurrency : formatCurrency
   const chartData = data.map((item, index) => ({
     ...item,
     amount: item.amountCents / 100,
@@ -58,7 +60,7 @@ export function CommitmentChart({ data, locale }: CommitmentChartProps) {
               borderRadius: 12,
               color: "#2D2D2D",
             }}
-            formatter={(value) => [formatCurrency(Number(value) * 100, locale), ""]}
+            formatter={(value) => [formatAmount(Number(value) * 100, locale), ""]}
           />
           <Pie
             cx="50%"
@@ -81,7 +83,7 @@ export function CommitmentChart({ data, locale }: CommitmentChartProps) {
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="rounded-full bg-card/90 px-4 py-3 text-center shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Total</p>
-            <p className="font-mono text-lg font-bold">{formatCurrency(totalCents, locale)}</p>
+            <p className="font-mono text-lg font-bold">{formatAmount(totalCents, locale)}</p>
           </div>
         </div>
       </div>
@@ -91,7 +93,7 @@ export function CommitmentChart({ data, locale }: CommitmentChartProps) {
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm" key={item.id}>
             <span className="size-3 rounded-full" style={{ backgroundColor: item.fill }} />
             <span className="min-w-0 truncate font-medium">{item.name}</span>
-            <span className="font-mono text-xs text-muted-foreground">{formatCurrency(item.amountCents, locale)}</span>
+            <span className="font-mono text-xs text-muted-foreground">{formatAmount(item.amountCents, locale)}</span>
           </div>
         ))}
       </div>
