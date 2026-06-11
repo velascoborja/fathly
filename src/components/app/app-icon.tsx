@@ -12,16 +12,17 @@ export function AppIcon({ alt = "Fathly app icon", className, size = 36 }: AppIc
   return (
     <div
       aria-label={alt}
-      className={cn("relative shrink-0 rotate-[-4deg]", className)}
+      className={cn("relative shrink-0", className)}
       role="img"
       style={{ height: dimension, width: dimension }}
     >
-      <span className="absolute inset-x-[24%] top-[4%] bottom-[18%] rotate-[-18deg] rounded-[18%] bg-coral shadow-[0_4px_12px_rgba(239,108,74,0.28)]" />
-      <span className="absolute inset-x-[20%] top-[1%] bottom-[14%] rotate-[12deg] rounded-[18%] bg-accent shadow-[0_4px_12px_rgba(255,210,63,0.28)]" />
-      <span className="absolute inset-[8%] rounded-[22%] border-2 border-primary-dark bg-cream shadow-[0_4px_20px_rgba(43,168,162,0.22)]" />
-      <span className="absolute inset-x-[25%] top-[22%] h-[14%] rounded-full bg-primary" />
-      <span className="absolute inset-x-[25%] top-[43%] h-[14%] rounded-full bg-accent" />
-      <span className="absolute inset-x-[25%] top-[64%] h-[14%] rounded-full bg-coral" />
+      <span className="absolute inset-[6%] rounded-2xl border border-primary/30 bg-card shadow-[0_8px_24px_rgba(123,47,190,0.18)]" />
+      <span className="absolute inset-x-[27%] top-[13%] h-[12%] rounded-full bg-muted" />
+      <span className="absolute inset-x-[18%] bottom-[16%] h-[32%] rounded-xl border border-border bg-muted" />
+      <span className="absolute left-[24%] top-[21%] h-[18%] w-[18%] rounded-full bg-secondary" />
+      <span className="absolute right-[24%] top-[21%] h-[18%] w-[18%] rounded-full bg-accent-dark" />
+      <span className="absolute left-[46%] top-[36%] h-[36%] w-[10%] -skew-x-12 rounded-sm bg-primary" />
+      <span className="absolute left-[35%] top-[50%] h-[10%] w-[30%] -skew-x-12 rounded-sm bg-primary" />
     </div>
   )
 }

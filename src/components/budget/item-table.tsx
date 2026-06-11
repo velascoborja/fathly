@@ -23,7 +23,7 @@ export function DepositTable({
 }) {
   return (
     <Card className="fathly-card">
-      <CardHeader className="pr-44">
+      <CardHeader className="pr-44 max-sm:pr-5">
         <CardTitle>{dictionary.nav.deposits}</CardTitle>
       </CardHeader>
       <CardContent className="overflow-x-auto">
@@ -31,7 +31,7 @@ export function DepositTable({
           <TableHeader>
             <TableRow>
               <TableHead>{dictionary.forms.name}</TableHead>
-              <TableHead>{dictionary.forms.notes}</TableHead>
+              <TableHead className="hidden sm:table-cell">{dictionary.forms.notes}</TableHead>
               <TableHead className="text-right">{dictionary.forms.amount}</TableHead>
               <TableHead className="w-12" />
             </TableRow>
@@ -47,7 +47,7 @@ export function DepositTable({
               deposits.map((deposit) => (
                 <TableRow key={deposit.id}>
                   <TableCell className="font-medium">{deposit.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{deposit.notes}</TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">{deposit.notes}</TableCell>
                   <TableCell className="text-right font-mono">{formatCurrency(deposit.amountCents, locale)}</TableCell>
                   <TableCell>
                     <DeleteButton action={onDelete.bind(null, deposit.id)} label={`Delete ${deposit.name}`} />
@@ -87,7 +87,7 @@ export function CommitmentTable({
 
   return (
     <Card className="fathly-card">
-      <CardHeader className="pr-44">
+      <CardHeader className="pr-44 max-sm:pr-5">
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className="overflow-x-auto">
@@ -95,8 +95,8 @@ export function CommitmentTable({
           <TableHeader>
             <TableRow>
               <TableHead>{dictionary.forms.name}</TableHead>
-              {!groupByCategory && <TableHead>{dictionary.forms.category}</TableHead>}
-              {!hideFrequency && <TableHead>{dictionary.forms.frequency}</TableHead>}
+              {!groupByCategory && <TableHead className="hidden sm:table-cell">{dictionary.forms.category}</TableHead>}
+              {!hideFrequency && <TableHead className="hidden sm:table-cell">{dictionary.forms.frequency}</TableHead>}
               <TableHead className="text-right">{dictionary.forms.amount}</TableHead>
               {showProratedAmount && <TableHead className="text-right">{dictionary.forms.prorated}</TableHead>}
               <TableHead className="w-12" />
@@ -115,7 +115,7 @@ export function CommitmentTable({
             ) : groupByCategory
               ? categoryGroups.map((group) => (
                   <Fragment key={group.category}>
-                    <TableRow className="bg-cream hover:bg-cream">
+                    <TableRow className="bg-muted hover:bg-muted">
                       <TableCell className="font-semibold" colSpan={hideFrequency ? 1 : 2}>
                         {group.category}
                       </TableCell>
@@ -134,7 +134,7 @@ export function CommitmentTable({
                       <TableRow key={commitment.id}>
                         <TableCell className="pl-6 font-medium">{commitment.name}</TableCell>
                         {!hideFrequency && (
-                          <TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
                           </TableCell>
                         )}
@@ -156,9 +156,9 @@ export function CommitmentTable({
               : commitments.map((commitment) => (
                   <TableRow key={commitment.id}>
                     <TableCell className="font-medium">{commitment.name}</TableCell>
-                    <TableCell>{commitment.category}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{commitment.category}</TableCell>
                     {!hideFrequency && (
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
                       </TableCell>
                     )}

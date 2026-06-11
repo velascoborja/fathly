@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fira_Code, Poppins } from "next/font/google";
+import { Fira_Code, Inter } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
-});
-
-const poppins = Poppins({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
 });
 
 const firaCode = Fira_Code({
@@ -35,7 +29,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${dmSans.variable} ${poppins.variable} ${firaCode.variable} h-full antialiased`}
+      className={`${inter.variable} ${firaCode.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <TooltipProvider>{children}</TooltipProvider>

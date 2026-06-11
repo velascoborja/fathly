@@ -9,6 +9,8 @@ describe("AppShell layout", () => {
     expect(source).not.toContain("Primary mobile navigation")
     expect(source).not.toContain("dictionary.nav.deposits")
     expect(source).not.toContain("dictionary.nav.monthlyBills")
+    expect(source).toContain("dictionary.nav.dashboard")
+    expect(source).toContain("dictionary.nav.settings")
     expect(source).toContain("setLocaleAction")
     expect(source).toContain("signOutUser")
     expect(source).toContain("householdName")

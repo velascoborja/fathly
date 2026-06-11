@@ -13,6 +13,10 @@ export type BudgetCommitment = {
   type: CommitmentType
 }
 
+export type BudgetCommitmentBreakdown<T extends BudgetCommitment> = T & {
+  monthlyAmountCents: number
+}
+
 export function monthlyAmountCents(item: Pick<BudgetCommitment, "amountCents" | "frequency">) {
   return item.frequency === "ANNUAL" ? Math.round(item.amountCents / 12) : item.amountCents
 }
@@ -53,6 +57,16 @@ export function groupCommitmentsByCategory(commitments: BudgetCommitment[]) {
       groups[commitment.category] = (groups[commitment.category] ?? 0) + monthlyAmountCents(commitment)
       return groups
     }, {})
+}
+
+export function getCommitmentBreakdown<T extends BudgetCommitment>(commitments: T[]): BudgetCommitmentBreakdown<T>[] {
+  return commitments
+    .filter((commitment) => commitment.status === "ACTIVE")
+    .map((commitment) => ({
+      ...commitment,
+      monthlyAmountCents: monthlyAmountCents(commitment),
+    }))
+    .sort((a, b) => b.monthlyAmountCents - a.monthlyAmountCents)
 }
 
 export function groupCommitmentsForTable<T extends BudgetCommitment>(commitments: T[]) {

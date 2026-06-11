@@ -8,27 +8,27 @@ const dashboard = readFileSync("src/app/(app)/dashboard/page.tsx", "utf8")
 const shell = readFileSync("src/components/app/app-shell.tsx", "utf8")
 const design = readFileSync("DESIGN.md", "utf8")
 
-describe("Flip7 visual system", () => {
-  it("documents and exposes the Flip7 color tokens", () => {
-    expect(design).toContain("Flip7 Design System")
-    expect(globals).toContain("--primary: #2ba8a2")
-    expect(globals).toContain("--accent: #ffd23f")
-    expect(globals).toContain("--coral: #ef6c4a")
-    expect(globals).toContain("--cream: #fff8e7")
-    expect(globals).not.toContain("#e11d48")
+describe("Canva visual system", () => {
+  it("documents and exposes the Canva-inspired color tokens", () => {
+    expect(design).toContain("name: Canva")
+    expect(globals).toContain("--primary: #7b2fbe")
+    expect(globals).toContain("--secondary: #00c4cc")
+    expect(globals).toContain("--accent-dark: #ff6b9d")
+    expect(globals).toContain("--background: #ffffff")
+    expect(globals).not.toContain("#121212")
   })
 
-  it("uses rounded pill buttons with colored glow treatments", () => {
+  it("uses rounded pill buttons with purple elevation", () => {
     expect(button).toContain("rounded-full")
-    expect(button).toContain("shadow-[0_4px_20px_rgba(255,210,63,0.40)]")
-    expect(button).toContain("active:not-aria-[haspopup]:scale-95")
+    expect(button).toContain("shadow-[0_8px_20px_rgba(123,47,190,0.22)]")
+    expect(button).toContain("cubic-bezier(0.34,1.56,0.64,1)")
   })
 
-  it("uses tactile scoring-card surfaces across app chrome", () => {
-    expect(card).toContain("border-l-[6px]")
-    expect(card).toContain("shadow-[0_4px_20px_rgba(43,168,162,0.10)]")
+  it("uses bright rounded app-canvas surfaces across app chrome", () => {
+    expect(card).toContain("rounded-[20px]")
+    expect(card).toContain("shadow-[0_2px_8px_rgba(0,0,0,0.08)]")
     expect(shell).toContain("fathly-ribbon")
     expect(dashboard).toContain("fathly-hero")
-    expect(dashboard).toContain("border-l-accent")
+    expect(dashboard).toContain("bg-[#f1feff]")
   })
 })

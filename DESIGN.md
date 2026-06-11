@@ -1,151 +1,116 @@
-# Flip7 Design System
+---
+version: alpha
+name: Canva
+description: "A high-energy, democratized design canvas anchored in Canva's signature purple (#7B2FBE) with white surfaces and generous doses of magenta, coral, and cyan as supporting accent energy. The system feels joyful and accessible — everything rounded, nothing intimidating. Display type is set in the Canva Sans family (a rounded grotesque) at bold weights with soft tracking, communicating creativity without requiring design expertise to feel. Surfaces are bright white with light lavender elevation, and the product experience uses a dense toolbar with icon-first communication optimized for non-designers."
 
-## Overview
+colors:
+  primary: "#7B2FBE"
+  on-primary: "#ffffff"
+  primary-hover: "#6B28A6"
+  secondary: "#00C4CC"
+  accent-magenta: "#FF6B9D"
+  accent-coral: "#FF7043"
+  ink: "#2D2D2D"
+  ink-muted: "#737373"
+  canvas: "#ffffff"
+  surface-1: "#F5F0FF"
+  surface-2: "#EDE4FF"
+  border: "#E0D5F0"
+  toolbar-bg: "#ffffff"
 
-Flip7 is a retro-playful, teal-coral-gold design system adapted for Fathly's household budget dashboard. It keeps Fathly's budgeting flows intact while borrowing Flip7's tactile game-piece feel: bold teal surfaces, cream inputs, gold CTAs, coral warning energy, rounded controls, colored glows, dashed dividers, and card-like scoring panels.
+typography:
+  display:
+    fontFamily: "Canva Sans, Circular, -apple-system, sans-serif"
+    fontSize: 52px
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: -0.02em
+  body:
+    fontFamily: "Canva Sans, Circular, -apple-system, sans-serif"
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.6
+    letterSpacing: 0
 
+spacing:
+  base: 8px
+  scale: [4, 8, 12, 16, 24, 32, 48, 64, 96]
+
+radius:
+  sm: 6px
+  md: 12px
+  lg: 20px
+  pill: 9999px
+
+shadows:
+  card: "0 2px 8px rgba(0,0,0,0.08)"
+  elevated: "0 8px 24px rgba(0,0,0,0.12)"
+  toolbar: "0 1px 4px rgba(0,0,0,0.1)"
+
+motion:
+  duration-fast: 100ms
+  duration-base: 200ms
+  easing: cubic-bezier(0.34, 1.56, 0.64, 1)
 ---
 
-## Colors
+## 1. Visual Theme & Atmosphere
+Canva is optimism made into product design. The purple brand color communicates creativity and premium quality, while the overall system stays bright, white, and friendly to avoid alienating the non-designer audience that makes up Canva's core user base. The editor surface is minimized chrome with maximum canvas — toolbars dock to edges, and everything uses icons with optional labels. Marketing pages use vibrant gradient moments and colorful template previews as the primary visual interest.
 
-- **Primary Teal** (#2BA8A2): Main UI, hero backgrounds, progress bars, selected accents
-- **Primary Light** (#3CC4BD): Hover states and lighter accents
-- **Primary Dark** (#1E8C86): Deep backgrounds and readable teal text
-- **Primary BG** (#E8F6F5): Subtle teal tint for secondary backgrounds
-- **Accent Gold** (#FFD23F): CTAs, highlights, active states, positive emphasis
-- **Accent Light** (#FFE47A): Soft gold tints
-- **Accent Dark** (#E6B800): Gold hover/depth
-- **Coral** (#EF6C4A): Warnings, destructive actions, urgent shortfall states
-- **Coral Light** (#FF8A6A): Soft coral tints
-- **Coral Dark** (#D45233): Coral hover/depth
-- **Cream** (#FFF8E7): Input surfaces and warm panels
-- **Sky Blue** (#5DADE2): Info states and chart contrast
-- **Surface Base** (#EFF8F7): Page background
-- **Surface Card** (#FFFFFF): Card backgrounds
-- **Success** (#27AE60): Positive states
-- **Error** (#E74C3C): Validation errors
+## 2. Color System
+- **Primary purple**: #7B2FBE — confident, creative, used on primary CTAs and brand moments
+- **Teal secondary**: #00C4CC — action highlights in the editor
+- **Magenta accent**: #FF6B9D — campaign and feature highlight color
+- **Canvas**: Pure white — the editor is white to not compete with user's designs
+- **Surface tints**: Light lavender (#F5F0FF) for sidebars and panels, subtle purple tint
+- **Ink**: #2D2D2D — warm near-black, never harsh
 
-## Typography
+## 3. Typography
+Canva Sans is their custom rounded grotesque — approachable and slightly playful at display sizes, clean at body. Bold (700) for headlines, medium for UI labels, regular for prose. The rounded terminals signal "safe, fun, creative" to a design-anxious audience. Letter spacing is tight but not aggressive.
 
-- **Headline Style**: System font stack, extra-bold (800), generous letter-spacing on major titles
-- **Body Font**: -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei
-- **Display**: 72px extra-bold where space allows
-- **h1**: 48px extra-bold
-- **h2**: 36px extra-bold
-- **h3**: 32px bold
-- **body**: 16px medium
-- **sm**: 14px medium
-- **xs**: 12px medium
+## 4. Components & Patterns
+- **Editor toolbar**: Icon buttons in white panels with hover fill, grouped by function
+- **Template cards**: Large previews with hover overlay and "Use template" CTA
+- **Primary button**: Purple fill, white text, 24px radius — very rounded
+- **Upload zone**: Dashed border, drag-and-drop with happy illustrated state
+- **Element panels**: Left sidebar with category tabs, scrollable grid of assets
+- **Brand Kit**: Dedicated section for colors, fonts, logos — core B2B feature
 
----
+## 5. Spacing & Layout
+Editor: full viewport, toolbars at left (72px) and right (240px). Marketing: centered content up to 1200px. Template galleries use masonry or uniform-grid depending on category. Generous inner padding on cards (24px).
 
-## Spacing
+## 6. Motion & Interaction
+Springy easing (cubic-bezier with overshoot) on interactive elements — buttons have a micro-bounce, panels slide in with spring physics. The editor uses smooth zoom and pan. Drag-and-drop has placeholder ghost with spring snap.
 
-Base unit: **8px**
+## Rationale
 
-- **xs**: 4px
-- **sm**: 8px
-- **md**: 16px
-- **lg**: 24px
-- **xl**: 32px
-- **2xl**: 48px
+**Purple as creativity-without-intimidation** — Purple historically signals creative professions and premium quality without the aggression of red or the coldness of blue. For a product asking design-anxious users to "just start designing," #7B2FBE communicates artistic confidence while the white canvas and rounded shapes ensure the overall system feels safe rather than intimidating.
 
-## Border Radius
+**Springy easing as permission to play** — The cubic-bezier with overshoot on interactive elements is a deliberate behavioral design choice: it trains users to interact more freely by making the product feel physically playful. A tool that bounces when you click it doesn't feel like a formal professional environment — which is exactly right for non-designer audiences who associate design with judgment.
 
-- **sm** (4px): Small tags, inputs
-- **md** (8px): Compact controls
-- **lg** (16px): Cards, buttons, inputs
-- **xl** (24px): Feature cards and scoring items
-- **2xl** (32px): Hero cards and modals
-- **round** (9999px): Pill buttons, badges, rank badges
+**Editor white to not compete with user content** — The editor canvas and toolbar stay pure white (#ffffff / no surface tint) because users are creating colorful designs on top of it. Any hue in the product chrome would color-contaminate the design surface and make it harder to evaluate whether a design's palette actually works.
 
-## Elevation -- Colored Glow System
+**Rounded forms as approachability signal** — Canva's 6–20px radius scale (compared to Adobe's 2–8px) is systematically rounder because roundness reduces cognitive friction for non-designers. Sharp corners signal formality and precision; rounded corners signal friendliness and accessibility. Every corner in Canva is an invitation.
 
-- **shadow-sm**: 0 2px 8px black at 8%
-- **shadow-md**: 0 4px 16px black at 12%
-- **shadow-lg**: 0 8px 32px black at 16%
-- **shadow-card**: 0 4px 20px teal at 10%
-- **shadow-coral-glow**: 0 4px 20px coral at 35%
-- **shadow-teal-glow**: 0 4px 20px teal at 30%
-- **shadow-accent-glow**: 0 4px 20px gold at 40%
-- **shadow-sky-glow**: 0 4px 16px sky-blue at 30%
-- **shadow-focus**: 0 0 0 4px primary at 15%
+**Brand Kit as the B2B anchor** — Dedicating a first-class feature to brand colors, fonts, and logos signals that Canva is serious about enterprise adoption without changing the core consumer experience. It lets teams maintain consistency while individual users retain the playful, free-form experience that makes Canva addictive.
 
-## Components
+## Accessibility
 
-### Logo and App Header
+### Contrast Ratios
+- **Primary on background** (#7B2FBE on #ffffff): 6.9:1 — passes AA, passes AAA
+- **Text on surface** (#2D2D2D on #ffffff): 15.3:1 — passes AA
+- **Muted on background** (#737373 on #ffffff): 4.6:1 — passes AA (decorative)
 
-The app chrome uses a compact folded-ribbon treatment:
+### Minimum Requirements
+- **Touch target**: 44×44px minimum for all interactive elements
+- **Focus indicator**: #7B2FBE outline, 2px, 2px offset
+- **Focus contrast**: 6.9:1 against #ffffff background
 
-- Cream ribbon background with a dark teal border
-- Slight rotation/skew on the app name for retro packaging energy
-- Teal/gold icon glow
-- Sticky header in a light teal wash
+### Motion
+- Respects `prefers-reduced-motion`: yes — spring bounce on buttons, panel slide-in, and drag-ghost animations should reduce to instant transitions
+- All transitions use `@media (prefers-reduced-motion: reduce)` guard
 
-### Buttons
-
-Pill shape (9999px radius), minimum 36px height, bounce transition curve.
-
-#### Primary (Gold CTA)
-
-- Gold gradient background with dark teal text
-- Shadow: accent glow
-- Active: scale(0.95)
-
-#### Secondary
-
-- Teal fill with white text
-- Shadow: teal glow
-
-#### Destructive
-
-- Coral tint or fill depending on context
-- Shadow: coral glow on hover/active states
-
-### Cards and Budget Scoring Items
-
-White background, 24px radius, shadow-card, 6px colored left accent bar.
-
-- Default: teal-light left border
-- Highlighted: gold left border, warm gold gradient, accent glow
-- Warning/shortfall: coral left border, coral-tinted surface
-- Data tables live inside the same tactile card system
-
-### Inputs
-
-- Cream background
-- 1.5px teal-tinted border
-- 16px radius
-- Focus ring uses teal at 15%
-- Error ring uses coral
-
-### Section Titles
-
-- Icon in a colored circular container
-- 3px dashed bottom border where sections need separation
-- Bold headline typography with warm, playful spacing
-
----
-
-## Animations
-
-- **Button bounce**: under 200ms, active scale 0.95
-- **Glow pulse**: subtle 2s pulse only for celebratory or key summary states
-- **Progress motion**: smooth, short easing
-- **Reduced motion**: disable non-essential animation for users who prefer reduced motion
-
----
-
-## Do's and Don'ts
-
-1. Do use colored glow shadows for interactive elements.
-2. Do use pill-shaped buttons consistently.
-3. Do use cream (#FFF8E7) for input surfaces.
-4. Don't use plain black shadows on interactive elements.
-5. Do celebrate budget coverage moments visually with matching brand colors.
-6. Do use dashed borders for section dividers.
-7. Don't make micro-interaction animations longer than 500ms.
-8. Do use left-border color accents on cards for state communication.
-9. Do ensure all touch targets are at least 36px on desktop and larger on mobile.
-10. Do use the retro folded-ribbon pattern for banner elements.
-11. Don't use translucent glass panels when a tactile cream or white surface is clearer.
+### Notes
+- The purple primary (#7B2FBE) is one of the stronger brand primaries for accessibility — 6.9:1 on white passes AAA, making it safe for small text and icons alike
+- The springy cubic-bezier easing (with overshoot above 1.0) can be disorienting for vestibular disorder users; `prefers-reduced-motion` must suppress overshooting easing in addition to duration
+- Muted gray (#737373) is borderline at 4.6:1 — acceptable for secondary labels but verify at 14px; prefer using it only at 16px+ for body metadata
+- The teal secondary (#00C4CC on #ffffff): approximately 2.3:1 — fails AA; do not use teal as text; restrict it to large decorative graphics and icons with adjacent text labels

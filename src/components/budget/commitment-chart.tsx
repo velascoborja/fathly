@@ -5,11 +5,23 @@ import { Cell, Pie, PieChart, Tooltip } from "recharts"
 import { formatCurrency } from "@/lib/budget/format"
 import type { Locale } from "@/lib/i18n/dictionaries"
 
-const colors = ["#2BA8A2", "#FFD23F", "#EF6C4A", "#5DADE2", "#27AE60", "#FFE47A"]
+const CHART_COLORS = [
+  "#7B2FBE",
+  "#FF6B9D",
+  "#FF7043",
+  "#FFB84D",
+  "#00C4CC",
+  "#5B8DEF",
+  "#8D7CF6",
+  "#69C779",
+  "#FF9EA5",
+  "#BDA7FF",
+]
 
 type CommitmentChartProps = {
   data: {
-    category: string
+    id: string
+    name: string
     amountCents: number
   }[]
   locale: Locale
@@ -17,39 +29,72 @@ type CommitmentChartProps = {
 
 export function CommitmentChart({ data, locale }: CommitmentChartProps) {
   const chartData = data.map((item, index) => ({
-    category: item.category,
+    ...item,
     amount: item.amountCents / 100,
-    fill: colors[index % colors.length],
+    fill: CHART_COLORS[index % CHART_COLORS.length],
   }))
+  const totalCents = data.reduce((sum, item) => sum + item.amountCents, 0)
+
   if (!chartData.length) {
-    return <div className="flex aspect-video items-center justify-center rounded-3xl bg-cream text-sm font-bold text-muted-foreground">No data</div>
+    return (
+      <div className="flex h-[320px] items-center justify-center rounded-2xl bg-muted text-sm font-semibold text-muted-foreground">
+        No data
+      </div>
+    )
   }
 
   return (
-    <div className="mx-auto flex h-[280px] w-full max-w-[320px] items-center justify-center">
-      <PieChart height={280} width={280}>
-        <Tooltip
-          formatter={(value, name) => [
-            formatCurrency(Number(value) * 100, locale),
-            name,
-          ]}
-        />
-        <Pie
-          cx="50%"
-          cy="50%"
-          data={chartData}
-          dataKey="amount"
-          innerRadius={62}
-          isAnimationActive={false}
-          nameKey="category"
-          outerRadius={108}
-          strokeWidth={0}
+    <div className="grid min-h-[320px] gap-5">
+      <div className="relative min-h-[240px]">
+        <PieChart
+          margin={{ bottom: 8, left: 8, right: 8, top: 8 }}
+          responsive
+          style={{ height: "100%", minHeight: 240, width: "100%" }}
         >
-          {chartData.map((entry) => (
-            <Cell fill={entry.fill} key={entry.category} />
-          ))}
-        </Pie>
-      </PieChart>
+          <Tooltip
+            contentStyle={{
+              background: "#FFFFFF",
+              border: "1px solid #E0D5F0",
+              borderRadius: 12,
+              color: "#2D2D2D",
+            }}
+            formatter={(value) => [formatCurrency(Number(value) * 100, locale), ""]}
+          />
+          <Pie
+            cx="50%"
+            cy="50%"
+            data={chartData}
+            dataKey="amount"
+            innerRadius="52%"
+            isAnimationActive={false}
+            nameKey="name"
+            outerRadius="86%"
+            paddingAngle={2}
+            stroke="#FFFFFF"
+            strokeWidth={3}
+          >
+            {chartData.map((entry) => (
+              <Cell fill={entry.fill} key={entry.id} />
+            ))}
+          </Pie>
+        </PieChart>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="rounded-full bg-card/90 px-4 py-3 text-center shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Total</p>
+            <p className="font-mono text-lg font-bold">{formatCurrency(totalCents, locale)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        {chartData.map((item) => (
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm" key={item.id}>
+            <span className="size-3 rounded-full" style={{ backgroundColor: item.fill }} />
+            <span className="min-w-0 truncate font-medium">{item.name}</span>
+            <span className="font-mono text-xs text-muted-foreground">{formatCurrency(item.amountCents, locale)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

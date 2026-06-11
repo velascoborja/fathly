@@ -3,15 +3,16 @@ import { describe, expect, it } from "vitest"
 
 const source = readFileSync("src/app/(app)/dashboard/page.tsx", "utf8")
 
-describe("dashboard command center", () => {
-  it("renders all budget management surfaces on the dashboard", () => {
-    expect(source).toContain("BudgetCommandPanel")
-    expect(source).toContain("BudgetDataSection")
+describe("dashboard monthly overview", () => {
+  it("removes the command center and renders focused budget surfaces", () => {
+    expect(source).not.toContain("BudgetCommandPanel")
+    expect(source).not.toContain("dictionary.dashboard.commandCenter")
+    expect(source).toContain("MonthlySnapshot")
+    expect(source).toContain("IncomePanel")
+    expect(source).toContain("OutflowTable")
     expect(source).toContain("dictionary.nav.deposits")
-    expect(source).toContain("dictionary.nav.monthlyBills")
-    expect(source).toContain("dictionary.nav.annualCosts")
-    expect(source).toContain("dictionary.nav.savings")
-    expect(source).toContain("HouseholdNameForm")
+    expect(source).not.toContain("HouseholdNameForm")
     expect(source).toContain("CommitmentChart")
+    expect(source).toContain("getCommitmentBreakdown")
   })
 })

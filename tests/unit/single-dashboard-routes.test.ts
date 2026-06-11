@@ -6,7 +6,6 @@ const legacyPages = [
   "src/app/(app)/monthly-bills/page.tsx",
   "src/app/(app)/annual-costs/page.tsx",
   "src/app/(app)/savings/page.tsx",
-  "src/app/(app)/settings/page.tsx",
 ]
 
 describe("legacy authenticated routes", () => {
@@ -17,5 +16,16 @@ describe("legacy authenticated routes", () => {
       expect(source, page).toContain('redirect("/dashboard")')
       expect(source, page).not.toContain("getBudgetData")
     }
+  })
+})
+
+describe("settings route", () => {
+  it("renders a dedicated settings page", () => {
+    const source = readFileSync("src/app/(app)/settings/page.tsx", "utf8")
+
+    expect(source).toContain("SettingsPage")
+    expect(source).toContain("HouseholdNameForm")
+    expect(source).toContain("getActiveHouseholdContext")
+    expect(source).not.toContain('redirect("/dashboard")')
   })
 })

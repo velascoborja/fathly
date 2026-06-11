@@ -1,6 +1,13 @@
 import Link from "next/link"
 import type React from "react"
-import { ArrowLeftIcon, CalendarDaysIcon, CircleDollarSignIcon, HomeIcon, PiggyBankIcon, SparklesIcon } from "lucide-react"
+import {
+  ActivityIcon,
+  AlertTriangleIcon,
+  ArrowLeftIcon,
+  CircleDollarSignIcon,
+  PlugZapIcon,
+  ZapIcon,
+} from "lucide-react"
 
 import { AppIcon } from "@/components/app/app-icon"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
@@ -10,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatCurrency } from "@/lib/budget/format"
-import { calculateBudgetSummary, groupCommitmentsByCategory, monthlyAmountCents } from "@/lib/budget/math"
+import { calculateBudgetSummary, getCommitmentBreakdown } from "@/lib/budget/math"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 
 const demoDeposits = [
@@ -23,8 +30,13 @@ const demoCommitments = [
   { id: "mortgage", name: "Hipoteca", category: "Casa", amountCents: 111_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
   { id: "groceries", name: "Compra", category: "Casa", amountCents: 60_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
   { id: "cleaning", name: "Limpieza", category: "Casa", amountCents: 46_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "childcare", name: "Guarderia", category: "Hijos", amountCents: 34_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "utilities", name: "Gas / Agua / Luz", category: "Suministros", amountCents: 19_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "childcare", name: "Guarderia Teresa", category: "Hijos", amountCents: 17_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "school", name: "Colegio Martin", category: "Hijos", amountCents: 20_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "fuel", name: "Gasolina RAV4", category: "Transporte", amountCents: 20_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "leisure", name: "Ocio", category: "Casa", amountCents: 15_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "gas", name: "Gas", category: "Suministros", amountCents: 7_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "water", name: "Agua", category: "Suministros", amountCents: 3_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "power", name: "Luz", category: "Suministros", amountCents: 9_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
   { id: "insurance", name: "Seguro hogar + IBI", category: "Prorrateados", amountCents: 185_500, frequency: "ANNUAL" as const, status: "ACTIVE" as const, type: "BILL" as const },
   { id: "savings", name: "Ahorro familiar", category: "Ahorro", amountCents: 30_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "SAVINGS" as const },
 ]
@@ -32,13 +44,11 @@ const demoCommitments = [
 export default async function DemoPage() {
   const [dictionary, locale] = await Promise.all([getServerDictionary(), getLocale()])
   const summary = calculateBudgetSummary(demoDeposits, demoCommitments)
-  const grouped = Object.entries(groupCommitmentsByCategory(demoCommitments))
-    .map(([category, amountCents]) => ({ category, amountCents }))
-    .sort((a, b) => b.amountCents - a.amountCents)
+  const outflows = getCommitmentBreakdown(demoCommitments)
 
   return (
     <main className="min-h-svh">
-      <header className="sticky top-0 z-30 border-b border-primary/20 bg-primary-bg/95 shadow-[0_2px_8px_rgba(0,0,0,0.08)] backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 md:px-6">
           <Link className="flex items-center gap-3" href="/auth/signin">
             <AppIcon className="size-11 fathly-color-shadow" />
@@ -52,126 +62,50 @@ export default async function DemoPage() {
       </header>
 
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-5 md:px-6 md:py-8">
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          <div className="fathly-hero flex min-h-[420px] flex-col justify-between p-6 md:p-8">
-            <div className="flex flex-col gap-5">
-              <div>
-                <Badge className="mb-4 w-fit bg-cream text-primary-dark shadow-[0_4px_20px_rgba(255,210,63,0.35)] hover:bg-cream">Mock demo</Badge>
-                <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-[0.03em] drop-shadow-sm md:text-6xl">
-                  {dictionary.dashboard.title}
-                </h1>
-                <p className="mt-2 max-w-2xl text-base font-medium text-white/85 md:text-lg">{dictionary.dashboard.subtitle}</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <HeroMetric label={dictionary.dashboard.deposits} value={formatCurrency(summary.monthlyDepositsCents, locale)} />
-                <HeroMetric label={dictionary.dashboard.commitments} value={formatCurrency(summary.monthlyCommitmentsCents, locale)} />
-                <HeroMetric label={dictionary.dashboard.annual} value={formatCurrency(summary.annualProratedCents, locale)} />
-                <HeroMetric label={dictionary.dashboard.savings} value={formatCurrency(summary.savingsCents, locale)} />
-              </div>
-            </div>
-            <div className="mt-8 rounded-3xl border border-white/35 border-l-[6px] border-l-accent bg-white/18 p-5 shadow-[0_4px_20px_rgba(255,210,63,0.22)] backdrop-blur">
-              <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-accent-light">
-                {summary.coverageCents >= 0 ? dictionary.dashboard.covered : dictionary.dashboard.shortBy}
-              </p>
-              <p className="mt-1 font-heading text-4xl font-extrabold md:text-5xl">
-                {formatCurrency(Math.abs(summary.coverageCents), locale)}
-              </p>
-              <Progress className="mt-5 [&_[data-slot=progress-indicator]]:bg-accent [&_[data-slot=progress-track]]:h-2 [&_[data-slot=progress-track]]:bg-white/25" value={summary.coverageRatio * 100} />
-            </div>
+        <section className="fathly-hero flex flex-col gap-6 p-5 md:p-6">
+          <div className="flex flex-col gap-2">
+            <Badge className="w-fit border border-primary/25 bg-muted text-primary hover:bg-muted">Mock demo</Badge>
+            <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">{dictionary.dashboard.title}</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">{dictionary.dashboard.subtitle}</p>
           </div>
 
-          <div className="grid gap-5">
-            <Card className="fathly-card border-l-accent bg-[linear-gradient(135deg,#ffffff_0%,#fff8e7_100%)] shadow-[0_4px_20px_rgba(255,210,63,0.24)]">
+          <DemoSnapshot dictionary={dictionary} locale={locale} summary={summary} />
+
+          <div className="grid items-start gap-4 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.9fr)]">
+            <div className="grid gap-4">
+              <Card className="fathly-card">
+                <CardHeader>
+                  <CardTitle className="text-2xl">{dictionary.dashboard.breakdown}</CardTitle>
+                  <CardDescription>{dictionary.dashboard.liveUpdateHint}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CommitmentChart
+                    data={outflows.map((outflow) => ({
+                      amountCents: outflow.monthlyAmountCents,
+                      id: outflow.id,
+                      name: outflow.name,
+                    }))}
+                    locale={locale}
+                  />
+                </CardContent>
+              </Card>
+              <DemoIncomePanel dictionary={dictionary} locale={locale} />
+            </div>
+
+            <Card className="fathly-card">
               <CardHeader>
-                <CardTitle className="font-heading text-2xl font-bold">{dictionary.dashboard.commandCenter}</CardTitle>
-                <CardDescription>{dictionary.dashboard.commandBody}</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <Button disabled>{dictionary.actions.addDeposit}</Button>
-                <Button disabled variant="secondary">{dictionary.actions.addBill}</Button>
-                <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
-                  <Button disabled size="sm" variant="outline">{dictionary.actions.addMonthlyBill}</Button>
-                  <Button disabled size="sm" variant="outline">{dictionary.actions.addAnnualCost}</Button>
-                  <Button disabled size="sm" variant="outline">{dictionary.actions.addSavings}</Button>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-2xl">{dictionary.dashboard.monthOutflows}</CardTitle>
+                    <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
+                  </div>
+                  <Button disabled>{dictionary.actions.addBill}</Button>
                 </div>
-              </CardContent>
-            </Card>
-            <Card className="fathly-card border-l-sky-blue">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-heading text-2xl font-bold">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-sky-blue/15 text-sky-blue">
-                    <SparklesIcon className="size-5" />
-                  </span>
-                  {dictionary.dashboard.breakdown}
-                </CardTitle>
               </CardHeader>
               <CardContent>
-                <CommitmentChart data={grouped} locale={locale} />
+                <DemoOutflowTable dictionary={dictionary} locale={locale} rows={outflows} />
               </CardContent>
             </Card>
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-4">
-          <div>
-            <h2 className="fathly-section-title text-3xl">{dictionary.dashboard.budgetData}</h2>
-            <p className="mt-2 text-muted-foreground">{dictionary.dashboard.budgetDataBody}</p>
-          </div>
-          <div className="grid gap-4 xl:grid-cols-2">
-            <DemoTable
-              icon={<CircleDollarSignIcon className="size-5 text-primary" />}
-              rows={demoDeposits.map((deposit) => ({
-                amount: deposit.amountCents,
-                category: deposit.notes,
-                frequency: dictionary.forms.monthly,
-                id: deposit.id,
-                name: deposit.name,
-              }))}
-              title={dictionary.nav.deposits}
-              locale={locale}
-            />
-            <DemoTable
-              icon={<HomeIcon className="size-5 text-secondary" />}
-              rows={demoCommitments
-                .filter((commitment) => commitment.type === "BILL" && commitment.frequency === "MONTHLY")
-                .map((commitment) => ({
-                  amount: monthlyAmountCents(commitment),
-                  category: commitment.category,
-                  frequency: dictionary.forms.monthly,
-                  id: commitment.id,
-                  name: commitment.name,
-                }))}
-              title={dictionary.nav.monthlyBills}
-              locale={locale}
-            />
-            <DemoTable
-              icon={<CalendarDaysIcon className="size-5 text-warning" />}
-              rows={demoCommitments
-                .filter((commitment) => commitment.type === "BILL" && commitment.frequency === "ANNUAL")
-                .map((commitment) => ({
-                  amount: monthlyAmountCents(commitment),
-                  category: commitment.category,
-                  frequency: dictionary.forms.annual,
-                  id: commitment.id,
-                  name: commitment.name,
-                }))}
-              title={dictionary.nav.annualCosts}
-              locale={locale}
-            />
-            <DemoTable
-              icon={<PiggyBankIcon className="size-5 text-success" />}
-              rows={demoCommitments
-                .filter((commitment) => commitment.type === "SAVINGS")
-                .map((commitment) => ({
-                  amount: monthlyAmountCents(commitment),
-                  category: commitment.category,
-                  frequency: dictionary.forms.monthly,
-                  id: commitment.id,
-                  name: commitment.name,
-                }))}
-              title={dictionary.nav.savings}
-              locale={locale}
-            />
           </div>
         </section>
       </div>
@@ -179,56 +113,150 @@ export default async function DemoPage() {
   )
 }
 
-function DemoTable({
-  icon,
+function DemoSnapshot({
+  dictionary,
   locale,
-  rows,
-  title,
+  summary,
 }: {
-  icon: React.ReactNode
+  dictionary: Awaited<ReturnType<typeof getServerDictionary>>
   locale: "es" | "en"
-  rows: { amount: number; category: string | null; frequency: string; id: string; name: string }[]
-  title: string
+  summary: ReturnType<typeof calculateBudgetSummary>
 }) {
+  const short = summary.coverageCents < 0
+
   return (
-    <Card className="fathly-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {icon}
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Frequency</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium">{row.name}</TableCell>
-                <TableCell>{row.category}</TableCell>
-                <TableCell>{row.frequency}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(row.amount, locale)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+    <Card className={`fathly-card ${short ? "fathly-alert" : "border-secondary/50 bg-[#f1feff]"}`}>
+      <CardContent className="grid gap-6 p-6 lg:grid-cols-[1fr_1.05fr_1fr] lg:items-center">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <DemoMetric icon={<PlugZapIcon className="size-5" />} label={dictionary.dashboard.deposits} value={formatCurrency(summary.monthlyDepositsCents, locale)} />
+          <DemoMetric icon={<ActivityIcon className="size-5" />} label={dictionary.dashboard.monthOutflows} tone="alert" value={formatCurrency(summary.monthlyCommitmentsCents, locale)} />
+        </div>
+        <div className="border-y border-border py-5 text-center lg:border-x lg:border-y-0 lg:px-8 lg:py-0">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{dictionary.dashboard.marginRemaining}</p>
+          <p className="mt-2 font-mono text-5xl font-bold leading-none text-primary md:text-6xl">
+            {formatCurrency(Math.abs(summary.coverageCents), locale)}
+          </p>
+          <p className={`mt-3 font-semibold ${short ? "text-destructive" : "text-success"}`}>
+            {short ? dictionary.dashboard.shortBy : dictionary.dashboard.goodMargin}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{dictionary.dashboard.remaining}</p>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            {short ? <AlertTriangleIcon className="size-5 text-destructive" /> : <ZapIcon className="size-5 text-primary" />}
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{dictionary.dashboard.coverage}</p>
+          </div>
+          <div className="flex items-end gap-2">
+            <span className="font-mono text-3xl font-bold text-primary">{Math.round(summary.coverageRatio * 100)}%</span>
+            <span className="pb-1 text-sm text-muted-foreground">{dictionary.dashboard.covered}</span>
+          </div>
+          <Progress className="[&_[data-slot=progress-indicator]]:bg-primary [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:bg-border" value={summary.coverageRatio * 100} />
+          <p className="text-sm text-muted-foreground">
+            {dictionary.dashboard.annual}: {formatCurrency(summary.annualProratedCents, locale)} · {dictionary.dashboard.savings}: {formatCurrency(summary.savingsCents, locale)}
+          </p>
+        </div>
       </CardContent>
     </Card>
   )
 }
 
-function HeroMetric({ label, value }: { label: string; value: string }) {
+function DemoMetric({
+  icon,
+  label,
+  tone = "data",
+  value,
+}: {
+  icon: React.ReactNode
+  label: string
+  tone?: "data" | "alert"
+  value: string
+}) {
   return (
-    <div className="rounded-3xl border border-white/30 border-l-[6px] border-l-accent bg-cream/18 p-4 shadow-[0_4px_20px_rgba(43,168,162,0.18)] backdrop-blur">
-      <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-accent-light">{label}</p>
-      <p className="mt-2 font-heading text-2xl font-extrabold">{value}</p>
+    <div className="flex items-center gap-4">
+      <span className={`flex size-12 items-center justify-center rounded-full ${tone === "alert" ? "bg-[#fff1ef] text-destructive" : "bg-secondary/15 text-secondary-foreground"}`}>
+        {icon}
+      </span>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+        <p className="mt-1 font-mono text-3xl font-bold">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+function DemoIncomePanel({ dictionary, locale }: { dictionary: Awaited<ReturnType<typeof getServerDictionary>>; locale: "es" | "en" }) {
+  const totalCents = demoDeposits.reduce((sum, deposit) => sum + deposit.amountCents, 0)
+
+  return (
+    <Card className="fathly-card">
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <CircleDollarSignIcon className="size-5 text-primary" />
+              {dictionary.nav.deposits}
+            </CardTitle>
+            <CardDescription>{dictionary.dashboard.incomeBody}</CardDescription>
+          </div>
+          <Button disabled>{dictionary.actions.addDeposit}</Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="divide-y divide-border">
+          {demoDeposits.map((deposit) => (
+            <div className="grid grid-cols-[1fr_auto] items-center gap-3 py-3" key={deposit.id}>
+              <div className="min-w-0">
+                <p className="truncate font-medium">{deposit.name}</p>
+                <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>
+              </div>
+              <p className="font-mono font-semibold">{formatCurrency(deposit.amountCents, locale)}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-between border-t border-border pt-4">
+          <span className="font-semibold">{dictionary.dashboard.incomeTotal}</span>
+          <span className="font-mono text-lg font-bold">{formatCurrency(totalCents, locale)}</span>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function DemoOutflowTable({
+  dictionary,
+  locale,
+  rows,
+}: {
+  dictionary: Awaited<ReturnType<typeof getServerDictionary>>
+  locale: "es" | "en"
+  rows: (typeof demoCommitments[number] & { monthlyAmountCents: number })[]
+}) {
+  return (
+    <div className="max-h-[620px] overflow-auto pr-1">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{dictionary.forms.name}</TableHead>
+            <TableHead className="hidden md:table-cell">{dictionary.forms.category}</TableHead>
+            <TableHead className="hidden sm:table-cell">{dictionary.forms.frequency}</TableHead>
+            <TableHead className="text-right">{dictionary.forms.amount}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell className="font-medium">{row.name}</TableCell>
+              <TableCell className="hidden text-muted-foreground md:table-cell">{row.category}</TableCell>
+              <TableCell className="hidden text-muted-foreground sm:table-cell">
+                {row.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+              </TableCell>
+              <TableCell className="text-right font-mono font-semibold">
+                {formatCurrency(row.monthlyAmountCents, locale)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }
