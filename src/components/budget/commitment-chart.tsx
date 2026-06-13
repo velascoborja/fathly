@@ -63,11 +63,11 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
 
   return (
     <div className="grid min-h-[320px] gap-5">
-      <div className="relative min-h-[240px]">
+      <div className="relative min-h-[280px]">
         <PieChart
           margin={{ bottom: 8, left: 8, right: 8, top: 8 }}
           responsive
-          style={{ height: "100%", minHeight: 240, width: "100%" }}
+          style={{ height: "100%", minHeight: 280, width: "100%" }}
         >
           <Tooltip
             contentStyle={{
@@ -84,10 +84,10 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
             cy="50%"
             data={chartData}
             dataKey="amount"
-            innerRadius="52%"
+            innerRadius="60%"
             isAnimationActive={false}
             nameKey="name"
-            outerRadius="86%"
+            outerRadius="98%"
             paddingAngle={2}
             stroke="#FFFFFF"
             strokeWidth={3}

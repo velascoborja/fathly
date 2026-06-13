@@ -106,8 +106,8 @@ export default async function DemoPage() {
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-2xl text-destructive">
-                      <ActivityIcon className="size-5" />
+                    <CardTitle className="flex items-center gap-2 text-2xl">
+                      <ActivityIcon className="size-5 text-destructive" />
                       {dictionary.dashboard.monthOutflows}
                     </CardTitle>
                     <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
@@ -229,8 +229,8 @@ function DemoIncomePanel({ dictionary, locale }: { dictionary: Awaited<ReturnTyp
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2 text-2xl text-success">
-              <CircleDollarSignIcon className="size-5" />
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <CircleDollarSignIcon className="size-5 text-success" />
               {dictionary.nav.deposits}
             </CardTitle>
             <CardDescription>{dictionary.dashboard.incomeBody}</CardDescription>
@@ -241,12 +241,12 @@ function DemoIncomePanel({ dictionary, locale }: { dictionary: Awaited<ReturnTyp
       <CardContent className="space-y-4">
         <div className="divide-y divide-border">
           {sortedDeposits.map((deposit) => (
-            <div className="grid grid-cols-[1fr_auto] items-center gap-3 py-3" key={deposit.id}>
+            <div className="grid grid-cols-[1fr_auto] items-center gap-3 px-2 py-3 -mx-2 transition-colors hover:bg-muted" key={deposit.id}>
               <div className="min-w-0">
                 <p className="truncate font-medium">{deposit.name}</p>
                 <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>
               </div>
-              <p className="font-mono font-semibold text-success">{formatWholeCurrency(deposit.amountCents, locale)}</p>
+              <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
             </div>
           ))}
         </div>
@@ -294,7 +294,7 @@ function DemoOutflowTable({
                   <TableCell className="pl-6 font-medium">
                     <DemoCommitmentName row={row} />
                   </TableCell>
-                  <TableCell className="w-28 pr-1 text-right font-mono font-semibold text-destructive">
+                  <TableCell className="w-28 pr-1 text-right font-mono font-semibold">
                     {formatWholeCurrency(row.monthlyAmountCents, locale)}
                   </TableCell>
                 </TableRow>

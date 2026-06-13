@@ -21,7 +21,6 @@ export default async function SettingsPage() {
           </span>
           {dictionary.nav.settings}
         </h1>
-        <p className="mt-2 text-muted-foreground">{dictionary.settings.householdCardDescription}</p>
       </div>
 
       <Card className="fathly-card border-primary/40">
