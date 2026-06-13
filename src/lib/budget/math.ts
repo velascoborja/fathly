@@ -17,8 +17,25 @@ export type BudgetCommitmentBreakdown<T extends BudgetCommitment> = T & {
   monthlyAmountCents: number
 }
 
+export const DEFAULT_LOW_MONTHLY_MARGIN_BASIS_POINTS = 500
+
 export function monthlyAmountCents(item: Pick<BudgetCommitment, "amountCents" | "frequency">) {
   return item.frequency === "ANNUAL" ? Math.round(item.amountCents / 12) : item.amountCents
+}
+
+export function getLowMonthlyMarginCents(
+  monthlyDepositsCents: number,
+  lowMonthlyMarginBasisPoints = DEFAULT_LOW_MONTHLY_MARGIN_BASIS_POINTS
+) {
+  return Math.round(monthlyDepositsCents * (lowMonthlyMarginBasisPoints / 10_000))
+}
+
+export function formatLowMonthlyMarginPercent(lowMonthlyMarginBasisPoints: number) {
+  const percentage = lowMonthlyMarginBasisPoints / 100
+
+  return Number.isInteger(percentage)
+    ? `${percentage}%`
+    : `${percentage.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}%`
 }
 
 export function calculateBudgetSummary(deposits: BudgetDeposit[], commitments: BudgetCommitment[]) {
@@ -48,6 +65,27 @@ export function calculateBudgetSummary(deposits: BudgetDeposit[], commitments: B
         ? 0
         : Math.min(monthlyCommitmentsCents / monthlyDepositsCents, 1),
   }
+}
+
+export function getMonthlyResultTone({
+  coverageCents,
+  lowMonthlyMarginBasisPoints = DEFAULT_LOW_MONTHLY_MARGIN_BASIS_POINTS,
+  monthlyDepositsCents,
+}: Pick<ReturnType<typeof calculateBudgetSummary>, "coverageCents" | "monthlyDepositsCents"> & {
+  lowMonthlyMarginBasisPoints?: number
+}) {
+  if (coverageCents < 0) {
+    return "shortfall"
+  }
+
+  if (
+    monthlyDepositsCents > 0 &&
+    coverageCents <= getLowMonthlyMarginCents(monthlyDepositsCents, lowMonthlyMarginBasisPoints)
+  ) {
+    return "warning"
+  }
+
+  return "surplus"
 }
 
 export function groupCommitmentsByCategory(commitments: BudgetCommitment[]) {

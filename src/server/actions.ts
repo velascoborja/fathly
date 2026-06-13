@@ -6,8 +6,9 @@ import { redirect } from "next/navigation"
 
 import { signIn, signOut } from "@/auth"
 import { centsFromDecimalInput } from "@/lib/budget/format"
+import { inferCommitmentIcon } from "@/lib/budget/commitment-icons"
 import { isLocale } from "@/lib/i18n/dictionaries"
-import { commitmentSchema, depositSchema } from "@/lib/validations/budget"
+import { commitmentSchema, depositSchema, planSettingsSchema } from "@/lib/validations/budget"
 import { householdNameSchema } from "@/lib/validations/household"
 import { prisma } from "@/lib/prisma"
 import { getActiveHouseholdContext } from "@/server/household"
@@ -59,6 +60,31 @@ export async function updateHouseholdName(formData: FormData) {
 
   revalidatePath("/settings")
   revalidatePath("/", "layout")
+}
+
+export async function updatePlanSettings(formData: FormData) {
+  const parsed = planSettingsSchema.safeParse({
+    lowMonthlyMarginPercent: formData.get("lowMonthlyMarginPercent"),
+  })
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid plan settings.")
+  }
+
+  const context = await getActiveHouseholdContext()
+
+  await prisma.budgetPlan.update({
+    where: {
+      id: context.plan.id,
+      householdId: context.household.id,
+    },
+    data: {
+      lowMonthlyMarginBasisPoints: Math.round(parsed.data.lowMonthlyMarginPercent * 100),
+    },
+  })
+
+  revalidatePath("/settings")
+  revalidateBudgetPaths()
 }
 
 export async function createDeposit(formData: FormData) {
@@ -135,6 +161,7 @@ export async function createCommitment(formData: FormData) {
     name: formData.get("name"),
     amount: formData.get("amount"),
     category: formData.get("category"),
+    icon: formData.get("icon") || inferCommitmentIcon(String(formData.get("name") ?? "")),
     frequency: formData.get("frequency"),
     type: formData.get("type"),
     notes: formData.get("notes") || undefined,
@@ -153,6 +180,7 @@ export async function createCommitment(formData: FormData) {
       name: parsed.data.name,
       amountCents: centsFromDecimalInput(parsed.data.amount),
       category: parsed.data.category,
+      icon: parsed.data.icon,
       frequency: parsed.data.frequency,
       type: parsed.data.type,
       notes: parsed.data.notes,
@@ -167,6 +195,7 @@ export async function updateCommitment(id: string, formData: FormData) {
     name: formData.get("name"),
     amount: formData.get("amount"),
     category: formData.get("category"),
+    icon: formData.get("icon") || inferCommitmentIcon(String(formData.get("name") ?? "")),
     frequency: formData.get("frequency"),
     type: formData.get("type"),
     notes: formData.get("notes") || undefined,
@@ -188,6 +217,7 @@ export async function updateCommitment(id: string, formData: FormData) {
       name: parsed.data.name,
       amountCents: centsFromDecimalInput(parsed.data.amount),
       category: parsed.data.category,
+      icon: parsed.data.icon,
       frequency: parsed.data.frequency,
       type: parsed.data.type,
       notes: parsed.data.notes,

@@ -107,17 +107,18 @@ model HouseholdMember {
 }
 
 model BudgetPlan {
-  id          String       @id @default(cuid())
-  householdId String
-  name        String
-  status      PlanStatus   @default(ACTIVE)
-  startsOn    DateTime?
-  endsOn      DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  household   Household    @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  deposits    Deposit[]
-  commitments Commitment[]
+  id                            String       @id @default(cuid())
+  householdId                   String
+  name                          String
+  status                        PlanStatus   @default(ACTIVE)
+  lowMonthlyMarginBasisPoints   Int          @default(500)
+  startsOn                      DateTime?
+  endsOn                        DateTime?
+  createdAt                     DateTime     @default(now())
+  updatedAt                     DateTime     @updatedAt
+  household                     Household    @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  deposits                      Deposit[]
+  commitments                   Commitment[]
 
   @@index([householdId, status])
 }
@@ -145,6 +146,7 @@ model Commitment {
   planId      String
   name        String
   category    String
+  icon        String              @default("receipt")
   type        CommitmentType      @default(BILL)
   frequency   Frequency           @default(MONTHLY)
   amountCents Int

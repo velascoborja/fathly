@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
 
 import { formatCurrency, formatWholeCurrency } from "@/lib/budget/format"
@@ -18,6 +19,8 @@ const CHART_COLORS = [
   "#BDA7FF",
 ]
 
+const COLLAPSED_LEGEND_ITEMS = 5
+
 type CommitmentChartProps = {
   data: {
     id: string
@@ -29,13 +32,26 @@ type CommitmentChartProps = {
 }
 
 export function CommitmentChart({ data, locale, wholeCurrency = false }: CommitmentChartProps) {
+  const [isLegendExpanded, setIsLegendExpanded] = useState(false)
   const formatAmount = wholeCurrency ? formatWholeCurrency : formatCurrency
-  const chartData = data.map((item, index) => ({
-    ...item,
-    amount: item.amountCents / 100,
-    fill: CHART_COLORS[index % CHART_COLORS.length],
-  }))
+  const chartData = [...data]
+    .sort((firstItem, secondItem) => secondItem.amountCents - firstItem.amountCents)
+    .map((item, index) => ({
+      ...item,
+      amount: item.amountCents / 100,
+      fill: CHART_COLORS[index % CHART_COLORS.length],
+    }))
   const totalCents = data.reduce((sum, item) => sum + item.amountCents, 0)
+  const hasCollapsibleLegend = chartData.length > COLLAPSED_LEGEND_ITEMS
+  const visibleLegendItems = isLegendExpanded ? chartData : chartData.slice(0, COLLAPSED_LEGEND_ITEMS)
+  const hiddenLegendItems = chartData.length - COLLAPSED_LEGEND_ITEMS
+  const legendToggleLabel = isLegendExpanded
+    ? locale === "en"
+      ? "Show less"
+      : "Mostrar menos"
+    : locale === "en"
+      ? `Show ${hiddenLegendItems} more`
+      : `Mostrar ${hiddenLegendItems} más`
 
   if (!chartData.length) {
     return (
@@ -60,7 +76,8 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
               borderRadius: 12,
               color: "#2D2D2D",
             }}
-            formatter={(value) => [formatAmount(Number(value) * 100, locale), ""]}
+            formatter={(value, name) => [formatAmount(Number(value) * 100, locale), name]}
+            wrapperStyle={{ zIndex: 20 }}
           />
           <Pie
             cx="50%"
@@ -89,13 +106,23 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-        {chartData.map((item) => (
+        {visibleLegendItems.map((item) => (
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm" key={item.id}>
             <span className="size-3 rounded-full" style={{ backgroundColor: item.fill }} />
             <span className="min-w-0 truncate font-medium">{item.name}</span>
             <span className="font-mono text-xs text-muted-foreground">{formatAmount(item.amountCents, locale)}</span>
           </div>
         ))}
+        {hasCollapsibleLegend ? (
+          <button
+            aria-expanded={isLegendExpanded}
+            className="min-h-9 rounded-full border border-primary/20 px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none sm:col-span-2 lg:col-span-1"
+            onClick={() => setIsLegendExpanded((currentValue) => !currentValue)}
+            type="button"
+          >
+            {legendToggleLabel}
+          </button>
+        ) : null}
       </div>
     </div>
   )

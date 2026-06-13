@@ -7,16 +7,23 @@ import {
 } from "lucide-react"
 import type { Commitment, Deposit } from "@prisma/client"
 import { Fragment } from "react"
-import type React from "react"
 
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
+import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
-import { DeleteButton } from "@/components/budget/delete-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Progress } from "@/components/ui/progress"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { calculateBudgetSummary, getCommitmentBreakdown, groupCommitmentsForTable } from "@/lib/budget/math"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import {
+  calculateBudgetSummary,
+  formatLowMonthlyMarginPercent,
+  getCommitmentBreakdown,
+  getLowMonthlyMarginCents,
+  getMonthlyResultTone,
+  groupCommitmentsForTable,
+} from "@/lib/budget/math"
+import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { formatBudgetUsagePercent, formatWholeCurrency } from "@/lib/budget/format"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 import {
@@ -24,6 +31,8 @@ import {
   createDeposit,
   deleteCommitment,
   deleteDeposit,
+  updateCommitment,
+  updateDeposit,
 } from "@/server/actions"
 import { getBudgetData } from "@/server/household"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
@@ -43,7 +52,13 @@ export default async function DashboardPage() {
       <section className="fathly-hero flex flex-col gap-6 p-5 md:p-6">
         <DashboardHeader dictionary={dictionary} />
 
-        <MonthlySnapshot dictionary={dictionary} hasData={hasData} locale={locale} summary={summary} />
+        <MonthlySnapshot
+          dictionary={dictionary}
+          hasData={hasData}
+          locale={locale}
+          lowMonthlyMarginBasisPoints={data.plan.lowMonthlyMarginBasisPoints}
+          summary={summary}
+        />
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.9fr)]">
           <div className="grid gap-4">
@@ -116,28 +131,50 @@ function MonthlySnapshot({
   dictionary,
   hasData,
   locale,
+  lowMonthlyMarginBasisPoints,
   summary,
 }: {
   dictionary: Dictionary
   hasData: boolean
   locale: Locale
+  lowMonthlyMarginBasisPoints: number
   summary: ReturnType<typeof calculateBudgetSummary>
 }) {
-  const short = summary.coverageCents < 0
-  const status = !hasData ? dictionary.dashboard.emptyTitle : short ? dictionary.dashboard.shortBy : dictionary.dashboard.goodMargin
+  const resultTone = hasData ? getMonthlyResultTone({ ...summary, lowMonthlyMarginBasisPoints }) : "surplus"
+  const short = resultTone === "shortfall"
+  const resultAmount = hasData
+    ? `${short ? "-" : "+"}${formatWholeCurrency(Math.abs(summary.coverageCents), locale)}`
+    : formatWholeCurrency(0, locale)
+  const resultDescription = !hasData
+    ? dictionary.dashboard.monthlyResultEmpty
+    : short
+      ? dictionary.dashboard.monthlyResultShortfall
+      : dictionary.dashboard.monthlyResultSurplus
+
+  const cardToneClass =
+    resultTone === "shortfall"
+      ? "fathly-alert"
+      : resultTone === "warning"
+        ? "border-warning/50 bg-[#fff6ed]"
+        : "border-secondary/50 bg-[#f1feff]"
+  const resultTextClass =
+    resultTone === "shortfall" ? "text-destructive" : resultTone === "warning" ? "text-warning" : "text-success"
+  const lowMarginPercent = formatLowMonthlyMarginPercent(lowMonthlyMarginBasisPoints)
+  const lowMarginAmount = formatWholeCurrency(
+    getLowMonthlyMarginCents(summary.monthlyDepositsCents, lowMonthlyMarginBasisPoints),
+    locale
+  )
 
   return (
-    <Card className={`fathly-card ${short ? "fathly-alert" : "border-secondary/50 bg-[#f1feff]"}`}>
+    <Card className={`fathly-card ${cardToneClass}`}>
       <CardContent className="grid gap-6 p-6 lg:grid-cols-3 lg:items-center">
         <div className="grid gap-4 sm:grid-cols-2">
           <SnapshotMetric
-            icon={<PlugZapIcon className="size-5" />}
             label={dictionary.dashboard.deposits}
             tone="income"
             value={formatWholeCurrency(summary.monthlyDepositsCents, locale)}
           />
           <SnapshotMetric
-            icon={<ActivityIcon className="size-5" />}
             label={dictionary.dashboard.monthOutflows}
             tone="expense"
             value={formatWholeCurrency(summary.monthlyCommitmentsCents, locale)}
@@ -145,17 +182,27 @@ function MonthlySnapshot({
         </div>
 
         <div className="border-y border-border py-5 text-center lg:border-x lg:border-y-0 lg:px-8 lg:py-0">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{dictionary.dashboard.marginRemaining}</p>
-          <p className="mt-2 font-mono text-5xl font-bold leading-none text-primary md:text-6xl">
-            {formatWholeCurrency(Math.abs(summary.coverageCents), locale)}
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{dictionary.dashboard.monthlyResult}</p>
+          <p className={`mt-2 font-mono text-5xl font-bold leading-none md:text-6xl ${resultTextClass}`}>
+            {resultAmount}
           </p>
-          <p className={`mt-3 font-semibold ${short ? "text-destructive" : "text-success"}`}>{status}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{dictionary.dashboard.remaining}</p>
+          <p className="mx-auto mt-3 max-w-48 text-sm font-medium leading-5 text-muted-foreground">{resultDescription}</p>
+          {resultTone === "warning" && (
+            <p className="mx-auto mt-2 w-fit rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs font-bold text-warning">
+              {dictionary.dashboard.monthlyResultLowMargin} {lowMarginPercent}: {lowMarginAmount}
+            </p>
+          )}
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            {short ? <AlertTriangleIcon className="size-5 text-destructive" /> : <ZapIcon className="size-5 text-primary" />}
+            {resultTone === "shortfall" ? (
+              <AlertTriangleIcon className="size-5 text-destructive" />
+            ) : resultTone === "warning" ? (
+              <AlertTriangleIcon className="size-5 text-warning" />
+            ) : (
+              <ZapIcon className="size-5 text-primary" />
+            )}
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{dictionary.dashboard.coverage}</p>
           </div>
           <div className="flex items-end gap-2">
@@ -177,16 +224,16 @@ function MonthlySnapshot({
 }
 
 function SnapshotMetric({
-  icon,
   label,
   tone = "income",
   value,
 }: {
-  icon: React.ReactNode
   label: string
   tone?: "income" | "expense"
   value: string
 }) {
+  const Icon = tone === "expense" ? ActivityIcon : PlugZapIcon
+
   return (
     <div className="flex items-center gap-4">
       <span
@@ -194,7 +241,7 @@ function SnapshotMetric({
           tone === "expense" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"
         }`}
       >
-        {icon}
+        <Icon className="size-5" />
       </span>
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground md:text-sm">{label}</p>
@@ -240,14 +287,29 @@ function IncomePanel({
             <p className="py-3 text-sm text-muted-foreground">{dictionary.dashboard.emptyBody}</p>
           ) : (
             sortedDeposits.map((deposit) => (
-              <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 py-3" key={deposit.id}>
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{deposit.name}</p>
-                  {deposit.notes && <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>}
+              <BudgetRowContextMenu
+                deleteAction={deleteDeposit.bind(null, deposit.id)}
+                dictionary={dictionary}
+                item={deposit}
+                key={deposit.id}
+                kind="deposit"
+                updateAction={updateDeposit.bind(null, deposit.id)}
+              >
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{deposit.name}</p>
+                    {deposit.notes && <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>}
+                  </div>
+                  <p className="font-mono font-semibold text-success">{formatWholeCurrency(deposit.amountCents, locale)}</p>
+                  <BudgetRowActions
+                    deleteAction={deleteDeposit.bind(null, deposit.id)}
+                    dictionary={dictionary}
+                    item={deposit}
+                    kind="deposit"
+                    updateAction={updateDeposit.bind(null, deposit.id)}
+                  />
                 </div>
-                <p className="font-mono font-semibold text-success">{formatWholeCurrency(deposit.amountCents, locale)}</p>
-                <DeleteButton action={deleteDeposit.bind(null, deposit.id)} label={`Delete ${deposit.name}`} />
-              </div>
+              </BudgetRowContextMenu>
             ))
           )}
         </div>
@@ -274,18 +336,10 @@ function OutflowTable({
   return (
     <div>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{dictionary.forms.name}</TableHead>
-            <TableHead className="hidden sm:table-cell">{dictionary.forms.frequency}</TableHead>
-            <TableHead className="text-right">{dictionary.forms.amount}</TableHead>
-            <TableHead className="w-12" />
-          </TableRow>
-        </TableHeader>
         <TableBody>
           {commitments.length === 0 ? (
             <TableRow>
-              <TableCell className="text-muted-foreground" colSpan={4}>
+              <TableCell className="text-muted-foreground" colSpan={3}>
                 {dictionary.dashboard.emptyBody}
               </TableCell>
             </TableRow>
@@ -293,27 +347,46 @@ function OutflowTable({
             categoryGroups.map((group) => (
               <Fragment key={group.category}>
                 <TableRow className="bg-muted hover:bg-muted">
-                  <TableCell className="font-semibold text-foreground" colSpan={2}>
+                  <TableCell className="font-semibold text-foreground">
                     {group.category}
                   </TableCell>
-                  <TableCell className="text-right font-mono font-semibold text-destructive">
-                    {formatWholeCurrency(group.totalCents, locale)}
+                  <TableCell className="w-44 pr-1 text-right">
+                    <span className="flex items-center justify-end gap-2 whitespace-nowrap">
+                      <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                        {dictionary.dashboard.categoryTotal}
+                      </span>
+                      <span className="font-mono font-semibold text-destructive">{formatWholeCurrency(group.totalCents, locale)}</span>
+                    </span>
                   </TableCell>
-                  <TableCell />
+                  <TableCell className="w-9 p-0" />
                 </TableRow>
                 {group.commitments.map((commitment) => (
-                  <TableRow key={commitment.id}>
-                    <TableCell className="pl-6 font-medium">{commitment.name}</TableCell>
-                    <TableCell className="hidden text-muted-foreground sm:table-cell">
-                      {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-destructive">
-                      {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
-                    </TableCell>
-                    <TableCell>
-                      <DeleteButton action={deleteCommitment.bind(null, commitment.id)} label={`Delete ${commitment.name}`} />
-                    </TableCell>
-                  </TableRow>
+                  <BudgetRowContextMenu
+                    deleteAction={deleteCommitment.bind(null, commitment.id)}
+                    dictionary={dictionary}
+                    item={commitment}
+                    key={commitment.id}
+                    kind="commitment"
+                    updateAction={updateCommitment.bind(null, commitment.id)}
+                  >
+                    <TableRow>
+                      <TableCell className="pl-6 font-medium">
+                        <CommitmentName commitment={commitment} />
+                      </TableCell>
+                      <TableCell className="w-28 pr-1 text-right font-mono font-semibold text-destructive">
+                        {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
+                      </TableCell>
+                      <TableCell className="w-9 p-0 text-right">
+                        <BudgetRowActions
+                          deleteAction={deleteCommitment.bind(null, commitment.id)}
+                          dictionary={dictionary}
+                          item={commitment}
+                          kind="commitment"
+                          updateAction={updateCommitment.bind(null, commitment.id)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  </BudgetRowContextMenu>
                 ))}
               </Fragment>
             ))
@@ -321,5 +394,19 @@ function OutflowTable({
         </TableBody>
       </Table>
     </div>
+  )
+}
+
+function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | "name"> }) {
+  const option = getCommitmentIconOption(commitment.icon)
+  const Icon = option.icon
+
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
+        <Icon className="size-4" />
+      </span>
+      <span className="truncate">{commitment.name}</span>
+    </span>
   )
 }

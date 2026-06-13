@@ -27,7 +27,7 @@ describe("Canva visual system", () => {
   it("uses bright rounded app-canvas surfaces across app chrome", () => {
     expect(card).toContain("rounded-[20px]")
     expect(card).toContain("shadow-[0_2px_8px_rgba(0,0,0,0.08)]")
-    expect(shell).toContain("fathly-ribbon")
+    expect(shell).toContain("fathly-wordmark")
     expect(dashboard).toContain("fathly-hero")
     expect(dashboard).toContain("bg-[#f1feff]")
   })

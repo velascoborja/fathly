@@ -1,0 +1,1 @@
+ALTER TABLE "BudgetPlan" ADD COLUMN "lowMonthlyMarginBasisPoints" INTEGER NOT NULL DEFAULT 500;

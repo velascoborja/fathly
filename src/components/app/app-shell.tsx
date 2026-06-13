@@ -40,10 +40,10 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur">
         <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-3 px-4 py-3 md:grid-cols-3 md:items-center md:px-6">
           <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
-            <AppIcon className="size-11 shrink-0 fathly-color-shadow" />
+            <AppIcon className="size-10 shrink-0" />
             <div className="min-w-0">
-              <p className="fathly-ribbon text-sm leading-tight">{dictionary.appName}</p>
-              <p className="mt-1 truncate text-sm font-semibold text-muted-foreground">{householdName}</p>
+              <p className="fathly-wordmark text-[0.68rem] leading-tight">{dictionary.appName}</p>
+              <p className="truncate text-lg font-bold leading-tight text-foreground">{householdName}</p>
             </div>
           </div>
 

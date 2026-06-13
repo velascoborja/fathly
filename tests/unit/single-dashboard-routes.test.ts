@@ -25,6 +25,8 @@ describe("settings route", () => {
 
     expect(source).toContain("SettingsPage")
     expect(source).toContain("HouseholdNameForm")
+    expect(source).toContain("PlanSettingsForm")
+    expect(source).toContain("updatePlanSettings")
     expect(source).toContain("getActiveHouseholdContext")
     expect(source).not.toContain('redirect("/dashboard")')
   })

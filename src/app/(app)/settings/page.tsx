@@ -1,9 +1,10 @@
 import { SettingsIcon } from "lucide-react"
 
 import { HouseholdNameForm } from "@/components/app/household-name-form"
+import { PlanSettingsForm } from "@/components/app/plan-settings-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getServerDictionary } from "@/lib/i18n/server"
-import { updateHouseholdName } from "@/server/actions"
+import { updateHouseholdName, updatePlanSettings } from "@/server/actions"
 import { getActiveHouseholdContext } from "@/server/household"
 
 export const dynamic = "force-dynamic"
@@ -33,6 +34,20 @@ export default async function SettingsPage() {
             action={updateHouseholdName}
             dictionary={dictionary}
             householdName={context.household.name}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="fathly-card border-warning/40">
+        <CardHeader>
+          <CardTitle className="text-2xl">{dictionary.settings.planSettingsCardTitle}</CardTitle>
+          <CardDescription>{dictionary.settings.planSettingsCardDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PlanSettingsForm
+            action={updatePlanSettings}
+            dictionary={dictionary}
+            lowMonthlyMarginBasisPoints={context.plan.lowMonthlyMarginBasisPoints}
           />
         </CardContent>
       </Card>

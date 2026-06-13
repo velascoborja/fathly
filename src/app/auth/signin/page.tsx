@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic"
 export default async function SignInPage() {
   const session = await auth()
   const dictionary = await getServerDictionary()
+  const showMockDemo = process.env.NODE_ENV === "development"
 
   if (session?.user) {
     redirect("/dashboard")
@@ -24,7 +25,7 @@ export default async function SignInPage() {
         <CardHeader className="gap-4 text-center">
           <AppIcon className="mx-auto size-14" size={56} />
           <div>
-            <CardTitle className="fathly-ribbon mx-auto text-lg">{dictionary.appName}</CardTitle>
+            <CardTitle className="fathly-wordmark justify-center text-lg">{dictionary.appName}</CardTitle>
             <CardDescription className="mt-2">{dictionary.dashboard.subtitle}</CardDescription>
           </div>
         </CardHeader>
@@ -33,9 +34,11 @@ export default async function SignInPage() {
             <Button className="w-full" size="lg" type="submit">
               {dictionary.actions.signIn}
             </Button>
-            <Button nativeButton={false} render={<Link href="/demo" />} className="w-full" size="lg" variant="outline">
-              View mock demo
-            </Button>
+            {showMockDemo ? (
+              <Button nativeButton={false} render={<Link href="/demo" />} className="w-full" size="lg" variant="outline">
+                View mock demo
+              </Button>
+            ) : null}
           </form>
         </CardContent>
       </Card>

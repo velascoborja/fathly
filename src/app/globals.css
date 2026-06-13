@@ -136,23 +136,8 @@
     @apply shadow-[0_8px_24px_rgba(123,47,190,0.18)];
   }
 
-  .fathly-ribbon {
-    @apply relative inline-flex items-center rounded-full bg-primary px-3 py-1 font-semibold tracking-normal text-primary-foreground shadow-[0_8px_24px_rgba(123,47,190,0.18)];
-  }
-
-  .fathly-ribbon::before,
-  .fathly-ribbon::after {
-    content: none;
-  }
-
-  .fathly-ribbon::before {
-    left: -0.7rem;
-    transform: skewY(18deg);
-  }
-
-  .fathly-ribbon::after {
-    right: -0.7rem;
-    transform: skewY(-18deg);
+  .fathly-wordmark {
+    @apply inline-flex items-center font-bold uppercase tracking-[0.12em] text-primary;
   }
 
   .fathly-hero {

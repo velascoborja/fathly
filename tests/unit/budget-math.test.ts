@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import {
   calculateBudgetSummary,
+  formatLowMonthlyMarginPercent,
   getCommitmentBreakdown,
+  getLowMonthlyMarginCents,
+  getMonthlyResultTone,
   groupCommitmentsByCategory,
   groupCommitmentsForTable,
   monthlyAmountCents,
@@ -33,6 +36,33 @@ describe("budget math", () => {
     expect(summary.annualProratedCents).toBe(10_000)
     expect(summary.savingsCents).toBe(20_000)
     expect(summary.coverageCents).toBe(219_000)
+  })
+
+  it("flags low positive monthly margin as warning", () => {
+    expect(getLowMonthlyMarginCents(100_000)).toBe(5_000)
+    expect(getMonthlyResultTone({ coverageCents: -1, monthlyDepositsCents: 100_000 })).toBe("shortfall")
+    expect(getMonthlyResultTone({ coverageCents: 5_000, monthlyDepositsCents: 100_000 })).toBe("warning")
+    expect(getMonthlyResultTone({ coverageCents: 5_001, monthlyDepositsCents: 100_000 })).toBe("surplus")
+  })
+
+  it("supports a configurable low monthly margin", () => {
+    expect(getLowMonthlyMarginCents(100_000, 750)).toBe(7_500)
+    expect(formatLowMonthlyMarginPercent(500)).toBe("5%")
+    expect(formatLowMonthlyMarginPercent(750)).toBe("7.5%")
+    expect(
+      getMonthlyResultTone({
+        coverageCents: 7_500,
+        lowMonthlyMarginBasisPoints: 750,
+        monthlyDepositsCents: 100_000,
+      })
+    ).toBe("warning")
+    expect(
+      getMonthlyResultTone({
+        coverageCents: 7_501,
+        lowMonthlyMarginBasisPoints: 750,
+        monthlyDepositsCents: 100_000,
+      })
+    ).toBe("surplus")
   })
 
   it("groups active commitments by category", () => {

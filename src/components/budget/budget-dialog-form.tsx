@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { type ReactElement, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2Icon, PlusIcon } from "lucide-react"
-import { type Resolver, useForm } from "react-hook-form"
+import { Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
+import { type Resolver, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -19,6 +20,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { commitmentIconOptions, inferCommitmentIcon } from "@/lib/budget/commitment-icons"
 import { commitmentSchema, depositSchema, type CommitmentInput, type DepositInput } from "@/lib/validations/budget"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
@@ -28,6 +30,12 @@ type DepositDialogProps = {
   kind: "deposit"
   dictionary: Dictionary
   action: (formData: FormData) => Promise<void>
+  defaults?: Partial<DepositInput>
+  deleteAction?: () => Promise<void>
+  mode?: "create" | "edit"
+  onOpenChange?: (open: boolean) => void
+  open?: boolean
+  trigger?: ReactElement | null
   triggerLabel?: string
 }
 
@@ -36,6 +44,11 @@ type CommitmentDialogProps = {
   dictionary: Dictionary
   action: (formData: FormData) => Promise<void>
   defaults?: Partial<CommitmentInput>
+  deleteAction?: () => Promise<void>
+  mode?: "create" | "edit"
+  onOpenChange?: (open: boolean) => void
+  open?: boolean
+  trigger?: ReactElement | null
   triggerLabel?: string
 }
 
@@ -46,14 +59,30 @@ export function BudgetDialogForm(props: BudgetDialogFormProps) {
 }
 
 function DepositDialog(props: DepositDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const mode = props.mode ?? "create"
+  const title = props.triggerLabel ?? (mode === "edit" ? props.dictionary.actions.editDeposit : props.dictionary.actions.addDeposit)
+  const defaultValues = useMemo(
+    () => ({
+      name: props.defaults?.name ?? "",
+      amount: props.defaults?.amount ?? 0,
+      notes: props.defaults?.notes ?? "",
+    }),
+    [props.defaults?.amount, props.defaults?.name, props.defaults?.notes]
+  )
   const form = useForm<DepositInput>({
     resolver: zodResolver(depositSchema) as unknown as Resolver<DepositInput>,
-    defaultValues: { name: "", amount: 0, notes: "" },
+    defaultValues,
   })
+  const open = props.open ?? uncontrolledOpen
+  const setOpen = props.onOpenChange ?? setUncontrolledOpen
 
-  const title = props.triggerLabel ?? props.dictionary.actions.addDeposit
+  useEffect(() => {
+    if (open) {
+      form.reset(defaultValues)
+    }
+  }, [defaultValues, form, open])
 
   function onSubmit(values: DepositInput) {
     const formData = new FormData()
@@ -66,9 +95,11 @@ function DepositDialog(props: DepositDialogProps) {
     startTransition(async () => {
       try {
         await props.action(formData)
-        form.reset()
+        if (mode === "create") {
+          form.reset()
+        }
         setOpen(false)
-        toast.success(title)
+        toast.success(mode === "edit" ? props.dictionary.actions.saved : title)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Could not save.")
       }
@@ -76,13 +107,16 @@ function DepositDialog(props: DepositDialogProps) {
   }
 
   const errors = form.formState.errors
+  const trigger = props.trigger === undefined ? <Button /> : props.trigger
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
-        <PlusIcon data-icon="inline-start" />
-        {title}
-      </DialogTrigger>
+      {trigger && (
+        <DialogTrigger render={trigger}>
+          <PlusIcon data-icon="inline-start" />
+          {title}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -112,10 +146,20 @@ function DepositDialog(props: DepositDialogProps) {
               <Textarea id={`${props.kind}-notes`} {...form.register("notes")} />
             </Field>
           </FieldGroup>
-          <Button className="self-end" disabled={isPending} type="submit">
-            {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
-            {props.dictionary.actions.save}
-          </Button>
+          <DialogFooter className="mx-0 mb-0">
+            {props.deleteAction && (
+              <DeleteConfirmation
+                action={props.deleteAction}
+                dictionary={props.dictionary}
+                itemName={form.getValues("name")}
+                onDeleted={() => setOpen(false)}
+              />
+            )}
+            <Button className="sm:ml-auto" disabled={isPending} type="submit">
+              {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
+              {props.dictionary.actions.save}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -123,20 +167,46 @@ function DepositDialog(props: DepositDialogProps) {
 }
 
 function CommitmentDialog(props: CommitmentDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const form = useForm<CommitmentInput>({
-    resolver: zodResolver(commitmentSchema) as unknown as Resolver<CommitmentInput>,
-    defaultValues: {
-      name: "",
-      amount: 0,
+  const manualIconOverrideRef = useRef(false)
+  const previousAutoNameRef = useRef("")
+  const mode = props.mode ?? "create"
+  const title = props.triggerLabel ?? (mode === "edit" ? props.dictionary.actions.editCommitment : props.dictionary.actions.addBill)
+  const defaultValues = useMemo(
+    () => ({
+      name: props.defaults?.name ?? "",
+      amount: props.defaults?.amount ?? 0,
       category: props.defaults?.category ?? "Casa",
+      icon: props.defaults?.icon ?? inferCommitmentIcon(props.defaults?.name ?? ""),
       frequency: props.defaults?.frequency ?? "MONTHLY",
       type: props.defaults?.type ?? "BILL",
-      notes: "",
-    },
+      notes: props.defaults?.notes ?? "",
+    }),
+    [
+      props.defaults?.amount,
+      props.defaults?.category,
+      props.defaults?.frequency,
+      props.defaults?.icon,
+      props.defaults?.name,
+      props.defaults?.notes,
+      props.defaults?.type,
+    ]
+  )
+  const form = useForm<CommitmentInput>({
+    resolver: zodResolver(commitmentSchema) as unknown as Resolver<CommitmentInput>,
+    defaultValues,
   })
-  const title = props.triggerLabel ?? props.dictionary.actions.addBill
+  const open = props.open ?? uncontrolledOpen
+  const setOpen = props.onOpenChange ?? setUncontrolledOpen
+
+  useEffect(() => {
+    if (open) {
+      form.reset(defaultValues)
+      previousAutoNameRef.current = defaultValues.name
+      manualIconOverrideRef.current = false
+    }
+  }, [defaultValues, form, open])
 
   function onSubmit(values: CommitmentInput) {
     const formData = new FormData()
@@ -149,9 +219,11 @@ function CommitmentDialog(props: CommitmentDialogProps) {
     startTransition(async () => {
       try {
         await props.action(formData)
-        form.reset()
+        if (mode === "create") {
+          form.reset()
+        }
         setOpen(false)
-        toast.success(title)
+        toast.success(mode === "edit" ? props.dictionary.actions.saved : title)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Could not save.")
       }
@@ -159,13 +231,34 @@ function CommitmentDialog(props: CommitmentDialogProps) {
   }
 
   const errors = form.formState.errors
+  const iconLocale: Locale = props.dictionary.forms.icon === "Icon" ? "en" : "es"
+  const nameValue = useWatch({ control: form.control, name: "name" })
+  const iconValue = useWatch({ control: form.control, name: "icon" })
+  const frequencyValue = useWatch({ control: form.control, name: "frequency" })
+  const typeValue = useWatch({ control: form.control, name: "type" })
+  const trigger = props.trigger === undefined ? <Button /> : props.trigger
+
+  useEffect(() => {
+    if (!open || manualIconOverrideRef.current || nameValue === previousAutoNameRef.current) {
+      return
+    }
+
+    const nextIcon = inferCommitmentIcon(nameValue)
+    previousAutoNameRef.current = nameValue
+
+    if (nextIcon !== iconValue) {
+      form.setValue("icon", nextIcon, { shouldDirty: true })
+    }
+  }, [form, iconValue, nameValue, open])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
-        <PlusIcon data-icon="inline-start" />
-        {title}
-      </DialogTrigger>
+      {trigger && (
+        <DialogTrigger render={trigger}>
+          <PlusIcon data-icon="inline-start" />
+          {title}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -195,12 +288,46 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <Input id="commitment-category" aria-invalid={Boolean(errors.category)} {...form.register("category")} />
               <FieldError>{errors.category?.message}</FieldError>
             </Field>
+            <Field>
+              <FieldLabel>{props.dictionary.forms.icon}</FieldLabel>
+              <Select
+                value={iconValue}
+                onValueChange={(value) => {
+                  manualIconOverrideRef.current = true
+                  form.setValue("icon", value as CommitmentInput["icon"], { shouldDirty: true })
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {commitmentIconOptions.map((option) => {
+                      const Icon = option.icon
+
+                      return (
+                        <SelectItem key={option.value} value={option.value}>
+                          <span className="flex items-center gap-2">
+                            <span className={`flex size-7 items-center justify-center rounded-full ${option.swatch}`}>
+                              <Icon className="size-3.5" />
+                            </span>
+                            {option.label[iconLocale]}
+                          </span>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
                 <FieldLabel>{props.dictionary.forms.frequency}</FieldLabel>
                 <Select
-                  defaultValue={form.getValues("frequency")}
-                  onValueChange={(value) => form.setValue("frequency", value as CommitmentInput["frequency"])}
+                  value={frequencyValue}
+                  onValueChange={(value) =>
+                    form.setValue("frequency", value as CommitmentInput["frequency"], { shouldDirty: true })
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -216,8 +343,8 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <Field>
                 <FieldLabel>{props.dictionary.forms.type}</FieldLabel>
                 <Select
-                  defaultValue={form.getValues("type")}
-                  onValueChange={(value) => form.setValue("type", value as CommitmentInput["type"])}
+                  value={typeValue}
+                  onValueChange={(value) => form.setValue("type", value as CommitmentInput["type"], { shouldDirty: true })}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -236,12 +363,77 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <Textarea id="commitment-notes" {...form.register("notes")} />
             </Field>
           </FieldGroup>
-          <Button className="self-end" disabled={isPending} type="submit">
-            {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
-            {props.dictionary.actions.save}
-          </Button>
+          <DialogFooter className="mx-0 mb-0">
+            {props.deleteAction && (
+              <DeleteConfirmation
+                action={props.deleteAction}
+                dictionary={props.dictionary}
+                itemName={form.getValues("name")}
+                onDeleted={() => setOpen(false)}
+              />
+            )}
+            <Button className="sm:ml-auto" disabled={isPending} type="submit">
+              {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
+              {props.dictionary.actions.save}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function DeleteConfirmation({
+  action,
+  dictionary,
+  itemName,
+  onDeleted,
+}: {
+  action: () => Promise<void>
+  dictionary: Dictionary
+  itemName: string
+  onDeleted: () => void
+}) {
+  const [confirming, setConfirming] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  if (!confirming) {
+    return (
+      <Button onClick={() => setConfirming(true)} type="button" variant="destructive">
+        <Trash2Icon data-icon="inline-start" />
+        {dictionary.actions.delete}
+      </Button>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2 sm:mr-auto">
+      <p className="max-w-72 text-sm text-muted-foreground">{dictionary.actions.deleteConfirmation.replace("{name}", itemName)}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button disabled={isPending} onClick={() => setConfirming(false)} size="sm" type="button" variant="outline">
+          {dictionary.actions.cancel}
+        </Button>
+        <Button
+          disabled={isPending}
+          onClick={() => {
+            startTransition(async () => {
+              try {
+                await action()
+                toast.success(dictionary.actions.deleted)
+                onDeleted()
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Could not delete.")
+              }
+            })
+          }}
+          size="sm"
+          type="button"
+          variant="destructive"
+        >
+          {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
+          {dictionary.actions.confirmDelete}
+        </Button>
+      </div>
+    </div>
   )
 }

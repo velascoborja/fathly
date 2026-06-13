@@ -1,10 +1,11 @@
 import type { Commitment, Deposit } from "@prisma/client"
 import { Fragment } from "react"
 
-import { DeleteButton } from "@/components/budget/delete-button"
+import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatCurrency } from "@/lib/budget/format"
+import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { groupCommitmentsForTable, monthlyAmountCents } from "@/lib/budget/math"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
@@ -15,11 +16,13 @@ export function DepositTable({
   dictionary,
   locale,
   onDelete,
+  onUpdate,
 }: {
   deposits: Deposit[]
   dictionary: Dictionary
   locale: Locale
   onDelete: (id: string) => Promise<void>
+  onUpdate: (id: string, formData: FormData) => Promise<void>
 }) {
   return (
     <Card className="fathly-card">
@@ -45,14 +48,29 @@ export function DepositTable({
               </TableRow>
             ) : (
               deposits.map((deposit) => (
-                <TableRow key={deposit.id}>
-                  <TableCell className="font-medium">{deposit.name}</TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">{deposit.notes}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(deposit.amountCents, locale)}</TableCell>
-                  <TableCell>
-                    <DeleteButton action={onDelete.bind(null, deposit.id)} label={`Delete ${deposit.name}`} />
-                  </TableCell>
-                </TableRow>
+                <BudgetRowContextMenu
+                  deleteAction={onDelete.bind(null, deposit.id)}
+                  dictionary={dictionary}
+                  item={deposit}
+                  key={deposit.id}
+                  kind="deposit"
+                  updateAction={onUpdate.bind(null, deposit.id)}
+                >
+                  <TableRow>
+                    <TableCell className="font-medium">{deposit.name}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{deposit.notes}</TableCell>
+                    <TableCell className="text-right font-mono">{formatCurrency(deposit.amountCents, locale)}</TableCell>
+                    <TableCell>
+                      <BudgetRowActions
+                        deleteAction={onDelete.bind(null, deposit.id)}
+                        dictionary={dictionary}
+                        item={deposit}
+                        kind="deposit"
+                        updateAction={onUpdate.bind(null, deposit.id)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                </BudgetRowContextMenu>
               ))
             )}
           </TableBody>
@@ -66,9 +84,10 @@ export function CommitmentTable({
   commitments,
   dictionary,
   groupByCategory = false,
-  hideFrequency = false,
+  hideFrequency = true,
   locale,
   onDelete,
+  onUpdate,
   showProratedAmount = false,
   title,
 }: {
@@ -78,6 +97,7 @@ export function CommitmentTable({
   hideFrequency?: boolean
   locale: Locale
   onDelete: (id: string) => Promise<void>
+  onUpdate: (id: string, formData: FormData) => Promise<void>
   showProratedAmount?: boolean
   title: string
 }) {
@@ -131,53 +151,101 @@ export function CommitmentTable({
                       <TableCell />
                     </TableRow>
                     {group.commitments.map((commitment) => (
-                      <TableRow key={commitment.id}>
-                        <TableCell className="pl-6 font-medium">{commitment.name}</TableCell>
-                        {!hideFrequency && (
-                          <TableCell className="hidden sm:table-cell">
-                            {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+                      <BudgetRowContextMenu
+                        deleteAction={onDelete.bind(null, commitment.id)}
+                        dictionary={dictionary}
+                        item={commitment}
+                        key={commitment.id}
+                        kind="commitment"
+                        updateAction={onUpdate.bind(null, commitment.id)}
+                      >
+                        <TableRow>
+                          <TableCell className="pl-6 font-medium">
+                            <CommitmentName commitment={commitment} />
                           </TableCell>
-                        )}
-                        <TableCell className="text-right font-mono">
-                          {formatCurrency(displayAmountCents(commitment), locale)}
-                        </TableCell>
-                        {showProratedAmount && (
+                          {!hideFrequency && (
+                            <TableCell className="hidden sm:table-cell">
+                              {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+                            </TableCell>
+                          )}
                           <TableCell className="text-right font-mono">
-                            {formatCurrency(monthlyAmountCents(commitment), locale)}
+                            {formatCurrency(displayAmountCents(commitment), locale)}
                           </TableCell>
-                        )}
-                        <TableCell>
-                          <DeleteButton action={onDelete.bind(null, commitment.id)} label={`Delete ${commitment.name}`} />
-                        </TableCell>
-                      </TableRow>
+                          {showProratedAmount && (
+                            <TableCell className="text-right font-mono">
+                              {formatCurrency(monthlyAmountCents(commitment), locale)}
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <BudgetRowActions
+                              deleteAction={onDelete.bind(null, commitment.id)}
+                              dictionary={dictionary}
+                              item={commitment}
+                              kind="commitment"
+                              updateAction={onUpdate.bind(null, commitment.id)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      </BudgetRowContextMenu>
                     ))}
                   </Fragment>
                 ))
               : commitments.map((commitment) => (
-                  <TableRow key={commitment.id}>
-                    <TableCell className="font-medium">{commitment.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{commitment.category}</TableCell>
-                    {!hideFrequency && (
-                      <TableCell className="hidden sm:table-cell">
-                        {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+                  <BudgetRowContextMenu
+                    deleteAction={onDelete.bind(null, commitment.id)}
+                    dictionary={dictionary}
+                    item={commitment}
+                    key={commitment.id}
+                    kind="commitment"
+                    updateAction={onUpdate.bind(null, commitment.id)}
+                  >
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        <CommitmentName commitment={commitment} />
                       </TableCell>
-                    )}
-                    <TableCell className="text-right font-mono">
-                      {formatCurrency(displayAmountCents(commitment), locale)}
-                    </TableCell>
-                    {showProratedAmount && (
+                      <TableCell className="hidden sm:table-cell">{commitment.category}</TableCell>
+                      {!hideFrequency && (
+                        <TableCell className="hidden sm:table-cell">
+                          {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+                        </TableCell>
+                      )}
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(monthlyAmountCents(commitment), locale)}
+                        {formatCurrency(displayAmountCents(commitment), locale)}
                       </TableCell>
-                    )}
-                    <TableCell>
-                      <DeleteButton action={onDelete.bind(null, commitment.id)} label={`Delete ${commitment.name}`} />
-                    </TableCell>
-                  </TableRow>
+                      {showProratedAmount && (
+                        <TableCell className="text-right font-mono">
+                          {formatCurrency(monthlyAmountCents(commitment), locale)}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <BudgetRowActions
+                          deleteAction={onDelete.bind(null, commitment.id)}
+                          dictionary={dictionary}
+                          item={commitment}
+                          kind="commitment"
+                          updateAction={onUpdate.bind(null, commitment.id)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  </BudgetRowContextMenu>
                 ))}
           </TableBody>
         </Table>
       </CardContent>
     </Card>
+  )
+}
+
+function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | "name"> }) {
+  const option = getCommitmentIconOption(commitment.icon)
+  const Icon = option.icon
+
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
+        <Icon className="size-4" />
+      </span>
+      <span className="truncate">{commitment.name}</span>
+    </span>
   )
 }

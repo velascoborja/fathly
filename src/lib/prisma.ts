@@ -1,14 +1,18 @@
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 
+import { normalizeDatabaseUrl } from "@/lib/database-url"
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient
 }
 
+const connectionString = normalizeDatabaseUrl(
+  process.env.DATABASE_URL ?? "postgresql://user:password@localhost:5432/fathly?schema=public"
+)
+
 const adapter = new PrismaPg({
-  connectionString:
-    process.env.DATABASE_URL ??
-    "postgresql://user:password@localhost:5432/fathly?schema=public",
+  connectionString,
 })
 
 export const prisma =

@@ -16,6 +16,14 @@ describe("dashboard monthly overview", () => {
     expect(source).toContain("getCommitmentBreakdown")
   })
 
+  it("uses row action menus instead of inline delete buttons", () => {
+    expect(source).toContain("BudgetRowActions")
+    expect(source).toContain("BudgetRowContextMenu")
+    expect(source).toContain("updateDeposit")
+    expect(source).toContain("updateCommitment")
+    expect(source).not.toContain("DeleteButton")
+  })
+
   it("places income above the expense chart in the left dashboard column", () => {
     expect(source.indexOf("<IncomePanel")).toBeLessThan(source.indexOf("<CommitmentChart"))
   })
@@ -25,6 +33,27 @@ describe("dashboard monthly overview", () => {
     expect(source).toContain("text-success")
     expect(source).toContain("border-destructive/35")
     expect(source).toContain("text-destructive")
+  })
+
+  it("uses warning emphasis when the monthly result has little margin", () => {
+    expect(source).toContain("getMonthlyResultTone")
+    expect(source).toContain("getLowMonthlyMarginCents")
+    expect(source).toContain("lowMonthlyMarginBasisPoints={data.plan.lowMonthlyMarginBasisPoints}")
+    expect(source).toContain("formatLowMonthlyMarginPercent")
+    expect(source).toContain("border-warning/50")
+    expect(source).toContain("text-warning")
+    expect(source).toContain('resultTone === "warning" &&')
+    expect(source).toContain("dictionary.dashboard.monthlyResultLowMargin")
+  })
+
+  it("keeps outflow amounts and row actions aligned to the right edge", () => {
+    expect(source).toContain("w-28 pr-1 text-right font-mono font-semibold text-destructive")
+    expect(source).toContain('TableCell className="w-9 p-0 text-right"')
+  })
+
+  it("labels category subtotals subtly in the category header rows", () => {
+    expect(source).toContain("dictionary.dashboard.categoryTotal")
+    expect(source).toContain("text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted-foreground")
   })
 
   it("sorts income rows from highest to lowest amount", () => {

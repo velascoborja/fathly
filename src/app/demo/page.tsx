@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { Fragment } from "react"
-import type React from "react"
 import {
   ActivityIcon,
   AlertTriangleIcon,
@@ -16,9 +15,18 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { formatBudgetUsagePercent, formatWholeCurrency } from "@/lib/budget/format"
-import { calculateBudgetSummary, getCommitmentBreakdown, groupCommitmentsForTable } from "@/lib/budget/math"
+import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
+import {
+  calculateBudgetSummary,
+  DEFAULT_LOW_MONTHLY_MARGIN_BASIS_POINTS,
+  formatLowMonthlyMarginPercent,
+  getCommitmentBreakdown,
+  getLowMonthlyMarginCents,
+  getMonthlyResultTone,
+  groupCommitmentsForTable,
+} from "@/lib/budget/math"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 
 const demoDeposits = [
@@ -28,18 +36,18 @@ const demoDeposits = [
 ]
 
 const demoCommitments = [
-  { id: "mortgage", name: "Hipoteca", category: "Casa", amountCents: 111_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "groceries", name: "Compra", category: "Casa", amountCents: 60_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "cleaning", name: "Limpieza", category: "Casa", amountCents: 46_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "childcare", name: "Guarderia Teresa", category: "Hijos", amountCents: 17_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "school", name: "Colegio Martin", category: "Hijos", amountCents: 20_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "fuel", name: "Gasolina RAV4", category: "Transporte", amountCents: 20_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "leisure", name: "Ocio", category: "Casa", amountCents: 15_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "gas", name: "Gas", category: "Suministros", amountCents: 7_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "water", name: "Agua", category: "Suministros", amountCents: 3_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "power", name: "Luz", category: "Suministros", amountCents: 9_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "insurance", name: "Seguro hogar + IBI", category: "Prorrateados", amountCents: 185_500, frequency: "ANNUAL" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "savings", name: "Ahorro familiar", category: "Ahorro", amountCents: 30_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "SAVINGS" as const },
+  { id: "mortgage", name: "Hipoteca", category: "Casa", icon: "home", amountCents: 111_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "groceries", name: "Compra", category: "Casa", icon: "shopping", amountCents: 60_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "cleaning", name: "Limpieza", category: "Casa", icon: "cleaning", amountCents: 46_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "childcare", name: "Guarderia Teresa", category: "Hijos", icon: "childcare", amountCents: 17_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "school", name: "Colegio Martin", category: "Hijos", icon: "school", amountCents: 20_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "fuel", name: "Gasolina RAV4", category: "Transporte", icon: "car", amountCents: 20_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "leisure", name: "Ocio", category: "Casa", icon: "leisure", amountCents: 15_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "gas", name: "Gas", category: "Suministros", icon: "gas", amountCents: 7_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "water", name: "Agua", category: "Suministros", icon: "water", amountCents: 3_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "power", name: "Luz", category: "Suministros", icon: "power", amountCents: 9_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "insurance", name: "Seguro hogar + IBI", category: "Prorrateados", icon: "insurance", amountCents: 185_500, frequency: "ANNUAL" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "savings", name: "Ahorro familiar", category: "Ahorro", icon: "savings", amountCents: 30_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "SAVINGS" as const },
 ]
 
 export default async function DemoPage() {
@@ -52,8 +60,8 @@ export default async function DemoPage() {
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 md:px-6">
           <Link className="flex items-center gap-3" href="/auth/signin">
-            <AppIcon className="size-11 fathly-color-shadow" />
-            <span className="fathly-ribbon text-sm">{dictionary.appName}</span>
+            <AppIcon className="size-10" />
+            <span className="fathly-wordmark text-xs">{dictionary.appName}</span>
           </Link>
           <Button nativeButton={false} render={<Link href="/auth/signin" />} variant="outline">
             <ArrowLeftIcon data-icon="inline-start" />
@@ -127,28 +135,49 @@ function DemoSnapshot({
   locale: "es" | "en"
   summary: ReturnType<typeof calculateBudgetSummary>
 }) {
-  const short = summary.coverageCents < 0
+  const resultTone = getMonthlyResultTone(summary)
+  const short = resultTone === "shortfall"
+  const resultAmount = `${short ? "-" : "+"}${formatWholeCurrency(Math.abs(summary.coverageCents), locale)}`
+  const resultDescription = short ? dictionary.dashboard.monthlyResultShortfall : dictionary.dashboard.monthlyResultSurplus
+  const cardToneClass =
+    resultTone === "shortfall"
+      ? "fathly-alert"
+      : resultTone === "warning"
+        ? "border-warning/50 bg-[#fff6ed]"
+        : "border-secondary/50 bg-[#f1feff]"
+  const resultTextClass =
+    resultTone === "shortfall" ? "text-destructive" : resultTone === "warning" ? "text-warning" : "text-success"
+  const lowMarginPercent = formatLowMonthlyMarginPercent(DEFAULT_LOW_MONTHLY_MARGIN_BASIS_POINTS)
+  const lowMarginAmount = formatWholeCurrency(getLowMonthlyMarginCents(summary.monthlyDepositsCents), locale)
 
   return (
-    <Card className={`fathly-card ${short ? "fathly-alert" : "border-secondary/50 bg-[#f1feff]"}`}>
+    <Card className={`fathly-card ${cardToneClass}`}>
       <CardContent className="grid gap-6 p-6 lg:grid-cols-3 lg:items-center">
         <div className="grid gap-4 sm:grid-cols-2">
-          <DemoMetric icon={<PlugZapIcon className="size-5" />} label={dictionary.dashboard.deposits} tone="income" value={formatWholeCurrency(summary.monthlyDepositsCents, locale)} />
-          <DemoMetric icon={<ActivityIcon className="size-5" />} label={dictionary.dashboard.monthOutflows} tone="expense" value={formatWholeCurrency(summary.monthlyCommitmentsCents, locale)} />
+          <DemoMetric label={dictionary.dashboard.deposits} tone="income" value={formatWholeCurrency(summary.monthlyDepositsCents, locale)} />
+          <DemoMetric label={dictionary.dashboard.monthOutflows} tone="expense" value={formatWholeCurrency(summary.monthlyCommitmentsCents, locale)} />
         </div>
         <div className="border-y border-border py-5 text-center lg:border-x lg:border-y-0 lg:px-8 lg:py-0">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{dictionary.dashboard.marginRemaining}</p>
-          <p className="mt-2 font-mono text-5xl font-bold leading-none text-primary md:text-6xl">
-            {formatWholeCurrency(Math.abs(summary.coverageCents), locale)}
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{dictionary.dashboard.monthlyResult}</p>
+          <p className={`mt-2 font-mono text-5xl font-bold leading-none md:text-6xl ${resultTextClass}`}>
+            {resultAmount}
           </p>
-          <p className={`mt-3 font-semibold ${short ? "text-destructive" : "text-success"}`}>
-            {short ? dictionary.dashboard.shortBy : dictionary.dashboard.goodMargin}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">{dictionary.dashboard.remaining}</p>
+          <p className="mx-auto mt-3 max-w-48 text-sm font-medium leading-5 text-muted-foreground">{resultDescription}</p>
+          {resultTone === "warning" && (
+            <p className="mx-auto mt-2 w-fit rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs font-bold text-warning">
+              {dictionary.dashboard.monthlyResultLowMargin} {lowMarginPercent}: {lowMarginAmount}
+            </p>
+          )}
         </div>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            {short ? <AlertTriangleIcon className="size-5 text-destructive" /> : <ZapIcon className="size-5 text-primary" />}
+            {resultTone === "shortfall" ? (
+              <AlertTriangleIcon className="size-5 text-destructive" />
+            ) : resultTone === "warning" ? (
+              <AlertTriangleIcon className="size-5 text-warning" />
+            ) : (
+              <ZapIcon className="size-5 text-primary" />
+            )}
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{dictionary.dashboard.coverage}</p>
           </div>
           <div className="flex items-end gap-2">
@@ -166,20 +195,20 @@ function DemoSnapshot({
 }
 
 function DemoMetric({
-  icon,
   label,
   tone = "income",
   value,
 }: {
-  icon: React.ReactNode
   label: string
   tone?: "income" | "expense"
   value: string
 }) {
+  const Icon = tone === "expense" ? ActivityIcon : PlugZapIcon
+
   return (
     <div className="flex items-center gap-4">
       <span className={`flex size-12 items-center justify-center rounded-full ${tone === "expense" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
-        {icon}
+        <Icon className="size-5" />
       </span>
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground md:text-sm">{label}</p>
@@ -244,31 +273,28 @@ function DemoOutflowTable({
   return (
     <div>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{dictionary.forms.name}</TableHead>
-            <TableHead className="hidden sm:table-cell">{dictionary.forms.frequency}</TableHead>
-            <TableHead className="text-right">{dictionary.forms.amount}</TableHead>
-          </TableRow>
-        </TableHeader>
         <TableBody>
           {categoryGroups.map((group) => (
             <Fragment key={group.category}>
               <TableRow className="bg-muted hover:bg-muted">
-                <TableCell className="font-semibold text-foreground" colSpan={2}>
+                <TableCell className="font-semibold text-foreground">
                   {group.category}
                 </TableCell>
-                <TableCell className="text-right font-mono font-semibold text-destructive">
-                  {formatWholeCurrency(group.totalCents, locale)}
+                <TableCell className="w-44 pr-1 text-right">
+                  <span className="flex items-center justify-end gap-2 whitespace-nowrap">
+                    <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      {dictionary.dashboard.categoryTotal}
+                    </span>
+                    <span className="font-mono font-semibold text-destructive">{formatWholeCurrency(group.totalCents, locale)}</span>
+                  </span>
                 </TableCell>
               </TableRow>
               {group.commitments.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="pl-6 font-medium">{row.name}</TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {row.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+                  <TableCell className="pl-6 font-medium">
+                    <DemoCommitmentName row={row} />
                   </TableCell>
-                  <TableCell className="text-right font-mono font-semibold text-destructive">
+                  <TableCell className="w-28 pr-1 text-right font-mono font-semibold text-destructive">
                     {formatWholeCurrency(row.monthlyAmountCents, locale)}
                   </TableCell>
                 </TableRow>
@@ -278,5 +304,19 @@ function DemoOutflowTable({
         </TableBody>
       </Table>
     </div>
+  )
+}
+
+function DemoCommitmentName({ row }: { row: Pick<(typeof demoCommitments)[number], "icon" | "name"> }) {
+  const option = getCommitmentIconOption(row.icon)
+  const Icon = option.icon
+
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
+        <Icon className="size-4" />
+      </span>
+      <span className="truncate">{row.name}</span>
+    </span>
   )
 }

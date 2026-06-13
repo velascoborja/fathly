@@ -15,6 +15,7 @@ function commitment(overrides: Partial<Commitment> = {}): Commitment {
     planId: "plan-1",
     name: "Internet",
     category: "Casa",
+    icon: "receipt",
     type: "BILL",
     frequency: "MONTHLY",
     amountCents: 4_000,
@@ -37,6 +38,7 @@ describe("CommitmentTable", () => {
         hideFrequency: true,
         locale: "es",
         onDelete: async () => {},
+        onUpdate: async () => {},
         title: dictionaries.es.nav.monthlyBills,
       })
     )
@@ -55,6 +57,7 @@ describe("CommitmentTable", () => {
         hideFrequency: true,
         locale: "es",
         onDelete: async () => {},
+        onUpdate: async () => {},
         showProratedAmount: true,
         title: dictionaries.es.nav.annualCosts,
       })
@@ -65,5 +68,21 @@ describe("CommitmentTable", () => {
     expect(html).not.toContain(dictionaries.es.forms.annual)
     expect(html).toContain("1200")
     expect(html).toContain("100")
+  })
+
+  it("renders row actions without inline delete labels", () => {
+    const html = renderToStaticMarkup(
+      createElement(CommitmentTable, {
+        commitments: [commitment()],
+        dictionary: dictionaries.es,
+        locale: "es",
+        onDelete: async () => {},
+        onUpdate: async () => {},
+        title: dictionaries.es.nav.monthlyBills,
+      })
+    )
+
+    expect(html).toContain(dictionaries.es.actions.actionsMenu)
+    expect(html).not.toContain("Delete Internet")
   })
 })
