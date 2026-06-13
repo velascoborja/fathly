@@ -2,6 +2,7 @@ import type { Commitment, Deposit } from "@prisma/client"
 import { Fragment } from "react"
 
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
+import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatCurrency } from "@/lib/budget/format"
@@ -135,59 +136,60 @@ export function CommitmentTable({
             ) : groupByCategory
               ? categoryGroups.map((group) => (
                   <Fragment key={group.category}>
-                    <TableRow className="bg-muted hover:bg-muted">
-                      <TableCell className="font-semibold" colSpan={hideFrequency ? 1 : 2}>
-                        {group.category}
-                      </TableCell>
-                      <TableCell className="text-right font-mono font-semibold">
-                        {formatCurrency(
-                          showProratedAmount
-                            ? group.commitments.reduce((sum, commitment) => sum + displayAmountCents(commitment), 0)
-                            : group.totalCents,
-                          locale
-                        )}
-                      </TableCell>
-                      {showProratedAmount && <TableCell />}
-                      <TableCell />
-                    </TableRow>
-                    {group.commitments.map((commitment, index) => (
-                      <BudgetRowContextMenu
-                        deleteAction={onDelete.bind(null, commitment.id)}
-                        dictionary={dictionary}
-                        item={commitment}
-                        key={commitment.id}
-                        kind="commitment"
-                        updateAction={onUpdate.bind(null, commitment.id)}
-                      >
-                        <TableRow style={index === group.commitments.length - 1 ? { borderBottom: "none" } : undefined}>
-                          <TableCell className="pl-6 font-medium">
-                            <CommitmentName commitment={commitment} />
-                          </TableCell>
-                          {!hideFrequency && (
-                            <TableCell className="hidden sm:table-cell">
-                              {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+                    <CollapsibleCategoryGroup
+                      actionColumn
+                      category={group.category}
+                      collapseLabel={dictionary.actions.collapseCategory}
+                      expandLabel={dictionary.actions.expandCategory}
+                      extraTrailingCells={Number(showProratedAmount)}
+                      leadingColSpan={hideFrequency ? 1 : 2}
+                      total={formatCurrency(
+                        showProratedAmount
+                          ? group.commitments.reduce((sum, commitment) => sum + displayAmountCents(commitment), 0)
+                          : group.totalCents,
+                        locale
+                      )}
+                      totalLabel={dictionary.dashboard.categoryTotal}
+                    >
+                      {group.commitments.map((commitment, index) => (
+                        <BudgetRowContextMenu
+                          deleteAction={onDelete.bind(null, commitment.id)}
+                          dictionary={dictionary}
+                          item={commitment}
+                          key={commitment.id}
+                          kind="commitment"
+                          updateAction={onUpdate.bind(null, commitment.id)}
+                        >
+                          <TableRow className={index === group.commitments.length - 1 ? "border-b-0" : undefined}>
+                            <TableCell className="pl-6 font-medium">
+                              <CommitmentName commitment={commitment} />
                             </TableCell>
-                          )}
-                          <TableCell className="text-right font-mono">
-                            {formatCurrency(displayAmountCents(commitment), locale)}
-                          </TableCell>
-                          {showProratedAmount && (
+                            {!hideFrequency && (
+                              <TableCell className="hidden sm:table-cell">
+                                {commitment.frequency === "ANNUAL" ? dictionary.forms.annual : dictionary.forms.monthly}
+                              </TableCell>
+                            )}
                             <TableCell className="text-right font-mono">
-                              {formatCurrency(monthlyAmountCents(commitment), locale)}
+                              {formatCurrency(displayAmountCents(commitment), locale)}
                             </TableCell>
-                          )}
-                          <TableCell>
-                            <BudgetRowActions
-                              deleteAction={onDelete.bind(null, commitment.id)}
-                              dictionary={dictionary}
-                              item={commitment}
-                              kind="commitment"
-                              updateAction={onUpdate.bind(null, commitment.id)}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      </BudgetRowContextMenu>
-                    ))}
+                            {showProratedAmount && (
+                              <TableCell className="text-right font-mono">
+                                {formatCurrency(monthlyAmountCents(commitment), locale)}
+                              </TableCell>
+                            )}
+                            <TableCell>
+                              <BudgetRowActions
+                                deleteAction={onDelete.bind(null, commitment.id)}
+                                dictionary={dictionary}
+                                item={commitment}
+                                kind="commitment"
+                                updateAction={onUpdate.bind(null, commitment.id)}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        </BudgetRowContextMenu>
+                      ))}
+                    </CollapsibleCategoryGroup>
                   </Fragment>
                 ))
               : commitments.map((commitment) => (

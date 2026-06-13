@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { AppIcon } from "@/components/app/app-icon"
+import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -285,29 +286,25 @@ function DemoOutflowTable({
                   <TableCell colSpan={2} className="h-4 p-0" />
                 </TableRow>
               )}
-              <TableRow className="bg-muted hover:bg-muted">
-                <TableCell className="font-semibold text-foreground">
-                  {group.category}
-                </TableCell>
-                <TableCell className="w-44 pr-1 text-right">
-                  <span className="flex items-center justify-end gap-2 whitespace-nowrap">
-                    <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                      {dictionary.dashboard.categoryTotal}
-                    </span>
-                    <span className="font-mono font-semibold text-destructive">{formatWholeCurrency(group.totalCents, locale)}</span>
-                  </span>
-                </TableCell>
-              </TableRow>
-              {group.commitments.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="pl-6 font-medium">
-                    <DemoCommitmentName row={row} />
-                  </TableCell>
-                  <TableCell className="w-28 pr-1 text-right font-mono font-semibold">
-                    {formatWholeCurrency(row.monthlyAmountCents, locale)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              <CollapsibleCategoryGroup
+                category={group.category}
+                collapseLabel={dictionary.actions.collapseCategory}
+                expandLabel={dictionary.actions.expandCategory}
+                total={formatWholeCurrency(group.totalCents, locale)}
+                totalClassName="text-destructive"
+                totalLabel={dictionary.dashboard.categoryTotal}
+              >
+                {group.commitments.map((row, rowIndex) => (
+                  <TableRow className={rowIndex === group.commitments.length - 1 ? "border-b-0" : undefined} key={row.id}>
+                    <TableCell className="pl-6 font-medium">
+                      <DemoCommitmentName row={row} />
+                    </TableCell>
+                    <TableCell className="w-28 pr-1 text-right font-mono font-semibold">
+                      {formatWholeCurrency(row.monthlyAmountCents, locale)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </CollapsibleCategoryGroup>
             </Fragment>
           ))}
         </TableBody>

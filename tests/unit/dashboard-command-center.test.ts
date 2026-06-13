@@ -47,13 +47,19 @@ describe("dashboard monthly overview", () => {
   })
 
   it("keeps outflow amounts and row actions aligned to the right edge", () => {
-    expect(source).toContain("w-28 pr-1 text-right font-mono font-semibold text-destructive")
+    expect(source).toContain("w-28 pr-1 text-right font-mono font-semibold")
     expect(source).toContain('TableCell className="w-9 p-0 text-right"')
+  })
+
+  it("removes extra dividers at category item edges", () => {
+    expect(source).toContain("CollapsibleCategoryGroup")
+    expect(source).toContain('commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined')
   })
 
   it("labels category subtotals subtly in the category header rows", () => {
     expect(source).toContain("dictionary.dashboard.categoryTotal")
-    expect(source).toContain("text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted-foreground")
+    expect(source).toContain("dictionary.actions.collapseCategory")
+    expect(source).toContain("dictionary.actions.expandCategory")
   })
 
   it("sorts income rows from highest to lowest amount", () => {

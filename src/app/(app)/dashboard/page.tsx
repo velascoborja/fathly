@@ -10,6 +10,7 @@ import { Fragment } from "react"
 
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
+import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
@@ -351,48 +352,44 @@ function OutflowTable({
                     <TableCell colSpan={3} className="h-4 p-0" />
                   </TableRow>
                 )}
-                <TableRow className="bg-muted hover:bg-muted">
-                  <TableCell className="font-semibold text-foreground">
-                    {group.category}
-                  </TableCell>
-                  <TableCell className="w-44 pr-1 text-right">
-                    <span className="flex items-center justify-end gap-2 whitespace-nowrap">
-                      <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                        {dictionary.dashboard.categoryTotal}
-                      </span>
-                      <span className="font-mono font-semibold text-destructive">{formatWholeCurrency(group.totalCents, locale)}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell className="w-9 p-0" />
-                </TableRow>
-                {group.commitments.map((commitment) => (
-                  <BudgetRowContextMenu
-                    deleteAction={deleteCommitment.bind(null, commitment.id)}
-                    dictionary={dictionary}
-                    item={commitment}
-                    key={commitment.id}
-                    kind="commitment"
-                    updateAction={updateCommitment.bind(null, commitment.id)}
-                  >
-                    <TableRow>
-                      <TableCell className="pl-6 font-medium">
-                        <CommitmentName commitment={commitment} />
-                      </TableCell>
-                      <TableCell className="w-28 pr-1 text-right font-mono font-semibold">
-                        {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
-                      </TableCell>
-                      <TableCell className="w-9 p-0 text-right">
-                        <BudgetRowActions
-                          deleteAction={deleteCommitment.bind(null, commitment.id)}
-                          dictionary={dictionary}
-                          item={commitment}
-                          kind="commitment"
-                          updateAction={updateCommitment.bind(null, commitment.id)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  </BudgetRowContextMenu>
-                ))}
+                <CollapsibleCategoryGroup
+                  actionColumn
+                  category={group.category}
+                  collapseLabel={dictionary.actions.collapseCategory}
+                  expandLabel={dictionary.actions.expandCategory}
+                  total={formatWholeCurrency(group.totalCents, locale)}
+                  totalClassName="text-destructive"
+                  totalLabel={dictionary.dashboard.categoryTotal}
+                >
+                  {group.commitments.map((commitment, commitmentIndex) => (
+                    <BudgetRowContextMenu
+                      deleteAction={deleteCommitment.bind(null, commitment.id)}
+                      dictionary={dictionary}
+                      item={commitment}
+                      key={commitment.id}
+                      kind="commitment"
+                      updateAction={updateCommitment.bind(null, commitment.id)}
+                    >
+                      <TableRow className={commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined}>
+                        <TableCell className="pl-6 font-medium">
+                          <CommitmentName commitment={commitment} />
+                        </TableCell>
+                        <TableCell className="w-28 pr-1 text-right font-mono font-semibold">
+                          {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
+                        </TableCell>
+                        <TableCell className="w-9 p-0 text-right">
+                          <BudgetRowActions
+                            deleteAction={deleteCommitment.bind(null, commitment.id)}
+                            dictionary={dictionary}
+                            item={commitment}
+                            kind="commitment"
+                            updateAction={updateCommitment.bind(null, commitment.id)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    </BudgetRowContextMenu>
+                  ))}
+                </CollapsibleCategoryGroup>
               </Fragment>
             ))
           )}

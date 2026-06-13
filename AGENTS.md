@@ -33,7 +33,7 @@ Core stack:
 - `prisma/` - Prisma schema, migrations, seed.
 - `tests/unit/` - Vitest unit tests.
 - `tests/e2e/` - Playwright smoke tests.
-- `DESIGN.md` - Flip7 visual design system. Follow it for UI work.
+- `DESIGN.md` - Canva-inspired visual design system. Follow it for UI work.
 
 ## Development Commands
 
@@ -75,9 +75,9 @@ The `/demo` route should remain usable without OAuth, PostgreSQL, or a `.env` fi
 
 ## UI and Design
 
-- Follow `DESIGN.md` for the Flip7 design system.
+- Follow `DESIGN.md` for the Canva-inspired design system.
 - Use existing `src/components/ui/*` primitives and local component patterns before adding new abstractions.
-- Preserve the tactile teal/coral/gold visual language, cream input surfaces, pill buttons, colored glows, dashed dividers, and card accents.
+- Preserve the bright white/lavender surface system, purple primary accents, magenta/coral/cyan support accents, rounded forms, pill buttons, colorful elevation, and card accents.
 - Ensure responsive layouts work on desktop and mobile without clipping or overlap.
 - Keep touch targets at least 36px on desktop and larger on mobile.
 - Use `lucide-react` for icons unless the existing UI pattern calls for something else.
