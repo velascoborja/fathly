@@ -150,7 +150,7 @@ export function CommitmentTable({
                       {showProratedAmount && <TableCell />}
                       <TableCell />
                     </TableRow>
-                    {group.commitments.map((commitment) => (
+                    {group.commitments.map((commitment, index) => (
                       <BudgetRowContextMenu
                         deleteAction={onDelete.bind(null, commitment.id)}
                         dictionary={dictionary}
@@ -159,7 +159,7 @@ export function CommitmentTable({
                         kind="commitment"
                         updateAction={onUpdate.bind(null, commitment.id)}
                       >
-                        <TableRow>
+                        <TableRow style={index === group.commitments.length - 1 ? { borderBottom: "none" } : undefined}>
                           <TableCell className="pl-6 font-medium">
                             <CommitmentName commitment={commitment} />
                           </TableCell>

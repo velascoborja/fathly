@@ -313,7 +313,7 @@ function IncomePanel({
             ))
           )}
         </div>
-        <div className="flex items-center justify-between rounded-2xl border border-success/20 bg-success/10 px-3 py-2">
+        <div className="ml-auto flex w-fit items-center gap-4 rounded-2xl border border-success/20 bg-success/10 px-5 py-2">
           <span className="font-semibold">{dictionary.dashboard.incomeTotal}</span>
           <span className="font-mono text-lg font-bold text-success">{formatWholeCurrency(totalCents, locale)}</span>
         </div>
@@ -344,8 +344,13 @@ function OutflowTable({
               </TableCell>
             </TableRow>
           ) : (
-            categoryGroups.map((group) => (
+            categoryGroups.map((group, index) => (
               <Fragment key={group.category}>
+                {index > 0 && (
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableCell colSpan={3} className="h-4 p-0" />
+                  </TableRow>
+                )}
                 <TableRow className="bg-muted hover:bg-muted">
                   <TableCell className="font-semibold text-foreground">
                     {group.category}
