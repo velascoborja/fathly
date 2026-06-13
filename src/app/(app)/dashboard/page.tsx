@@ -206,17 +206,17 @@ function MonthlySnapshot({
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{dictionary.dashboard.coverage}</p>
           </div>
           <div className="flex items-end gap-2">
-            <span className="font-mono text-3xl font-bold text-primary">{formatBudgetUsagePercent(summary.coverageRatio, locale)}</span>
+            <span
+              className={`font-mono text-3xl font-bold ${resultTone === "shortfall" ? "text-destructive" : resultTone === "warning" ? "text-warning" : "text-primary"}`}
+            >
+              {formatBudgetUsagePercent(summary.coverageRatio, locale)}
+            </span>
             <span className="pb-1 text-sm text-muted-foreground">{dictionary.dashboard.covered}</span>
           </div>
           <Progress
-            className="[&_[data-slot=progress-indicator]]:bg-primary [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:bg-border"
+            className={`[&_[data-slot=progress-track]]:h-4 [&_[data-slot=progress-track]]:bg-border ${resultTone === "shortfall" ? "[&_[data-slot=progress-indicator]]:bg-destructive" : resultTone === "warning" ? "[&_[data-slot=progress-indicator]]:bg-warning" : "[&_[data-slot=progress-indicator]]:bg-primary"}`}
             value={summary.coverageRatio * 100}
           />
-          <p className="text-sm text-muted-foreground">
-            {dictionary.dashboard.annual}: {formatWholeCurrency(summary.annualProratedCents, locale)} · {dictionary.dashboard.savings}:{" "}
-            {formatWholeCurrency(summary.savingsCents, locale)}
-          </p>
         </div>
       </CardContent>
     </Card>
