@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { commitmentIconOptions, inferCommitmentIcon } from "@/lib/budget/commitment-icons"
-import { commitmentSchema, depositSchema, type CommitmentInput, type DepositInput } from "@/lib/validations/budget"
+import { getCommitmentSchema, getDepositSchema, type CommitmentInput, type DepositInput } from "@/lib/validations/budget"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
 type Dictionary = (typeof dictionaries)[Locale]
@@ -73,7 +73,7 @@ function DepositDialog(props: DepositDialogProps) {
     [props.defaults?.amount, props.defaults?.name, props.defaults?.notes]
   )
   const form = useForm<DepositInput>({
-    resolver: zodResolver(depositSchema) as unknown as Resolver<DepositInput>,
+    resolver: zodResolver(getDepositSchema(props.dictionary.validation)) as unknown as Resolver<DepositInput>,
     defaultValues,
   })
   const open = props.open ?? uncontrolledOpen
@@ -102,7 +102,7 @@ function DepositDialog(props: DepositDialogProps) {
         setOpen(false)
         toast.success(mode === "edit" ? props.dictionary.actions.saved : title)
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Could not save.")
+        toast.error(error instanceof Error ? error.message : props.dictionary.actions.saveError)
       }
     })
   }
@@ -215,7 +215,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
     ]
   )
   const form = useForm<CommitmentInput>({
-    resolver: zodResolver(commitmentSchema) as unknown as Resolver<CommitmentInput>,
+    resolver: zodResolver(getCommitmentSchema(props.dictionary.validation)) as unknown as Resolver<CommitmentInput>,
     defaultValues,
   })
   const open = props.open ?? uncontrolledOpen
@@ -246,7 +246,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
         setOpen(false)
         toast.success(mode === "edit" ? props.dictionary.actions.saved : title)
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Could not save.")
+        toast.error(error instanceof Error ? error.message : props.dictionary.actions.saveError)
       }
     })
   }
@@ -520,7 +520,7 @@ function DeleteConfirmation({
                 toast.success(dictionary.actions.deleted)
                 onDeleted()
               } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Could not delete.")
+                toast.error(error instanceof Error ? error.message : dictionary.actions.deleteError)
               }
             })
           }}

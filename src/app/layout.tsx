@@ -18,7 +18,7 @@ const firaCode = Fira_Code({
 
 export const metadata: Metadata = {
   title: "Fathly",
-  description: "Shared household budget coverage for the monthly account.",
+  description: "Control compartido del presupuesto mensual del hogar.",
 };
 
 export default function RootLayout({

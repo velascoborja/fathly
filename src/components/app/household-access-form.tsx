@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
-import { householdInviteSchema, type HouseholdInviteInput } from "@/lib/validations/household"
+import { getHouseholdInviteSchema, type HouseholdInviteInput } from "@/lib/validations/household"
 
 type Dictionary = (typeof dictionaries)[Locale]
 
@@ -42,7 +42,7 @@ export function HouseholdAccessForm({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const form = useForm<HouseholdInviteInput>({
-    resolver: zodResolver(householdInviteSchema) as unknown as Resolver<HouseholdInviteInput>,
+    resolver: zodResolver(getHouseholdInviteSchema(dictionary.validation)) as unknown as Resolver<HouseholdInviteInput>,
     defaultValues: { email: "" },
   })
 

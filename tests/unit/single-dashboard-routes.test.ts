@@ -31,3 +31,17 @@ describe("settings route", () => {
     expect(source).not.toContain('redirect("/dashboard")')
   })
 })
+
+describe("setup route", () => {
+  it("renders onboarding before the first empty dashboard", () => {
+    const setupSource = readFileSync("src/app/(app)/setup/page.tsx", "utf8")
+    const dashboardSource = readFileSync("src/app/(app)/dashboard/page.tsx", "utf8")
+
+    expect(setupSource).toContain("SetupPage")
+    expect(setupSource).toContain("InitialSetupForm")
+    expect(setupSource).toContain("completeInitialSetup")
+    expect(setupSource).toContain('redirect("/dashboard")')
+    expect(dashboardSource).toContain("onboardingCompletedAt")
+    expect(dashboardSource).toContain('redirect("/setup")')
+  })
+})

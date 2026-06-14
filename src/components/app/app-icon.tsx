@@ -8,7 +8,7 @@ type AppIconProps = {
   size?: number
 }
 
-export function AppIcon({ alt = "Fathly app icon", className, size = 36 }: AppIconProps) {
+export function AppIcon({ alt = "Fathly", className, size = 36 }: AppIconProps) {
   return (
     <Image
       alt={alt}

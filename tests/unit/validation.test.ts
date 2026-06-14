@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { commitmentSchema, depositSchema, planSettingsSchema } from "@/lib/validations/budget"
+import { commitmentSchema, depositSchema, initialSetupSchema, planSettingsSchema } from "@/lib/validations/budget"
 import { householdInviteSchema, householdNameSchema } from "@/lib/validations/household"
 
 describe("budget validation", () => {
@@ -60,5 +60,32 @@ describe("budget validation", () => {
     })
     expect(planSettingsSchema.safeParse({ lowMonthlyMarginPercent: -1 }).success).toBe(false)
     expect(planSettingsSchema.safeParse({ lowMonthlyMarginPercent: 101 }).success).toBe(false)
+  })
+
+  it("normalizes first-run setup rows and rejects incomplete onboarding data", () => {
+    const parsed = initialSetupSchema.parse({
+      deposits: [
+        { name: " Alex ", amount: "1800" },
+        { name: "", amount: "" },
+      ],
+      monthlyBills: [{ name: "Rent", amount: "950" }],
+      annualCosts: [{ name: "", amount: "" }],
+      savings: [{ name: "", amount: "" }],
+    })
+
+    expect(parsed.deposits).toEqual([{ name: "Alex", amount: 1800 }])
+    expect(parsed.monthlyBills).toEqual([{ name: "Rent", amount: 950 }])
+    expect(initialSetupSchema.safeParse({
+      deposits: [{ name: "Alex", amount: "" }],
+      monthlyBills: [{ name: "Rent", amount: "950" }],
+      annualCosts: [],
+      savings: [],
+    }).success).toBe(false)
+    expect(initialSetupSchema.safeParse({
+      deposits: [{ name: "Alex", amount: "1800" }],
+      monthlyBills: [{ name: "", amount: "" }],
+      annualCosts: [],
+      savings: [],
+    }).success).toBe(false)
   })
 })

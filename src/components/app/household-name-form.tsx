@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { householdNameFormSchema, type HouseholdNameFormInput } from "@/lib/validations/household"
+import { getHouseholdNameFormSchema, type HouseholdNameFormInput } from "@/lib/validations/household"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
 type Dictionary = (typeof dictionaries)[Locale]
@@ -25,7 +25,7 @@ export function HouseholdNameForm({ action, dictionary, householdName }: Househo
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const form = useForm<HouseholdNameFormInput>({
-    resolver: zodResolver(householdNameFormSchema) as unknown as Resolver<HouseholdNameFormInput>,
+    resolver: zodResolver(getHouseholdNameFormSchema(dictionary.validation)) as unknown as Resolver<HouseholdNameFormInput>,
     defaultValues: { name: householdName },
   })
 

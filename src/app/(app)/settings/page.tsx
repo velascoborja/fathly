@@ -1,12 +1,13 @@
-import { SettingsIcon, UsersIcon } from "lucide-react"
+import { SettingsIcon, Trash2Icon, UsersIcon } from "lucide-react"
 
+import { AccountDeleteDialog } from "@/components/app/account-delete-dialog"
 import { HouseholdAccessForm } from "@/components/app/household-access-form"
 import { HouseholdNameForm } from "@/components/app/household-name-form"
 import { PlanSettingsForm } from "@/components/app/plan-settings-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getServerDictionary } from "@/lib/i18n/server"
 import { prisma } from "@/lib/prisma"
-import { shareHouseholdAccess, updateHouseholdName, updatePlanSettings } from "@/server/actions"
+import { deleteUserAccount, shareHouseholdAccess, updateHouseholdName, updatePlanSettings } from "@/server/actions"
 import { getActiveHouseholdContext } from "@/server/household"
 
 export const dynamic = "force-dynamic"
@@ -90,6 +91,19 @@ export default async function SettingsPage() {
             dictionary={dictionary}
             lowMonthlyMarginBasisPoints={context.plan.lowMonthlyMarginBasisPoints}
           />
+        </CardContent>
+      </Card>
+
+      <Card className="fathly-card border-destructive/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Trash2Icon className="size-5 text-destructive" />
+            {dictionary.settings.accountDangerCardTitle}
+          </CardTitle>
+          <CardDescription>{dictionary.settings.accountDangerCardDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AccountDeleteDialog action={deleteUserAccount} dictionary={dictionary} />
         </CardContent>
       </Card>
     </section>

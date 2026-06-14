@@ -191,7 +191,7 @@ function DeleteConfirmDialog({
                   toast.success(dictionary.actions.deleted)
                   onOpenChange(false)
                 } catch (error) {
-                  toast.error(error instanceof Error ? error.message : "Could not delete.")
+                  toast.error(error instanceof Error ? error.message : dictionary.actions.deleteError)
                 }
               })
             }}

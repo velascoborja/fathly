@@ -1,35 +1,135 @@
 import { z } from "zod"
 
 import { commitmentIconValues } from "@/lib/budget/commitment-icons"
+import { dictionaries, type Locale } from "@/lib/i18n/dictionaries"
 
-export const moneyAmountSchema = z.coerce
-  .number({ message: "Enter a valid amount." })
-  .positive("Amount must be greater than zero.")
-  .max(1_000_000, "Amount is too large.")
+type ValidationMessages = (typeof dictionaries)[Locale]["validation"]
 
-export const depositSchema = z.object({
-  name: z.string().trim().min(1, "Name is required.").max(80),
-  amount: moneyAmountSchema,
-  notes: z.string().trim().max(240).optional(),
-})
+const defaultValidationMessages = dictionaries.es.validation
 
-export const commitmentSchema = z.object({
-  name: z.string().trim().min(1, "Name is required.").max(80),
-  amount: moneyAmountSchema,
-  category: z.string().trim().min(1, "Category is required.").max(60),
-  icon: z.enum(commitmentIconValues).default("receipt"),
-  frequency: z.enum(["MONTHLY", "ANNUAL"]),
-  type: z.enum(["BILL", "SAVINGS"]),
-  notes: z.string().trim().max(240).optional(),
-})
+export function getMoneyAmountSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.coerce
+    .number({ message: messages.amountInvalid })
+    .positive(messages.amountPositive)
+    .max(1_000_000, messages.amountTooLarge)
+}
 
-export const planSettingsSchema = z.object({
-  lowMonthlyMarginPercent: z.coerce
-    .number({ message: "Enter a valid percentage." })
-    .min(0, "Percentage cannot be negative.")
-    .max(100, "Percentage cannot be greater than 100."),
-})
+export function getDepositSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.object({
+    name: z.string().trim().min(1, messages.nameRequired).max(80),
+    amount: getMoneyAmountSchema(messages),
+    notes: z.string().trim().max(240).optional(),
+  })
+}
 
+export function getCommitmentSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.object({
+    name: z.string().trim().min(1, messages.nameRequired).max(80),
+    amount: getMoneyAmountSchema(messages),
+    category: z.string().trim().min(1, messages.categoryRequired).max(60),
+    icon: z.enum(commitmentIconValues).default("receipt"),
+    frequency: z.enum(["MONTHLY", "ANNUAL"]),
+    type: z.enum(["BILL", "SAVINGS"]),
+    notes: z.string().trim().max(240).optional(),
+  })
+}
+
+function getOptionalSetupMoneyAmountSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.preprocess((value) => {
+    if (typeof value === "string" && value.trim() === "") {
+      return undefined
+    }
+
+    return value
+  }, getMoneyAmountSchema(messages).optional())
+}
+
+function getOptionalSetupItemSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.object({
+    name: z.string().trim().max(80).optional(),
+    amount: getOptionalSetupMoneyAmountSchema(messages),
+  })
+}
+
+export function getInitialSetupSchema(messages: ValidationMessages = defaultValidationMessages) {
+  const optionalSetupItemSchema = getOptionalSetupItemSchema(messages)
+
+  return z
+    .object({
+      deposits: z.array(optionalSetupItemSchema).min(1),
+      monthlyBills: z.array(optionalSetupItemSchema).min(1),
+      annualCosts: z.array(optionalSetupItemSchema),
+      savings: z.array(optionalSetupItemSchema),
+    })
+    .transform((setup, context) => {
+      const normalizeItems = (items: z.infer<typeof optionalSetupItemSchema>[], label: string) =>
+      items.flatMap((item, index) => {
+        const hasName = Boolean(item.name)
+        const hasAmount = item.amount !== undefined
+
+        if (!hasName && !hasAmount) {
+          return []
+        }
+
+        if (!hasName || !hasAmount) {
+          context.addIssue({
+            code: "custom",
+            message: messages.incompleteSetupItem.replace("{label}", label).replace("{index}", String(index + 1)),
+          })
+          return []
+        }
+
+        return [
+          {
+            name: item.name!,
+            amount: item.amount!,
+          },
+        ]
+      })
+
+      const deposits = normalizeItems(setup.deposits, messages.setupDepositLabel)
+      const monthlyBills = normalizeItems(setup.monthlyBills, messages.setupMonthlyBillLabel)
+      const annualCosts = normalizeItems(setup.annualCosts, messages.setupAnnualCostLabel)
+      const savings = normalizeItems(setup.savings, messages.setupSavingsLabel)
+
+      if (deposits.length === 0) {
+        context.addIssue({
+          code: "custom",
+          message: messages.setupRequiresDeposit,
+        })
+      }
+
+      if (monthlyBills.length + annualCosts.length + savings.length === 0) {
+        context.addIssue({
+          code: "custom",
+          message: messages.setupRequiresOutflow,
+        })
+      }
+
+      return {
+        annualCosts,
+        deposits,
+        monthlyBills,
+        savings,
+      }
+    })
+}
+
+export function getPlanSettingsSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.object({
+    lowMonthlyMarginPercent: z.coerce
+      .number({ message: messages.percentageInvalid })
+      .min(0, messages.percentageNegative)
+      .max(100, messages.percentageTooLarge),
+  })
+}
+
+export const moneyAmountSchema = getMoneyAmountSchema()
+export const depositSchema = getDepositSchema()
+export const commitmentSchema = getCommitmentSchema()
+export const initialSetupSchema = getInitialSetupSchema()
+export const planSettingsSchema = getPlanSettingsSchema()
 export type DepositInput = z.infer<typeof depositSchema>
 export type CommitmentInput = z.infer<typeof commitmentSchema>
+export type InitialSetupInput = z.infer<typeof initialSetupSchema>
 export type PlanSettingsInput = z.infer<typeof planSettingsSchema>

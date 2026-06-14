@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 import type { Commitment, Deposit } from "@prisma/client"
 import { Fragment } from "react"
+import { redirect } from "next/navigation"
 
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
@@ -48,6 +49,10 @@ export default async function DashboardPage() {
   const outflows = getCommitmentBreakdown(data.commitments)
   const categoryOptions = getCategoryOptions(data.commitments)
   const hasData = data.deposits.length > 0 || data.commitments.length > 0
+
+  if (!data.plan.onboardingCompletedAt && !hasData) {
+    redirect("/setup")
+  }
 
   return (
     <>
@@ -101,6 +106,11 @@ export default async function DashboardPage() {
                   icon: outflow.icon,
                   name: outflow.name,
                 }))}
+                labels={{
+                  noData: dictionary.dashboard.noChartData,
+                  showLess: dictionary.dashboard.showLess,
+                  showMore: dictionary.dashboard.showMore,
+                }}
                 locale={locale}
                 wholeCurrency
               />

@@ -37,7 +37,7 @@ export default async function SignInPage() {
             </Button>
             {showMockDemo ? (
               <Button nativeButton={false} render={<Link href="/demo" />} className="w-full" size="lg" variant="outline">
-                View mock demo
+                {dictionary.actions.viewMockDemo}
               </Button>
             ) : null}
           </form>

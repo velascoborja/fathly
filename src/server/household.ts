@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { PlanStatus, HouseholdRole } from "@prisma/client"
 
 import { auth } from "@/auth"
+import { getServerDictionary } from "@/lib/i18n/server"
 import { prisma } from "@/lib/prisma"
 
 export async function requireUser() {
@@ -43,12 +44,13 @@ export async function getActiveHouseholdContext() {
 
   if (existingMembership) {
     const [activePlan] = existingMembership.household.budgetPlans
+    const dictionary = activePlan ? null : await getServerDictionary()
     const plan =
       activePlan ??
       (await prisma.budgetPlan.create({
         data: {
           householdId: existingMembership.householdId,
-          name: "Current plan",
+          name: dictionary!.activePlanName,
           status: PlanStatus.ACTIVE,
         },
       }))
@@ -61,7 +63,10 @@ export async function getActiveHouseholdContext() {
     }
   }
 
-  const householdName = user.name ? `${user.name}'s household` : "Casa familiar"
+  const dictionary = await getServerDictionary()
+  const householdName = user.name
+    ? dictionary.householdNameTemplate.replace("{name}", user.name)
+    : dictionary.household
 
   const household = await prisma.household.create({
     data: {
@@ -74,7 +79,7 @@ export async function getActiveHouseholdContext() {
       },
       budgetPlans: {
         create: {
-          name: "Current plan",
+          name: dictionary.activePlanName,
           status: PlanStatus.ACTIVE,
         },
       },

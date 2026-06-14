@@ -112,6 +112,7 @@ model BudgetPlan {
   name                          String
   status                        PlanStatus   @default(ACTIVE)
   lowMonthlyMarginBasisPoints   Int          @default(500)
+  onboardingCompletedAt         DateTime?
   startsOn                      DateTime?
   endsOn                        DateTime?
   createdAt                     DateTime     @default(now())

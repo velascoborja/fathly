@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
-import { planSettingsSchema, type PlanSettingsInput } from "@/lib/validations/budget"
+import { getPlanSettingsSchema, type PlanSettingsInput } from "@/lib/validations/budget"
 
 type Dictionary = (typeof dictionaries)[Locale]
 
@@ -30,7 +30,7 @@ export function PlanSettingsForm({
   const [isPending, startTransition] = useTransition()
   const lowMonthlyMarginPercent = lowMonthlyMarginBasisPoints / 100
   const form = useForm<PlanSettingsInput>({
-    resolver: zodResolver(planSettingsSchema) as unknown as Resolver<PlanSettingsInput>,
+    resolver: zodResolver(getPlanSettingsSchema(dictionary.validation)) as unknown as Resolver<PlanSettingsInput>,
     defaultValues: { lowMonthlyMarginPercent },
   })
 

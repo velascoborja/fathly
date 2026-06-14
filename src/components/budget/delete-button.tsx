@@ -24,7 +24,7 @@ export function DeleteButton({ action, label }: DeleteButtonProps) {
             await action()
             toast.success(label)
           } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Could not delete.")
+            toast.error(error instanceof Error ? error.message : "No se ha podido eliminar.")
           }
         })
       }}

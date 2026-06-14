@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Fathly",
     short_name: "Fathly",
-    description: "Shared household budget coverage for the monthly account.",
+    description: "Control compartido del presupuesto mensual del hogar.",
     start_url: "/",
     display: "standalone",
     background_color: "#fffdf4",

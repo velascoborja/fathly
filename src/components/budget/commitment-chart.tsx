@@ -35,11 +35,16 @@ type CommitmentChartProps = {
     name: string
     amountCents: number
   }[]
+  labels: {
+    noData: string
+    showLess: string
+    showMore: string
+  }
   locale: Locale
   wholeCurrency?: boolean
 }
 
-export function CommitmentChart({ data, locale, wholeCurrency = false }: CommitmentChartProps) {
+export function CommitmentChart({ data, labels, locale, wholeCurrency = false }: CommitmentChartProps) {
   const [isLegendExpanded, setIsLegendExpanded] = useState(false)
   const formatAmount = wholeCurrency ? formatWholeCurrency : formatCurrency
   const chartData = [...data]
@@ -55,17 +60,13 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
   const visibleLegendItems = isLegendExpanded ? chartData : chartData.slice(0, COLLAPSED_LEGEND_ITEMS)
   const hiddenLegendItems = chartData.length - COLLAPSED_LEGEND_ITEMS
   const legendToggleLabel = isLegendExpanded
-    ? locale === "en"
-      ? "Show less"
-      : "Mostrar menos"
-    : locale === "en"
-      ? `Show ${hiddenLegendItems} more`
-      : `Mostrar ${hiddenLegendItems} más`
+    ? labels.showLess
+    : labels.showMore.replace("{count}", String(hiddenLegendItems))
 
   if (!chartData.length) {
     return (
       <div className="mx-auto flex h-[clamp(240px,55vw,360px)] w-full max-w-[520px] items-center justify-center rounded-2xl bg-muted text-sm font-semibold text-muted-foreground">
-        No data
+        {labels.noData}
       </div>
     )
   }

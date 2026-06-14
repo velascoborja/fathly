@@ -2,12 +2,21 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useTransition } from "react"
-import { EllipsisIcon, HomeIcon, LogOutIcon, LanguagesIcon, SettingsIcon } from "lucide-react"
+import { useState, useTransition } from "react"
+import { EllipsisIcon, HomeIcon, LanguagesIcon, Loader2Icon, LogOutIcon, SettingsIcon } from "lucide-react"
 
 import { AppIcon } from "@/components/app/app-icon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,8 +46,9 @@ type AppShellProps = {
 
 export function AppShell({ children, dictionary, householdName, locale, user }: AppShellProps) {
   const [isPending, startTransition] = useTransition()
+  const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false)
   const pathname = usePathname()
-  const avatarLabel = user.name ?? user.email ?? "User"
+  const avatarLabel = user.name ?? user.email ?? dictionary.settings.unknownMember
   const userLabel = user.name ?? user.email
   const nextLocale = locale === "es" ? "en" : "es"
   const localeActionLabel = locale === "es" ? dictionary.actions.switchToEnglish : dictionary.actions.switchToSpanish
@@ -75,7 +85,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => startTransition(() => signOutUser())}>
+                <DropdownMenuItem onClick={() => setIsSignOutDialogOpen(true)}>
                   <LogOutIcon />
                   {dictionary.actions.signOut}
                 </DropdownMenuItem>
@@ -84,7 +94,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
           </div>
 
           <nav
-            aria-label="Primary navigation"
+            aria-label={dictionary.nav.primary}
             className="col-span-2 flex w-full items-center gap-1 rounded-full border border-border bg-muted p-1 md:col-span-1 md:w-fit md:justify-self-center"
           >
             {navItems.map((item) => {
@@ -126,7 +136,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
               <LanguagesIcon data-icon="inline-start" />
               {localeActionLabel}
             </Button>
-            <Button disabled={isPending} onClick={() => startTransition(() => signOutUser())} size="sm" type="button" variant="ghost">
+            <Button disabled={isPending} onClick={() => setIsSignOutDialogOpen(true)} size="sm" type="button" variant="ghost">
               <LogOutIcon data-icon="inline-start" />
               {dictionary.actions.signOut}
             </Button>
@@ -137,6 +147,24 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
       <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-5 md:px-6 md:py-8">
         {children}
       </main>
+
+      <Dialog open={isSignOutDialogOpen} onOpenChange={setIsSignOutDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{dictionary.actions.signOutDialogTitle}</DialogTitle>
+            <DialogDescription>{dictionary.actions.signOutDialogDescription}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button disabled={isPending} type="button" variant="outline" />}>
+              {dictionary.actions.cancel}
+            </DialogClose>
+            <Button disabled={isPending} onClick={() => startTransition(() => signOutUser())} type="button" variant="default">
+              {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
+              {isPending ? dictionary.actions.signingOut : dictionary.actions.confirmSignOut}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

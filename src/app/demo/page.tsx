@@ -30,10 +30,16 @@ import {
 } from "@/lib/budget/math"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 
-const demoDeposits = [
-  { id: "a", name: "Alex", amountCents: 180_000, notes: "Monthly transfer", status: "ACTIVE" as const },
-  { id: "b", name: "Sam", amountCents: 180_000, notes: "Monthly transfer", status: "ACTIVE" as const },
-  { id: "c", name: "Buffer", amountCents: 20_000, notes: "Shared cushion", status: "ACTIVE" as const },
+const demoDeposits: {
+  id: string
+  name: string
+  amountCents: number
+  noteKey: "monthlyTransfer" | "sharedCushion"
+  status: "ACTIVE"
+}[] = [
+  { id: "a", name: "Alex", amountCents: 180_000, noteKey: "monthlyTransfer", status: "ACTIVE" as const },
+  { id: "b", name: "Sam", amountCents: 180_000, noteKey: "monthlyTransfer", status: "ACTIVE" as const },
+  { id: "c", name: "Buffer", amountCents: 20_000, noteKey: "sharedCushion", status: "ACTIVE" as const },
 ]
 
 const demoCommitments = [
@@ -66,7 +72,7 @@ export default async function DemoPage() {
           </Link>
           <Button nativeButton={false} render={<Link href="/auth/signin" />} variant="outline">
             <ArrowLeftIcon data-icon="inline-start" />
-            Sign in
+            {dictionary.actions.signIn}
           </Button>
         </div>
       </header>
@@ -74,7 +80,7 @@ export default async function DemoPage() {
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-5 md:px-6 md:py-8">
         <section className="fathly-hero flex flex-col gap-6 p-5 md:p-6">
           <div className="flex flex-col gap-2">
-            <Badge className="w-fit border border-primary/25 bg-muted text-primary hover:bg-muted">Mock demo</Badge>
+            <Badge className="w-fit border border-primary/25 bg-muted text-primary hover:bg-muted">{dictionary.demo.badge}</Badge>
             <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">{dictionary.dashboard.title}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">{dictionary.dashboard.subtitle}</p>
           </div>
@@ -115,6 +121,11 @@ export default async function DemoPage() {
                     icon: outflow.icon,
                     name: outflow.name,
                   }))}
+                  labels={{
+                    noData: dictionary.dashboard.noChartData,
+                    showLess: dictionary.dashboard.showLess,
+                    showMore: dictionary.dashboard.showMore,
+                  }}
                   locale={locale}
                   wholeCurrency
                 />
@@ -252,7 +263,7 @@ function DemoIncomePanel({ dictionary, locale }: { dictionary: Awaited<ReturnTyp
             <div className="grid grid-cols-[1fr_auto] items-center gap-3 px-2 py-3 -mx-2 transition-colors hover:bg-muted" key={deposit.id}>
               <div className="min-w-0">
                 <p className="truncate font-medium">{deposit.name}</p>
-                <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>
+                <p className="truncate text-sm text-muted-foreground">{dictionary.demo[deposit.noteKey]}</p>
               </div>
               <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
             </div>

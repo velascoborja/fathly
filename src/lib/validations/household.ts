@@ -1,12 +1,30 @@
 import { z } from "zod"
 
-export const householdNameSchema = z.string().trim().min(1, "Name is required.").max(80)
-export const householdNameFormSchema = z.object({
-  name: householdNameSchema,
-})
-export const householdInviteSchema = z.object({
-  email: z.string().trim().toLowerCase().max(254).email("Enter a valid email."),
-})
+import { dictionaries, type Locale } from "@/lib/i18n/dictionaries"
+
+type ValidationMessages = (typeof dictionaries)[Locale]["validation"]
+
+const defaultValidationMessages = dictionaries.es.validation
+
+export function getHouseholdNameSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.string().trim().min(1, messages.nameRequired).max(80)
+}
+
+export function getHouseholdNameFormSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.object({
+    name: getHouseholdNameSchema(messages),
+  })
+}
+
+export function getHouseholdInviteSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.object({
+    email: z.string().trim().toLowerCase().max(254).email(messages.emailInvalid),
+  })
+}
+
+export const householdNameSchema = getHouseholdNameSchema()
+export const householdNameFormSchema = getHouseholdNameFormSchema()
+export const householdInviteSchema = getHouseholdInviteSchema()
 
 export type HouseholdNameInput = z.infer<typeof householdNameSchema>
 export type HouseholdNameFormInput = z.infer<typeof householdNameFormSchema>
