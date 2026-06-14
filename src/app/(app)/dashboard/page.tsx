@@ -46,6 +46,7 @@ export default async function DashboardPage() {
   const [data, dictionary, locale] = await Promise.all([getBudgetData(), getServerDictionary(), getLocale()])
   const summary = calculateBudgetSummary(data.deposits, data.commitments)
   const outflows = getCommitmentBreakdown(data.commitments)
+  const categoryOptions = getCategoryOptions(data.commitments)
   const hasData = data.deposits.length > 0 || data.commitments.length > 0
 
   return (
@@ -74,6 +75,7 @@ export default async function DashboardPage() {
                   data={outflows.map((outflow) => ({
                     amountCents: outflow.monthlyAmountCents,
                     id: outflow.id,
+                    icon: outflow.icon,
                     name: outflow.name,
                   }))}
                   locale={locale}
@@ -93,11 +95,16 @@ export default async function DashboardPage() {
                   </CardTitle>
                   <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
                 </div>
-                <BudgetDialogForm action={createCommitment} dictionary={dictionary} kind="commitment" />
+                <BudgetDialogForm
+                  action={createCommitment}
+                  categoryOptions={categoryOptions}
+                  dictionary={dictionary}
+                  kind="commitment"
+                />
               </div>
             </CardHeader>
             <CardContent>
-              <OutflowTable commitments={outflows} dictionary={dictionary} locale={locale} />
+              <OutflowTable commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
             </CardContent>
           </Card>
         </div>
@@ -125,6 +132,12 @@ function DashboardHeader({ dictionary }: { dictionary: Dictionary }) {
       <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">{dictionary.dashboard.title}</h1>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">{dictionary.dashboard.subtitle}</p>
     </div>
+  )
+}
+
+function getCategoryOptions(commitments: Pick<Commitment, "category">[]) {
+  return Array.from(new Set(commitments.map((commitment) => commitment.category).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b)
   )
 }
 
@@ -324,10 +337,12 @@ function IncomePanel({
 }
 
 function OutflowTable({
+  categoryOptions,
   commitments,
   dictionary,
   locale,
 }: {
+  categoryOptions: string[]
   commitments: (Commitment & { monthlyAmountCents: number })[]
   dictionary: Dictionary
   locale: Locale
@@ -364,6 +379,7 @@ function OutflowTable({
                   {group.commitments.map((commitment, commitmentIndex) => (
                     <BudgetRowContextMenu
                       deleteAction={deleteCommitment.bind(null, commitment.id)}
+                      categoryOptions={categoryOptions}
                       dictionary={dictionary}
                       item={commitment}
                       key={commitment.id}
@@ -380,6 +396,7 @@ function OutflowTable({
                         <TableCell className="w-9 p-0 text-right">
                           <BudgetRowActions
                             deleteAction={deleteCommitment.bind(null, commitment.id)}
+                            categoryOptions={categoryOptions}
                             dictionary={dictionary}
                             item={commitment}
                             kind="commitment"

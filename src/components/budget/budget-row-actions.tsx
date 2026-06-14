@@ -43,6 +43,7 @@ type DepositActionsProps = {
 }
 
 type CommitmentActionsProps = {
+  categoryOptions?: string[]
   deleteAction: () => Promise<void>
   dictionary: Dictionary
   item: Commitment
@@ -108,58 +109,51 @@ export function BudgetRowContextMenu({ children, ...props }: BudgetRowContextMen
   )
 }
 
-function BudgetEditDialog({
-  deleteAction,
-  dictionary,
-  item,
-  kind,
-  onOpenChange,
-  open,
-  updateAction,
-}: BudgetRowActionProps & {
+function BudgetEditDialog(props: BudgetRowActionProps & {
   onOpenChange: (open: boolean) => void
   open: boolean
 }) {
-  if (kind === "deposit") {
+  if (props.kind === "deposit") {
     return (
       <BudgetDialogForm
-        action={updateAction}
+        action={props.updateAction}
         defaults={{
-          amount: item.amountCents / 100,
-          name: item.name,
-          notes: item.notes ?? "",
+          amount: props.item.amountCents / 100,
+          name: props.item.name,
+          notes: props.item.notes ?? "",
         }}
-        deleteAction={deleteAction}
-        dictionary={dictionary}
+        deleteAction={props.deleteAction}
+        dictionary={props.dictionary}
         kind="deposit"
         mode="edit"
-        onOpenChange={onOpenChange}
-        open={open}
+        onOpenChange={props.onOpenChange}
+        open={props.open}
         trigger={null}
       />
     )
   }
 
-  const icon = getCommitmentIconOption(item.icon).value
+  const icon = getCommitmentIconOption(props.item.icon).value
 
   return (
     <BudgetDialogForm
-      action={updateAction}
+      action={props.updateAction}
+      categoryOptions={props.categoryOptions}
       defaults={{
-        amount: item.amountCents / 100,
-        category: item.category,
-        frequency: item.frequency,
+        amount: props.item.amountCents / 100,
+        category: props.item.category,
+        frequency: props.item.frequency,
         icon,
-        name: item.name,
-        notes: item.notes ?? "",
-        type: item.type,
+        name: props.item.name,
+        notes: props.item.notes ?? "",
+        type: props.item.type,
       }}
-      deleteAction={deleteAction}
-      dictionary={dictionary}
+      deleteAction={props.deleteAction}
+      dictionary={props.dictionary}
       kind="commitment"
       mode="edit"
-      onOpenChange={onOpenChange}
-      open={open}
+      onOpenChange={props.onOpenChange}
+      open={props.open}
       trigger={null}
     />
   )

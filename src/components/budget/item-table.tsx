@@ -103,6 +103,7 @@ export function CommitmentTable({
   title: string
 }) {
   const categoryGroups = groupByCategory ? groupCommitmentsForTable(commitments) : []
+  const categoryOptions = getCategoryOptions(commitments)
   const displayAmountCents = (commitment: Commitment) =>
     showProratedAmount ? commitment.amountCents : monthlyAmountCents(commitment)
 
@@ -154,6 +155,7 @@ export function CommitmentTable({
                       {group.commitments.map((commitment, index) => (
                         <BudgetRowContextMenu
                           deleteAction={onDelete.bind(null, commitment.id)}
+                          categoryOptions={categoryOptions}
                           dictionary={dictionary}
                           item={commitment}
                           key={commitment.id}
@@ -180,6 +182,7 @@ export function CommitmentTable({
                             <TableCell>
                               <BudgetRowActions
                                 deleteAction={onDelete.bind(null, commitment.id)}
+                                categoryOptions={categoryOptions}
                                 dictionary={dictionary}
                                 item={commitment}
                                 kind="commitment"
@@ -195,6 +198,7 @@ export function CommitmentTable({
               : commitments.map((commitment) => (
                   <BudgetRowContextMenu
                     deleteAction={onDelete.bind(null, commitment.id)}
+                    categoryOptions={categoryOptions}
                     dictionary={dictionary}
                     item={commitment}
                     key={commitment.id}
@@ -222,6 +226,7 @@ export function CommitmentTable({
                       <TableCell>
                         <BudgetRowActions
                           deleteAction={onDelete.bind(null, commitment.id)}
+                          categoryOptions={categoryOptions}
                           dictionary={dictionary}
                           item={commitment}
                           kind="commitment"
@@ -235,6 +240,12 @@ export function CommitmentTable({
         </Table>
       </CardContent>
     </Card>
+  )
+}
+
+function getCategoryOptions(commitments: Pick<Commitment, "category">[]) {
+  return Array.from(new Set(commitments.map((commitment) => commitment.category).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b)
   )
 }
 

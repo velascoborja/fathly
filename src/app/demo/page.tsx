@@ -94,6 +94,7 @@ export default async function DemoPage() {
                     data={outflows.map((outflow) => ({
                       amountCents: outflow.monthlyAmountCents,
                       id: outflow.id,
+                      icon: outflow.icon,
                       name: outflow.name,
                     }))}
                     locale={locale}

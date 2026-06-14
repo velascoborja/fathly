@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import { Cell, Pie, PieChart, Tooltip } from "recharts"
+import type { PieLabelRenderProps } from "recharts"
 
+import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { formatCurrency, formatWholeCurrency } from "@/lib/budget/format"
 import type { Locale } from "@/lib/i18n/dictionaries"
 
@@ -20,10 +22,16 @@ const CHART_COLORS = [
 ]
 
 const COLLAPSED_LEGEND_ITEMS = 5
+const ICON_LABEL_MIN_PERCENT = 0.12
+const ICON_LABEL_SIZE = 24
+const ICON_LABEL_HALF_SIZE = ICON_LABEL_SIZE / 2
+const ICON_LABEL_RADIUS_RATIO = 0.5
+const RADIAN = Math.PI / 180
 
 type CommitmentChartProps = {
   data: {
     id: string
+    icon?: string | null
     name: string
     amountCents: number
   }[]
@@ -40,6 +48,7 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
       ...item,
       amount: item.amountCents / 100,
       fill: CHART_COLORS[index % CHART_COLORS.length],
+      Icon: getCommitmentIconOption(item.icon).icon,
     }))
   const totalCents = data.reduce((sum, item) => sum + item.amountCents, 0)
   const hasCollapsibleLegend = chartData.length > COLLAPSED_LEGEND_ITEMS
@@ -86,6 +95,8 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
             dataKey="amount"
             innerRadius="60%"
             isAnimationActive={false}
+            label={renderCommitmentIconLabel}
+            labelLine={false}
             nameKey="name"
             outerRadius="98%"
             paddingAngle={2}
@@ -126,4 +137,57 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
       </div>
     </div>
   )
+}
+
+function renderCommitmentIconLabel(props: PieLabelRenderProps) {
+  const percent = typeof props.percent === "number" ? props.percent : 0
+
+  if (percent < ICON_LABEL_MIN_PERCENT) {
+    return null
+  }
+
+  const payload = props.payload as
+    | { Icon?: React.ComponentType<{ color?: string; height?: number; strokeWidth?: number; style?: React.CSSProperties; width?: number }> }
+    | undefined
+  const Icon = payload?.Icon
+  const cx = Number(props.cx)
+  const cy = Number(props.cy)
+  const innerRadius = Number(props.innerRadius)
+  const outerRadius = Number(props.outerRadius)
+  const midAngle = Number(props.midAngle)
+
+  if (
+    !Icon ||
+    !Number.isFinite(cx) ||
+    !Number.isFinite(cy) ||
+    !Number.isFinite(innerRadius) ||
+    !Number.isFinite(outerRadius) ||
+    !Number.isFinite(midAngle)
+  ) {
+    return null
+  }
+
+  const radius = clamp(
+    innerRadius + (outerRadius - innerRadius) * ICON_LABEL_RADIUS_RATIO,
+    innerRadius + ICON_LABEL_HALF_SIZE,
+    outerRadius - ICON_LABEL_HALF_SIZE
+  )
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return (
+    <g className="pointer-events-none" transform={`translate(${x - ICON_LABEL_HALF_SIZE} ${y - ICON_LABEL_HALF_SIZE})`}>
+      <Icon
+        color="#FFFFFF"
+        height={ICON_LABEL_SIZE}
+        strokeWidth={2.8}
+        style={{ filter: "drop-shadow(0 1px 2px rgba(45, 45, 45, 0.35))" }}
+        width={ICON_LABEL_SIZE}
+      />
+    </g>
+  )
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
 }
