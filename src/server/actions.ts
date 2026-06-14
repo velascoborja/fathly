@@ -149,7 +149,7 @@ export async function shareHouseholdAccess(formData: FormData) {
   }
 
   if (context.user.email?.toLowerCase() === parsed.data.email) {
-    throw new Error(dictionary.validation.shareAccessSelf)
+    return
   }
 
   const user = await prisma.user.findFirst({
@@ -169,7 +169,7 @@ export async function shareHouseholdAccess(formData: FormData) {
   })
 
   if (!user) {
-    throw new Error(dictionary.validation.shareAccessUnknownUser)
+    return
   }
 
   const existingMembership = user.memberships.find(
@@ -177,11 +177,11 @@ export async function shareHouseholdAccess(formData: FormData) {
   )
 
   if (existingMembership) {
-    throw new Error(dictionary.validation.shareAccessAlreadyMember)
+    return
   }
 
   if (user.memberships.length > 0) {
-    throw new Error(dictionary.validation.shareAccessOtherHousehold)
+    return
   }
 
   await prisma.householdMember.create({

@@ -4,7 +4,7 @@ Instructions for coding agents working in this repository.
 
 ## Communication
 
-- Always reply in English.
+- Reply in the language used by the user in their prompt.
 - Be direct and concise. Explain assumptions and tradeoffs when they affect implementation.
 - Do not revert user changes unless explicitly asked. If the worktree is dirty, preserve unrelated changes.
 
@@ -95,6 +95,7 @@ The `/demo` route should remain usable without OAuth, PostgreSQL, or a `.env` fi
 - E2E tests use Playwright with desktop Chromium and Pixel 7 projects.
 - Add or update tests for changed budget math, validations, i18n copy behavior, app-shell layout behavior, auth guard behavior, and user-facing workflows.
 - For UI changes, verify the demo route or the affected authenticated route in a browser when feasible.
+- Always run and verify that unit tests pass after implementing each feature. If any tests fail, correct the code or tests.
 
 ## Git Hygiene
 
