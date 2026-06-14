@@ -1,16 +1,40 @@
-import { SettingsIcon } from "lucide-react"
+import { SettingsIcon, UsersIcon } from "lucide-react"
 
+import { HouseholdAccessForm } from "@/components/app/household-access-form"
 import { HouseholdNameForm } from "@/components/app/household-name-form"
 import { PlanSettingsForm } from "@/components/app/plan-settings-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getServerDictionary } from "@/lib/i18n/server"
-import { updateHouseholdName, updatePlanSettings } from "@/server/actions"
+import { prisma } from "@/lib/prisma"
+import { shareHouseholdAccess, updateHouseholdName, updatePlanSettings } from "@/server/actions"
 import { getActiveHouseholdContext } from "@/server/household"
 
 export const dynamic = "force-dynamic"
 
 export default async function SettingsPage() {
   const [context, dictionary] = await Promise.all([getActiveHouseholdContext(), getServerDictionary()])
+  const members = await prisma.householdMember.findMany({
+    where: {
+      householdId: context.household.id,
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        role: "desc",
+      },
+      {
+        createdAt: "asc",
+      },
+    ],
+  })
 
   return (
     <section className="flex flex-col gap-4">
@@ -33,6 +57,24 @@ export default async function SettingsPage() {
             action={updateHouseholdName}
             dictionary={dictionary}
             householdName={context.household.name}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="fathly-card border-accent/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <UsersIcon className="size-5 text-primary" />
+            {dictionary.settings.shareAccessCardTitle}
+          </CardTitle>
+          <CardDescription>{dictionary.settings.shareAccessCardDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HouseholdAccessForm
+            action={shareHouseholdAccess}
+            dictionary={dictionary}
+            isOwner={context.membership.role === "OWNER"}
+            members={members}
           />
         </CardContent>
       </Card>

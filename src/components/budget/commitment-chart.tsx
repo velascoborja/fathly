@@ -64,19 +64,19 @@ export function CommitmentChart({ data, locale, wholeCurrency = false }: Commitm
 
   if (!chartData.length) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-2xl bg-muted text-sm font-semibold text-muted-foreground">
+      <div className="mx-auto flex h-[clamp(240px,55vw,360px)] w-full max-w-[520px] items-center justify-center rounded-2xl bg-muted text-sm font-semibold text-muted-foreground">
         No data
       </div>
     )
   }
 
   return (
-    <div className="grid min-h-[320px] gap-5">
-      <div className="relative min-h-[280px]">
+    <div className="grid gap-5">
+      <div className="relative mx-auto h-[clamp(240px,55vw,360px)] w-full max-w-[520px]">
         <PieChart
           margin={{ bottom: 8, left: 8, right: 8, top: 8 }}
           responsive
-          style={{ height: "100%", minHeight: 280, width: "100%" }}
+          style={{ height: "100%", width: "100%" }}
         >
           <Tooltip
             contentStyle={{

@@ -14,5 +14,8 @@ describe("AppShell layout", () => {
     expect(source).toContain("setLocaleAction")
     expect(source).toContain("signOutUser")
     expect(source).toContain("householdName")
+    expect(source).toContain("lg:hidden")
+    expect(source).toContain("DropdownMenu")
+    expect(source).toContain("hidden min-w-0 flex-nowrap items-center gap-2 lg:flex")
   })
 })

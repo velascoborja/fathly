@@ -12,9 +12,9 @@ import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
+import { CoverageProgress } from "@/components/budget/coverage-progress"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import {
   calculateBudgetSummary,
@@ -62,30 +62,10 @@ export default async function DashboardPage() {
           summary={summary}
         />
 
-        <div className="grid items-start gap-4 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.9fr)]">
-          <div className="grid gap-4">
-            <IncomePanel deposits={data.deposits} dictionary={dictionary} locale={locale} />
-            <Card className="fathly-card">
-              <CardHeader>
-                <CardTitle className="text-2xl">{dictionary.dashboard.breakdown}</CardTitle>
-                <CardDescription>{dictionary.dashboard.liveUpdateHint}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CommitmentChart
-                  data={outflows.map((outflow) => ({
-                    amountCents: outflow.monthlyAmountCents,
-                    id: outflow.id,
-                    icon: outflow.icon,
-                    name: outflow.name,
-                  }))}
-                  locale={locale}
-                  wholeCurrency
-                />
-              </CardContent>
-            </Card>
-          </div>
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(520px,1.55fr)]">
+          <IncomePanel deposits={data.deposits} dictionary={dictionary} locale={locale} />
 
-          <Card className="fathly-card border-destructive/35">
+          <Card className="fathly-card border-destructive/35 lg:row-span-2">
             <CardHeader>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -105,6 +85,25 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <OutflowTable commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
+            </CardContent>
+          </Card>
+
+          <Card className="fathly-card">
+            <CardHeader>
+              <CardTitle className="text-2xl">{dictionary.dashboard.breakdown}</CardTitle>
+              <CardDescription>{dictionary.dashboard.liveUpdateHint}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CommitmentChart
+                data={outflows.map((outflow) => ({
+                  amountCents: outflow.monthlyAmountCents,
+                  id: outflow.id,
+                  icon: outflow.icon,
+                  name: outflow.name,
+                }))}
+                locale={locale}
+                wholeCurrency
+              />
             </CardContent>
           </Card>
         </div>
@@ -182,7 +181,7 @@ function MonthlySnapshot({
   return (
     <Card className={`fathly-card ${cardToneClass}`}>
       <CardContent className="grid gap-6 p-6 lg:grid-cols-3 lg:items-center">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
           <SnapshotMetric
             label={dictionary.dashboard.deposits}
             tone="income"
@@ -227,8 +226,11 @@ function MonthlySnapshot({
             </span>
             <span className="pb-1 text-sm text-muted-foreground">{dictionary.dashboard.covered}</span>
           </div>
-          <Progress
-            className={`[&_[data-slot=progress-track]]:h-4 [&_[data-slot=progress-track]]:bg-border ${resultTone === "shortfall" ? "[&_[data-slot=progress-indicator]]:bg-destructive" : resultTone === "warning" ? "[&_[data-slot=progress-indicator]]:bg-warning" : "[&_[data-slot=progress-indicator]]:bg-primary"}`}
+          <CoverageProgress
+            lowMonthlyMarginBasisPoints={lowMonthlyMarginBasisPoints}
+            markerLabel={dictionary.dashboard.coverageMarginMarker}
+            markerShortLabel={dictionary.dashboard.monthlyResultLowMargin}
+            tone={resultTone}
             value={summary.coverageRatio * 100}
           />
         </div>
@@ -251,7 +253,7 @@ function SnapshotMetric({
   return (
     <div className="flex items-center gap-4">
       <span
-        className={`flex size-12 items-center justify-center rounded-full ${
+        className={`flex size-12 shrink-0 items-center justify-center rounded-full ${
           tone === "expense" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"
         }`}
       >

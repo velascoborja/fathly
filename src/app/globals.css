@@ -114,9 +114,9 @@
   body {
     @apply bg-background text-foreground;
     background:
-      radial-gradient(circle at top left, rgba(123, 47, 190, 0.14), transparent 30rem),
-      radial-gradient(circle at bottom right, rgba(0, 196, 204, 0.10), transparent 26rem),
+      radial-gradient(circle at top left, rgba(123, 47, 190, 0.12), transparent 34rem),
       #ffffff;
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { commitmentSchema, depositSchema, planSettingsSchema } from "@/lib/validations/budget"
-import { householdNameSchema } from "@/lib/validations/household"
+import { householdInviteSchema, householdNameSchema } from "@/lib/validations/household"
 
 describe("budget validation", () => {
   it("accepts valid deposits", () => {
@@ -45,6 +45,13 @@ describe("budget validation", () => {
   it("trims and validates household names", () => {
     expect(householdNameSchema.parse(" Casa nueva ")).toBe("Casa nueva")
     expect(householdNameSchema.safeParse("").success).toBe(false)
+  })
+
+  it("normalizes and validates household share emails", () => {
+    expect(householdInviteSchema.parse({ email: " PERSON@example.COM " })).toEqual({
+      email: "person@example.com",
+    })
+    expect(householdInviteSchema.safeParse({ email: "not-an-email" }).success).toBe(false)
   })
 
   it("validates the monthly result margin percentage", () => {

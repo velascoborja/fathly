@@ -3,13 +3,14 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { HouseholdRole } from "@prisma/client"
 
 import { signIn, signOut } from "@/auth"
 import { centsFromDecimalInput } from "@/lib/budget/format"
 import { inferCommitmentIcon } from "@/lib/budget/commitment-icons"
 import { isLocale } from "@/lib/i18n/dictionaries"
 import { commitmentSchema, depositSchema, planSettingsSchema } from "@/lib/validations/budget"
-import { householdNameSchema } from "@/lib/validations/household"
+import { householdInviteSchema, householdNameSchema } from "@/lib/validations/household"
 import { prisma } from "@/lib/prisma"
 import { getActiveHouseholdContext } from "@/server/household"
 
@@ -55,6 +56,69 @@ export async function updateHouseholdName(formData: FormData) {
     },
     data: {
       name: parsed.data,
+    },
+  })
+
+  revalidatePath("/settings")
+  revalidatePath("/", "layout")
+}
+
+export async function shareHouseholdAccess(formData: FormData) {
+  const parsed = householdInviteSchema.safeParse({
+    email: formData.get("email"),
+  })
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid email.")
+  }
+
+  const context = await getActiveHouseholdContext()
+
+  if (context.membership.role !== "OWNER") {
+    throw new Error("Only household owners can share access.")
+  }
+
+  if (context.user.email?.toLowerCase() === parsed.data.email) {
+    throw new Error("You already have access to this household.")
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      email: {
+        equals: parsed.data.email,
+        mode: "insensitive",
+      },
+    },
+    include: {
+      memberships: {
+        select: {
+          householdId: true,
+        },
+      },
+    },
+  })
+
+  if (!user) {
+    throw new Error("That email does not belong to a Fathly user yet.")
+  }
+
+  const existingMembership = user.memberships.find(
+    (membership) => membership.householdId === context.household.id
+  )
+
+  if (existingMembership) {
+    throw new Error("That user already has access to this household.")
+  }
+
+  if (user.memberships.length > 0) {
+    throw new Error("That user already belongs to another household. Household switching is not supported yet.")
+  }
+
+  await prisma.householdMember.create({
+    data: {
+      householdId: context.household.id,
+      userId: user.id,
+      role: HouseholdRole.MEMBER,
     },
   })
 

@@ -3,11 +3,20 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTransition } from "react"
-import { HomeIcon, LogOutIcon, LanguagesIcon, SettingsIcon } from "lucide-react"
+import { EllipsisIcon, HomeIcon, LogOutIcon, LanguagesIcon, SettingsIcon } from "lucide-react"
 
 import { AppIcon } from "@/components/app/app-icon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { setLocaleAction, signOutUser } from "@/server/actions"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
@@ -30,6 +39,9 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
   const [isPending, startTransition] = useTransition()
   const pathname = usePathname()
   const avatarLabel = user.name ?? user.email ?? "User"
+  const userLabel = user.name ?? user.email
+  const nextLocale = locale === "es" ? "en" : "es"
+  const localeActionLabel = locale === "es" ? dictionary.actions.switchToEnglish : dictionary.actions.switchToSpanish
   const navItems = [
     { href: "/dashboard", icon: HomeIcon, label: dictionary.nav.dashboard },
     { href: "/settings", icon: SettingsIcon, label: dictionary.nav.settings },
@@ -38,7 +50,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
   return (
     <div className="min-h-svh text-foreground">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur">
-        <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-3 px-4 py-3 md:grid-cols-3 md:items-center md:px-6">
+        <div className="mx-auto grid w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:px-6 lg:grid-cols-[minmax(220px,1fr)_auto_minmax(360px,1fr)]">
           <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
             <AppIcon className="size-10 shrink-0" />
             <div className="min-w-0">
@@ -47,9 +59,33 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
             </div>
           </div>
 
+          <div className="justify-self-end lg:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button aria-label={dictionary.actions.actionsMenu} disabled={isPending} size="icon-lg" type="button" variant="outline" />}
+              >
+                <EllipsisIcon />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuGroup>
+                  {userLabel ? <DropdownMenuLabel className="truncate">{userLabel}</DropdownMenuLabel> : null}
+                  <DropdownMenuItem onClick={() => startTransition(() => setLocaleAction(nextLocale))}>
+                    <LanguagesIcon />
+                    {localeActionLabel}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => startTransition(() => signOutUser())}>
+                  <LogOutIcon />
+                  {dictionary.actions.signOut}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           <nav
             aria-label="Primary navigation"
-            className="flex w-fit items-center gap-1 rounded-full border border-border bg-muted p-1 md:justify-self-center"
+            className="col-span-2 flex w-full items-center gap-1 rounded-full border border-border bg-muted p-1 md:col-span-1 md:w-fit md:justify-self-center"
           >
             {navItems.map((item) => {
               const Icon = item.icon
@@ -59,7 +95,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
                 <Button
                   key={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={cn(isActive && "border-primary/40 bg-card text-primary shadow-[0_2px_8px_rgba(0,0,0,0.08)]")}
+                  className={cn("flex-1 md:flex-none", isActive && "border-primary/40 bg-card text-primary shadow-[0_2px_8px_rgba(0,0,0,0.08)]")}
                   nativeButton={false}
                   render={<Link href={item.href} />}
                   size="sm"
@@ -72,23 +108,23 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
             })}
           </nav>
 
-          <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-self-end">
+          <div className="hidden min-w-0 flex-nowrap items-center gap-2 lg:flex lg:justify-self-end">
             <div className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-muted px-2 py-1">
               <Avatar className="size-8">
                 <AvatarImage alt={avatarLabel} src={user.image ?? undefined} />
                 <AvatarFallback>{avatarLabel.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="hidden max-w-[180px] truncate text-sm font-semibold sm:inline">{user.name ?? user.email}</span>
+              <span className="max-w-[160px] truncate text-sm font-semibold xl:max-w-[180px]">{userLabel}</span>
             </div>
             <Button
               disabled={isPending}
-              onClick={() => startTransition(() => setLocaleAction(locale === "es" ? "en" : "es"))}
+              onClick={() => startTransition(() => setLocaleAction(nextLocale))}
               size="sm"
               type="button"
               variant="outline"
             >
               <LanguagesIcon data-icon="inline-start" />
-              {locale === "es" ? dictionary.actions.switchToEnglish : dictionary.actions.switchToSpanish}
+              {localeActionLabel}
             </Button>
             <Button disabled={isPending} onClick={() => startTransition(() => signOutUser())} size="sm" type="button" variant="ghost">
               <LogOutIcon data-icon="inline-start" />
