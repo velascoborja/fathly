@@ -68,9 +68,35 @@ export default async function DashboardPage() {
         />
 
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(520px,1.55fr)]">
-          <IncomePanel deposits={data.deposits} dictionary={dictionary} locale={locale} />
+          <div className="flex flex-col gap-4">
+            <IncomePanel deposits={data.deposits} dictionary={dictionary} locale={locale} />
 
-          <Card className="fathly-card border-destructive/35 lg:row-span-2">
+            <Card className="fathly-card">
+              <CardHeader>
+                <CardTitle className="text-2xl">{dictionary.dashboard.breakdown}</CardTitle>
+                <CardDescription>{dictionary.dashboard.liveUpdateHint}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CommitmentChart
+                  data={outflows.map((outflow) => ({
+                    amountCents: outflow.monthlyAmountCents,
+                    id: outflow.id,
+                    icon: outflow.icon,
+                    name: outflow.name,
+                  }))}
+                  labels={{
+                    noData: dictionary.dashboard.noChartData,
+                    showLess: dictionary.dashboard.showLess,
+                    showMore: dictionary.dashboard.showMore,
+                  }}
+                  locale={locale}
+                  wholeCurrency
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="fathly-card border-destructive/35">
             <CardHeader>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -90,30 +116,6 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <OutflowTable commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
-            </CardContent>
-          </Card>
-
-          <Card className="fathly-card">
-            <CardHeader>
-              <CardTitle className="text-2xl">{dictionary.dashboard.breakdown}</CardTitle>
-              <CardDescription>{dictionary.dashboard.liveUpdateHint}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CommitmentChart
-                data={outflows.map((outflow) => ({
-                  amountCents: outflow.monthlyAmountCents,
-                  id: outflow.id,
-                  icon: outflow.icon,
-                  name: outflow.name,
-                }))}
-                labels={{
-                  noData: dictionary.dashboard.noChartData,
-                  showLess: dictionary.dashboard.showLess,
-                  showMore: dictionary.dashboard.showMore,
-                }}
-                locale={locale}
-                wholeCurrency
-              />
             </CardContent>
           </Card>
         </div>
