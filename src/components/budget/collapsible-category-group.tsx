@@ -58,15 +58,15 @@ export function CollapsibleCategoryGroup({
         </TableCell>
         <TableCell
           className={cn(
-            "w-44 bg-muted/70 py-2 pr-2 pl-0 text-right",
+            "w-44 bg-muted/70 py-2 pr-2 pl-0 text-right max-sm:w-32",
             totalCellIsLast && "rounded-r-2xl"
           )}
         >
-          <span className="inline-flex items-center justify-end gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 whitespace-nowrap">
-            <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-destructive/80">
+          <span className="inline-flex items-center justify-end gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 whitespace-nowrap max-sm:gap-1.5 max-sm:px-2">
+            <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-destructive/80 max-sm:text-[0.6rem] max-sm:tracking-[0.08em]">
               {totalLabel}
             </span>
-            <span className={cn("font-mono font-semibold", totalClassName)}>{total}</span>
+            <span className={cn("font-mono font-semibold max-sm:text-sm", totalClassName)}>{total}</span>
           </span>
         </TableCell>
         {Array.from({ length: extraTrailingCells }, (_, index) => (

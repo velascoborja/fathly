@@ -114,7 +114,7 @@ export default async function DashboardPage() {
                 />
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-sm:px-2">
               <OutflowTable commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
             </CardContent>
           </Card>
@@ -365,7 +365,7 @@ function OutflowTable({
 
   return (
     <div>
-      <Table>
+      <Table className="table-fixed">
         <TableBody>
           {commitments.length === 0 ? (
             <TableRow>
@@ -401,10 +401,10 @@ function OutflowTable({
                       updateAction={updateCommitment.bind(null, commitment.id)}
                     >
                       <TableRow className={commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined}>
-                        <TableCell className="pl-6 font-medium max-sm:pl-2">
+                        <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
                           <CommitmentName commitment={commitment} />
                         </TableCell>
-                        <TableCell className="w-28 pr-1 text-right font-mono font-semibold max-sm:w-20 max-sm:text-sm">
+                        <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
                           {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
                         </TableCell>
                         <TableCell className="w-9 p-0 text-right">

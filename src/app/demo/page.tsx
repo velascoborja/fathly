@@ -103,7 +103,7 @@ export default async function DemoPage() {
                   <Button disabled>{dictionary.actions.addBill}</Button>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="max-sm:px-2">
                 <DemoOutflowTable dictionary={dictionary} locale={locale} rows={outflows} />
               </CardContent>
             </Card>
@@ -291,7 +291,7 @@ function DemoOutflowTable({
 
   return (
     <div>
-      <Table>
+      <Table className="table-fixed">
         <TableBody>
           {categoryGroups.map((group, index) => (
             <Fragment key={group.category}>
@@ -310,10 +310,10 @@ function DemoOutflowTable({
               >
                 {group.commitments.map((row, rowIndex) => (
                   <TableRow className={rowIndex === group.commitments.length - 1 ? "border-b-0" : undefined} key={row.id}>
-                    <TableCell className="pl-6 font-medium max-sm:pl-2">
+                    <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
                       <DemoCommitmentName row={row} />
                     </TableCell>
-                    <TableCell className="w-28 pr-1 text-right font-mono font-semibold max-sm:w-20 max-sm:text-sm">
+                    <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
                       {formatWholeCurrency(row.monthlyAmountCents, locale)}
                     </TableCell>
                   </TableRow>
