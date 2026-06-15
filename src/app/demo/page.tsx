@@ -64,7 +64,7 @@ export default async function DemoPage() {
 
   return (
     <main className="min-h-svh">
-      <header className="sticky top-0 z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur">
+      <header className="z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur md:sticky md:top-0">
         <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 md:px-6">
           <Link className="flex items-center gap-3" href="/auth/signin">
             <AppIcon className="size-10" />
@@ -78,7 +78,7 @@ export default async function DemoPage() {
       </header>
 
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-5 md:px-6 md:py-8">
-        <section className="fathly-hero flex flex-col gap-6 p-5 md:p-6">
+        <section className="fathly-hero flex flex-col gap-6 p-5 max-sm:-mx-4 max-sm:gap-5 max-sm:rounded-none max-sm:border-0 max-sm:px-4 max-sm:py-0 max-sm:shadow-none max-sm:[background:transparent] md:p-6">
           <div className="flex flex-col gap-2">
             <Badge className="w-fit border border-primary/25 bg-muted text-primary hover:bg-muted">{dictionary.demo.badge}</Badge>
             <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">{dictionary.dashboard.title}</h1>
@@ -310,10 +310,10 @@ function DemoOutflowTable({
               >
                 {group.commitments.map((row, rowIndex) => (
                   <TableRow className={rowIndex === group.commitments.length - 1 ? "border-b-0" : undefined} key={row.id}>
-                    <TableCell className="pl-6 font-medium">
+                    <TableCell className="pl-6 font-medium max-sm:pl-2">
                       <DemoCommitmentName row={row} />
                     </TableCell>
-                    <TableCell className="w-28 pr-1 text-right font-mono font-semibold">
+                    <TableCell className="w-28 pr-1 text-right font-mono font-semibold max-sm:w-20 max-sm:text-sm">
                       {formatWholeCurrency(row.monthlyAmountCents, locale)}
                     </TableCell>
                   </TableRow>

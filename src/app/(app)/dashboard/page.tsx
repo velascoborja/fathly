@@ -56,7 +56,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <section className="fathly-hero flex flex-col gap-6 p-5 md:p-6">
+      <section className="fathly-hero flex flex-col gap-6 p-5 max-sm:-mx-4 max-sm:gap-5 max-sm:rounded-none max-sm:border-0 max-sm:px-4 max-sm:py-0 max-sm:shadow-none max-sm:[background:transparent] md:p-6">
         <DashboardHeader dictionary={dictionary} />
 
         <MonthlySnapshot
@@ -401,10 +401,10 @@ function OutflowTable({
                       updateAction={updateCommitment.bind(null, commitment.id)}
                     >
                       <TableRow className={commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined}>
-                        <TableCell className="pl-6 font-medium">
+                        <TableCell className="pl-6 font-medium max-sm:pl-2">
                           <CommitmentName commitment={commitment} />
                         </TableCell>
-                        <TableCell className="w-28 pr-1 text-right font-mono font-semibold">
+                        <TableCell className="w-28 pr-1 text-right font-mono font-semibold max-sm:w-20 max-sm:text-sm">
                           {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
                         </TableCell>
                         <TableCell className="w-9 p-0 text-right">
