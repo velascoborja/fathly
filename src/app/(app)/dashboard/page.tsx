@@ -366,6 +366,11 @@ function OutflowTable({
   return (
     <div>
       <Table className="table-fixed">
+        <colgroup>
+          <col />
+          <col className="w-28 max-sm:w-18" />
+          <col className="w-9" />
+        </colgroup>
         <TableBody>
           {commitments.length === 0 ? (
             <TableRow>
