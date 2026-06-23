@@ -22,8 +22,8 @@ export function CoverageProgress({
   const marginPercent = lowMonthlyMarginBasisPoints / 100
   const markerPercent = Math.min(Math.max(100 - marginPercent, 0), 100)
   const formattedMargin = formatLowMonthlyMarginPercent(lowMonthlyMarginBasisPoints)
-  const markerAlignmentClass =
-    markerPercent > 85 ? "-translate-x-full items-end" : markerPercent < 15 ? "items-start" : "-translate-x-1/2 items-center"
+  const markerLabelAlignmentClass =
+    markerPercent > 85 ? "self-end" : markerPercent < 15 ? "self-start" : "self-center"
 
   return (
     <div className={cn("relative pt-8", className)}>
@@ -41,11 +41,16 @@ export function CoverageProgress({
       />
       <div
         aria-hidden="true"
-        className={cn("pointer-events-none absolute top-0 flex flex-col", markerAlignmentClass)}
+        className="pointer-events-none absolute top-0 flex w-0 flex-col items-center"
         data-slot="coverage-margin-marker"
         style={{ left: `${markerPercent}%` }}
       >
-        <span className="mb-1 whitespace-nowrap rounded-full border border-border/70 bg-card/90 px-2 py-0.5 text-[0.65rem] font-bold leading-none text-muted-foreground shadow-sm">
+        <span
+          className={cn(
+            "mb-1 whitespace-nowrap rounded-full border border-border/70 bg-card/90 px-2 py-0.5 text-[0.65rem] font-bold leading-none text-muted-foreground shadow-sm",
+            markerLabelAlignmentClass
+          )}
+        >
           {markerShortLabel} {formattedMargin}
         </span>
         <span className="h-2 w-px rounded-full bg-foreground/35" />

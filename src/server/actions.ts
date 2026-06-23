@@ -10,7 +10,13 @@ import { centsFromDecimalInput } from "@/lib/budget/format"
 import { inferCommitmentIcon } from "@/lib/budget/commitment-icons"
 import { isLocale } from "@/lib/i18n/dictionaries"
 import { getServerDictionary } from "@/lib/i18n/server"
-import { getCommitmentSchema, getDepositSchema, getInitialSetupSchema, getPlanSettingsSchema } from "@/lib/validations/budget"
+import {
+  getCategoryNameSchema,
+  getCommitmentSchema,
+  getDepositSchema,
+  getInitialSetupSchema,
+  getPlanSettingsSchema,
+} from "@/lib/validations/budget"
 import { getHouseholdInviteSchema, getHouseholdNameSchema } from "@/lib/validations/household"
 import { prisma } from "@/lib/prisma"
 import { getActiveHouseholdContext } from "@/server/household"
@@ -434,6 +440,57 @@ export async function updateCommitment(id: string, formData: FormData) {
       frequency: parsed.data.frequency,
       type: parsed.data.type,
       notes: parsed.data.notes,
+    },
+  })
+
+  revalidateBudgetPaths()
+}
+
+export async function renameCommitmentCategory(oldCategory: string, formData: FormData) {
+  const dictionary = await getServerDictionary()
+  const parsed = getCategoryNameSchema(dictionary.validation).safeParse(formData.get("category"))
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCommitmentInvalid)
+  }
+
+  const nextCategory = parsed.data
+  const currentCategory = oldCategory.trim()
+
+  if (nextCategory === currentCategory) {
+    throw new Error(dictionary.validation.categoryUnchanged)
+  }
+
+  const context = await getActiveHouseholdContext()
+  const categoryExists = await prisma.commitment.findFirst({
+    where: {
+      householdId: context.household.id,
+      planId: context.plan.id,
+      category: {
+        equals: nextCategory,
+        mode: "insensitive",
+      },
+      NOT: {
+        category: currentCategory,
+      },
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (categoryExists) {
+    throw new Error(dictionary.validation.categoryDuplicate)
+  }
+
+  await prisma.commitment.updateMany({
+    where: {
+      householdId: context.household.id,
+      planId: context.plan.id,
+      category: currentCategory,
+    },
+    data: {
+      category: nextCategory,
     },
   })
 

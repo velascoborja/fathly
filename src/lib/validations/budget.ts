@@ -26,12 +26,16 @@ export function getCommitmentSchema(messages: ValidationMessages = defaultValida
   return z.object({
     name: z.string().trim().min(1, messages.nameRequired).max(80),
     amount: getMoneyAmountSchema(messages),
-    category: z.string().trim().min(1, messages.categoryRequired).max(60),
+    category: getCategoryNameSchema(messages),
     icon: z.enum(commitmentIconValues).default("receipt"),
     frequency: z.enum(["MONTHLY", "ANNUAL"]),
     type: z.literal("BILL").default("BILL"),
     notes: z.string().trim().max(240).optional(),
   })
+}
+
+export function getCategoryNameSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.string().trim().min(1, messages.categoryRequired).max(60)
 }
 
 function getOptionalSetupMoneyAmountSchema(messages: ValidationMessages = defaultValidationMessages) {
@@ -121,6 +125,7 @@ export function getPlanSettingsSchema(messages: ValidationMessages = defaultVali
 export const moneyAmountSchema = getMoneyAmountSchema()
 export const depositSchema = getDepositSchema()
 export const commitmentSchema = getCommitmentSchema()
+export const categoryNameSchema = getCategoryNameSchema()
 export const initialSetupSchema = getInitialSetupSchema()
 export const planSettingsSchema = getPlanSettingsSchema()
 export type DepositInput = z.infer<typeof depositSchema>

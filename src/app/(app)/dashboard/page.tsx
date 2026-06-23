@@ -11,6 +11,7 @@ import { redirect } from "next/navigation"
 
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
+import { CategoryRenameDialog } from "@/components/budget/category-rename-dialog"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { CoverageProgress } from "@/components/budget/coverage-progress"
@@ -33,6 +34,7 @@ import {
   createDeposit,
   deleteCommitment,
   deleteDeposit,
+  renameCommitmentCategory,
   updateCommitment,
   updateDeposit,
 } from "@/server/actions"
@@ -389,6 +391,13 @@ function OutflowTable({
                 <CollapsibleCategoryGroup
                   actionColumn
                   category={group.category}
+                  categoryAction={
+                    <CategoryRenameDialog
+                      action={renameCommitmentCategory.bind(null, group.category)}
+                      category={group.category}
+                      dictionary={dictionary}
+                    />
+                  }
                   collapseLabel={dictionary.actions.collapseCategory}
                   expandLabel={dictionary.actions.expandCategory}
                   total={formatWholeCurrency(group.totalCents, locale)}

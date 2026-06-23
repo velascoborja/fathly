@@ -1,14 +1,15 @@
 "use client"
 
 import { ChevronDownIcon } from "lucide-react"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useId, useState } from "react"
 
-import { TableCell, TableRow } from "@/components/ui/table"
+import { TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
 export function CollapsibleCategoryGroup({
   actionColumn = false,
   category,
+  categoryAction,
   children,
   collapseLabel,
   expandLabel,
@@ -20,6 +21,7 @@ export function CollapsibleCategoryGroup({
 }: {
   actionColumn?: boolean
   category: string
+  categoryAction?: ReactNode
   children: ReactNode
   collapseLabel: string
   expandLabel: string
@@ -29,10 +31,12 @@ export function CollapsibleCategoryGroup({
   totalClassName?: string
   totalLabel: string
 }) {
+  const contentId = useId()
   const [expanded, setExpanded] = useState(true)
   const toggleLabel = `${expanded ? collapseLabel : expandLabel} ${category}`
   const totalColSpan = actionColumn ? 2 + extraTrailingCells : 1
   const totalCellIsLast = actionColumn || extraTrailingCells === 0
+  const groupColSpan = (leadingColSpan ?? 1) + totalColSpan + (actionColumn ? 0 : extraTrailingCells)
 
   return (
     <>
@@ -44,18 +48,22 @@ export function CollapsibleCategoryGroup({
           className="rounded-l-2xl bg-muted/70 py-2 pr-0 pl-2 font-semibold text-foreground"
           colSpan={leadingColSpan}
         >
-          <button
-            aria-expanded={expanded}
-            aria-label={toggleLabel}
-            className="flex min-h-11 w-full min-w-0 items-center gap-2 rounded-xl px-2 text-left outline-none transition-colors hover:bg-muted/80 hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/30"
-            onClick={() => setExpanded((current) => !current)}
-            type="button"
-          >
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-muted text-primary">
-              <ChevronDownIcon className={`size-4 transition-transform ${expanded ? "" : "-rotate-90"}`} />
-            </span>
-            <span className="truncate">{category}</span>
-          </button>
+          <div className="flex min-w-0 items-center gap-1">
+            <button
+              aria-controls={contentId}
+              aria-expanded={expanded}
+              aria-label={toggleLabel}
+              className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-xl px-2 text-left outline-none transition-colors hover:bg-muted/80 hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/30"
+              onClick={() => setExpanded((current) => !current)}
+              type="button"
+            >
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-muted text-primary">
+                <ChevronDownIcon className={`size-4 transition-transform ${expanded ? "" : "-rotate-90"}`} />
+              </span>
+              <span className="truncate">{category}</span>
+            </button>
+            {categoryAction}
+          </div>
         </TableCell>
         <TableCell
           className={cn(
@@ -81,7 +89,25 @@ export function CollapsibleCategoryGroup({
           />
         ))}
       </TableRow>
-      {expanded && children}
+      <TableRow className="fathly-row-hover-transparent border-0 bg-transparent">
+        <TableCell className="p-0" colSpan={groupColSpan}>
+          <div
+            aria-hidden={!expanded}
+            className={cn(
+              "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+              expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            )}
+            id={contentId}
+            inert={!expanded ? true : undefined}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <table className="w-full caption-bottom text-sm">
+                <TableBody>{children}</TableBody>
+              </table>
+            </div>
+          </div>
+        </TableCell>
+      </TableRow>
     </>
   )
 }

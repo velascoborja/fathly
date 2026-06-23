@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { commitmentSchema, depositSchema, initialSetupSchema, planSettingsSchema } from "@/lib/validations/budget"
+import { categoryNameSchema, commitmentSchema, depositSchema, initialSetupSchema, planSettingsSchema } from "@/lib/validations/budget"
 import { householdInviteSchema, householdNameSchema } from "@/lib/validations/household"
 
 describe("budget validation", () => {
@@ -18,6 +18,12 @@ describe("budget validation", () => {
         type: "BILL",
       }).success
     ).toBe(false)
+  })
+
+  it("trims and validates category names", () => {
+    expect(categoryNameSchema.parse(" Suministros ")).toBe("Suministros")
+    expect(categoryNameSchema.safeParse("").success).toBe(false)
+    expect(categoryNameSchema.safeParse("x".repeat(61)).success).toBe(false)
   })
 
   it("rejects savings as a commitment type", () => {
