@@ -431,7 +431,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <FieldDescription>{props.dictionary.formHints.notesHelp}</FieldDescription>
             </Field>
           </FieldGroup>
-          <DialogFooter className="mx-0 mb-0 border-t bg-popover px-0 pb-0 pt-4">
+          <DialogFooter className="sticky bottom-[-1.25rem] -mx-5 -mb-5 border-t bg-popover/95 px-5 pb-5 pt-4 backdrop-blur supports-[backdrop-filter]:bg-popover/85">
             {props.deleteAction && (
               <DeleteConfirmation
                 action={props.deleteAction}

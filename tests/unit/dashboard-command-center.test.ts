@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
 const source = readFileSync("src/app/(app)/dashboard/page.tsx", "utf8")
+const demoSource = readFileSync("src/app/demo/page.tsx", "utf8")
 
 describe("dashboard monthly overview", () => {
   it("removes the command center and renders focused budget surfaces", () => {
@@ -26,6 +27,11 @@ describe("dashboard monthly overview", () => {
 
   it("places income above the expense chart in the left dashboard column", () => {
     expect(source.indexOf("<IncomePanel")).toBeLessThan(source.indexOf("<CommitmentChart"))
+  })
+
+  it("places expenses first on mobile without changing the desktop grid", () => {
+    expect(source).toContain('className="fathly-card border-destructive/35 max-sm:order-first"')
+    expect(demoSource).toContain('className="fathly-card border-destructive/35 max-sm:order-first lg:row-span-2"')
   })
 
   it("uses green income and red expense emphasis for faster scanning", () => {

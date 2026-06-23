@@ -96,7 +96,7 @@ export default async function DashboardPage() {
             </Card>
           </div>
 
-          <Card className="fathly-card border-destructive/35">
+          <Card className="fathly-card border-destructive/35 max-sm:order-first">
             <CardHeader>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
