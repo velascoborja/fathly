@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Cell, Pie, PieChart, Tooltip } from "recharts"
-import type { PieLabelRenderProps } from "recharts"
+import { Cell, Pie, PieChart, Sector, Tooltip } from "recharts"
+import type { PieLabelRenderProps, PieSectorShapeProps } from "recharts"
 
 import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { formatCurrency, formatWholeCurrency } from "@/lib/budget/format"
@@ -26,6 +26,7 @@ const ICON_LABEL_MIN_PERCENT = 0.12
 const ICON_LABEL_SIZE = 24
 const ICON_LABEL_HALF_SIZE = ICON_LABEL_SIZE / 2
 const ICON_LABEL_RADIUS_RATIO = 0.5
+const ACTIVE_SLICE_RADIUS_OFFSET = 8
 const RADIAN = Math.PI / 180
 
 type CommitmentChartProps = {
@@ -46,6 +47,8 @@ type CommitmentChartProps = {
 
 export function CommitmentChart({ data, labels, locale, wholeCurrency = false }: CommitmentChartProps) {
   const [isLegendExpanded, setIsLegendExpanded] = useState(false)
+  const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null)
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null)
   const formatAmount = wholeCurrency ? formatWholeCurrency : formatCurrency
   const chartData = [...data]
     .sort((firstItem, secondItem) => secondItem.amountCents - firstItem.amountCents)
@@ -62,6 +65,7 @@ export function CommitmentChart({ data, labels, locale, wholeCurrency = false }:
   const legendToggleLabel = isLegendExpanded
     ? labels.showLess
     : labels.showMore.replace("{count}", String(hiddenLegendItems))
+  const activeItemIndex = hoveredItemIndex ?? selectedItemIndex
 
   if (!chartData.length) {
     return (
@@ -73,9 +77,9 @@ export function CommitmentChart({ data, labels, locale, wholeCurrency = false }:
 
   return (
     <div className="grid gap-5">
-      <div className="relative mx-auto h-[clamp(240px,55vw,360px)] w-full max-w-[520px]">
+      <div className="relative mx-auto h-[clamp(240px,55vw,360px)] w-full max-w-[520px] [&_.recharts-pie-sector]:outline-none [&_.recharts-pie]:outline-none [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none">
         <PieChart
-          margin={{ bottom: 8, left: 8, right: 8, top: 8 }}
+          margin={{ bottom: 12, left: 12, right: 12, top: 12 }}
           responsive
           style={{ height: "100%", width: "100%" }}
         >
@@ -99,8 +103,22 @@ export function CommitmentChart({ data, labels, locale, wholeCurrency = false }:
             label={renderCommitmentIconLabel}
             labelLine={false}
             nameKey="name"
-            outerRadius="98%"
+            outerRadius="94%"
             paddingAngle={2}
+            rootTabIndex={-1}
+            shape={(props, index) =>
+              renderCommitmentSector(props, index === activeItemIndex, {
+                onClick: () => {
+                  setSelectedItemIndex((currentItemIndex) => (currentItemIndex === index ? null : index))
+                },
+                onMouseEnter: () => {
+                  setHoveredItemIndex(index)
+                },
+                onMouseLeave: () => {
+                  setHoveredItemIndex(null)
+                },
+              })
+            }
             stroke="#FFFFFF"
             strokeWidth={3}
           >
@@ -137,6 +155,26 @@ export function CommitmentChart({ data, labels, locale, wholeCurrency = false }:
         ) : null}
       </div>
     </div>
+  )
+}
+
+function renderCommitmentSector(
+  props: PieSectorShapeProps,
+  isActive: boolean,
+  eventHandlers: Pick<React.ComponentProps<typeof Sector>, "onClick" | "onMouseEnter" | "onMouseLeave">
+) {
+  return (
+    <Sector
+      {...props}
+      {...eventHandlers}
+      className="cursor-pointer outline-none transition-[filter,stroke-width] duration-200 motion-reduce:transition-none"
+      outerRadius={isActive ? props.outerRadius + ACTIVE_SLICE_RADIUS_OFFSET : props.outerRadius}
+      stroke="#FFFFFF"
+      strokeWidth={isActive ? 5 : 3}
+      style={{
+        filter: isActive ? "drop-shadow(0 6px 10px rgba(45, 45, 45, 0.18))" : undefined,
+      }}
+    />
   )
 }
 
