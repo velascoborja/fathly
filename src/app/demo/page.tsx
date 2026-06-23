@@ -259,7 +259,7 @@ function DemoIncomePanel({ dictionary, locale }: { dictionary: Awaited<ReturnTyp
       <CardContent className="space-y-4">
         <div className="divide-y divide-border">
           {sortedDeposits.map((deposit) => (
-            <div className="grid grid-cols-[1fr_auto] items-center gap-3 px-2 py-3 -mx-2 transition-colors hover:bg-muted" key={deposit.id}>
+            <div className="grid grid-cols-[1fr_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted" key={deposit.id}>
               <div className="min-w-0">
                 <p className="truncate font-medium">{deposit.name}</p>
                 <p className="truncate text-sm text-muted-foreground">{dictionary.demo[deposit.noteKey]}</p>
@@ -295,7 +295,7 @@ function DemoOutflowTable({
           {categoryGroups.map((group, index) => (
             <Fragment key={group.category}>
               {index > 0 && (
-                <TableRow className="border-0 hover:bg-transparent">
+                <TableRow className="fathly-row-hover-transparent border-0">
                   <TableCell colSpan={2} className="h-4 p-0" />
                 </TableRow>
               )}

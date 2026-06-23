@@ -38,7 +38,7 @@ export function CollapsibleCategoryGroup({
     <>
       <TableRow
         aria-expanded={expanded}
-        className="border-0 bg-transparent hover:bg-transparent has-aria-expanded:bg-transparent"
+        className="fathly-row-hover-transparent border-0 bg-transparent"
       >
         <TableCell
           className="rounded-l-2xl bg-muted/70 py-2 pr-0 pl-2 font-semibold text-foreground"

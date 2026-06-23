@@ -323,7 +323,7 @@ function IncomePanel({
                 kind="deposit"
                 updateAction={updateDeposit.bind(null, deposit.id)}
               >
-                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-2 py-3 -mx-2 transition-colors hover:bg-muted">
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{deposit.name}</p>
                     {deposit.notes && <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>}
@@ -382,7 +382,7 @@ function OutflowTable({
             categoryGroups.map((group, index) => (
               <Fragment key={group.category}>
                 {index > 0 && (
-                  <TableRow className="border-0 hover:bg-transparent">
+                  <TableRow className="fathly-row-hover-transparent border-0">
                     <TableCell colSpan={3} className="h-4 p-0" />
                   </TableRow>
                 )}
