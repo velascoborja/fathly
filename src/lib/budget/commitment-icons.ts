@@ -109,7 +109,7 @@ const iconKeywordRules: { icon: CommitmentIcon; keywords: string[] }[] = [
   },
   {
     icon: "savings",
-    keywords: ["ahorro", "savings", "save", "inversion", "investment", "fondo"],
+    keywords: ["fondo", "fund", "reserva", "reserve"],
   },
   {
     icon: "cash",
@@ -138,7 +138,7 @@ export const commitmentIconOptions: CommitmentIconOption[] = [
   { value: "gas", label: { es: "Gas", en: "Gas" }, icon: FlameIcon, swatch: "bg-coral/15 text-coral-dark" },
   { value: "power", label: { es: "Luz", en: "Power" }, icon: PlugZapIcon, swatch: "bg-primary-light/15 text-primary" },
   { value: "water", label: { es: "Agua", en: "Water" }, icon: DropletsIcon, swatch: "bg-sky-blue/15 text-sky-blue" },
-  { value: "savings", label: { es: "Ahorro", en: "Savings" }, icon: PiggyBankIcon, swatch: "bg-accent-light text-accent-dark" },
+  { value: "savings", label: { es: "Fondo", en: "Fund" }, icon: PiggyBankIcon, swatch: "bg-accent-light text-accent-dark" },
   { value: "insurance", label: { es: "Seguro", en: "Insurance" }, icon: ShieldCheckIcon, swatch: "bg-primary-bg text-primary" },
   { value: "cash", label: { es: "Efectivo", en: "Cash" }, icon: BanknoteIcon, swatch: "bg-success/10 text-success" },
   { value: "books", label: { es: "Libros", en: "Books" }, icon: BookOpenIcon, swatch: "bg-warning/15 text-warning" },

@@ -54,7 +54,6 @@ const demoCommitments = [
   { id: "water", name: "Agua", category: "Suministros", icon: "water", amountCents: 3_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
   { id: "power", name: "Luz", category: "Suministros", icon: "power", amountCents: 9_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
   { id: "insurance", name: "Seguro hogar + IBI", category: "Prorrateados", icon: "insurance", amountCents: 185_500, frequency: "ANNUAL" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "savings", name: "Ahorro familiar", category: "Ahorro", icon: "savings", amountCents: 30_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "SAVINGS" as const },
 ]
 
 export default async function DemoPage() {

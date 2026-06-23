@@ -254,8 +254,6 @@ export async function completeInitialSetup(formData: FormData) {
   const parsed = getInitialSetupSchema(dictionary.validation).safeParse({
     deposits: parseSetupItems(formData, "deposit"),
     monthlyBills: parseSetupItems(formData, "monthlyBill"),
-    annualCosts: parseSetupItems(formData, "annualCost"),
-    savings: parseSetupItems(formData, "saving"),
   })
 
   if (!parsed.success) {
@@ -290,35 +288,15 @@ export async function completeInitialSetup(formData: FormData) {
       })
     }
 
-    const commitments = [
-      ...parsed.data.monthlyBills.map((bill, index) => ({
-        category: dictionary.setup.defaultCategories.monthlyBills,
-        frequency: "MONTHLY" as const,
-        icon: inferCommitmentIcon(bill.name),
-        name: bill.name,
-        amountCents: centsFromDecimalInput(bill.amount),
-        sortOrder: nextCommitmentSortOrder + index,
-        type: "BILL" as const,
-      })),
-      ...parsed.data.annualCosts.map((cost, index) => ({
-        category: dictionary.setup.defaultCategories.annualCosts,
-        frequency: "ANNUAL" as const,
-        icon: inferCommitmentIcon(cost.name),
-        name: cost.name,
-        amountCents: centsFromDecimalInput(cost.amount),
-        sortOrder: nextCommitmentSortOrder + parsed.data.monthlyBills.length + index,
-        type: "BILL" as const,
-      })),
-      ...parsed.data.savings.map((saving, index) => ({
-        category: dictionary.setup.defaultCategories.savings,
-        frequency: "MONTHLY" as const,
-        icon: inferCommitmentIcon(saving.name),
-        name: saving.name,
-        amountCents: centsFromDecimalInput(saving.amount),
-        sortOrder: nextCommitmentSortOrder + parsed.data.monthlyBills.length + parsed.data.annualCosts.length + index,
-        type: "SAVINGS" as const,
-      })),
-    ]
+    const commitments = parsed.data.monthlyBills.map((bill, index) => ({
+      category: dictionary.setup.defaultCategories.monthlyBills,
+      frequency: "MONTHLY" as const,
+      icon: inferCommitmentIcon(bill.name),
+      name: bill.name,
+      amountCents: centsFromDecimalInput(bill.amount),
+      sortOrder: nextCommitmentSortOrder + index,
+      type: "BILL" as const,
+    }))
 
     if (commitments.length > 0) {
       await tx.commitment.createMany({
@@ -397,7 +375,7 @@ export async function createCommitment(formData: FormData) {
     category: formData.get("category"),
     icon: formData.get("icon") || inferCommitmentIcon(String(formData.get("name") ?? "")),
     frequency: formData.get("frequency"),
-    type: formData.get("type"),
+    type: "BILL",
     notes: formData.get("notes") || undefined,
   })
 
@@ -432,7 +410,7 @@ export async function updateCommitment(id: string, formData: FormData) {
     category: formData.get("category"),
     icon: formData.get("icon") || inferCommitmentIcon(String(formData.get("name") ?? "")),
     frequency: formData.get("frequency"),
-    type: formData.get("type"),
+    type: "BILL",
     notes: formData.get("notes") || undefined,
   })
 

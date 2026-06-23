@@ -20,6 +20,18 @@ describe("budget validation", () => {
     ).toBe(false)
   })
 
+  it("rejects savings as a commitment type", () => {
+    expect(
+      commitmentSchema.safeParse({
+        name: "Holiday fund",
+        amount: 150,
+        category: "Fund",
+        frequency: "MONTHLY",
+        type: "SAVINGS",
+      }).success
+    ).toBe(false)
+  })
+
   it("accepts known commitment icons and defaults missing icons", () => {
     const parsed = commitmentSchema.parse({
       name: "Hipoteca",
@@ -69,23 +81,22 @@ describe("budget validation", () => {
         { name: "", amount: "" },
       ],
       monthlyBills: [{ name: "Rent", amount: "950" }],
-      annualCosts: [{ name: "", amount: "" }],
-      savings: [{ name: "", amount: "" }],
     })
 
     expect(parsed.deposits).toEqual([{ name: "Alex", amount: 1800 }])
     expect(parsed.monthlyBills).toEqual([{ name: "Rent", amount: 950 }])
     expect(initialSetupSchema.safeParse({
+      deposits: [{ name: "Alex", amount: "1800" }],
+      monthlyBills: [{ name: "", amount: "" }],
+      annualCosts: [{ name: "Home insurance", amount: "600" }],
+    }).success).toBe(false)
+    expect(initialSetupSchema.safeParse({
       deposits: [{ name: "Alex", amount: "" }],
       monthlyBills: [{ name: "Rent", amount: "950" }],
-      annualCosts: [],
-      savings: [],
     }).success).toBe(false)
     expect(initialSetupSchema.safeParse({
       deposits: [{ name: "Alex", amount: "1800" }],
       monthlyBills: [{ name: "", amount: "" }],
-      annualCosts: [],
-      savings: [],
     }).success).toBe(false)
   })
 })

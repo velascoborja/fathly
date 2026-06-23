@@ -29,7 +29,7 @@ export function getCommitmentSchema(messages: ValidationMessages = defaultValida
     category: z.string().trim().min(1, messages.categoryRequired).max(60),
     icon: z.enum(commitmentIconValues).default("receipt"),
     frequency: z.enum(["MONTHLY", "ANNUAL"]),
-    type: z.enum(["BILL", "SAVINGS"]),
+    type: z.literal("BILL").default("BILL"),
     notes: z.string().trim().max(240).optional(),
   })
 }
@@ -58,39 +58,35 @@ export function getInitialSetupSchema(messages: ValidationMessages = defaultVali
     .object({
       deposits: z.array(optionalSetupItemSchema).min(1),
       monthlyBills: z.array(optionalSetupItemSchema).min(1),
-      annualCosts: z.array(optionalSetupItemSchema),
-      savings: z.array(optionalSetupItemSchema),
     })
     .transform((setup, context) => {
       const normalizeItems = (items: z.infer<typeof optionalSetupItemSchema>[], label: string) =>
-      items.flatMap((item, index) => {
-        const hasName = Boolean(item.name)
-        const hasAmount = item.amount !== undefined
+        items.flatMap((item, index) => {
+          const hasName = Boolean(item.name)
+          const hasAmount = item.amount !== undefined
 
-        if (!hasName && !hasAmount) {
-          return []
-        }
+          if (!hasName && !hasAmount) {
+            return []
+          }
 
-        if (!hasName || !hasAmount) {
-          context.addIssue({
-            code: "custom",
-            message: messages.incompleteSetupItem.replace("{label}", label).replace("{index}", String(index + 1)),
-          })
-          return []
-        }
+          if (!hasName || !hasAmount) {
+            context.addIssue({
+              code: "custom",
+              message: messages.incompleteSetupItem.replace("{label}", label).replace("{index}", String(index + 1)),
+            })
+            return []
+          }
 
-        return [
-          {
-            name: item.name!,
-            amount: item.amount!,
-          },
-        ]
-      })
+          return [
+            {
+              name: item.name!,
+              amount: item.amount!,
+            },
+          ]
+        })
 
       const deposits = normalizeItems(setup.deposits, messages.setupDepositLabel)
       const monthlyBills = normalizeItems(setup.monthlyBills, messages.setupMonthlyBillLabel)
-      const annualCosts = normalizeItems(setup.annualCosts, messages.setupAnnualCostLabel)
-      const savings = normalizeItems(setup.savings, messages.setupSavingsLabel)
 
       if (deposits.length === 0) {
         context.addIssue({
@@ -99,7 +95,7 @@ export function getInitialSetupSchema(messages: ValidationMessages = defaultVali
         })
       }
 
-      if (monthlyBills.length + annualCosts.length + savings.length === 0) {
+      if (monthlyBills.length === 0) {
         context.addIssue({
           code: "custom",
           message: messages.setupRequiresOutflow,
@@ -107,10 +103,8 @@ export function getInitialSetupSchema(messages: ValidationMessages = defaultVali
       }
 
       return {
-        annualCosts,
         deposits,
         monthlyBills,
-        savings,
       }
     })
 }

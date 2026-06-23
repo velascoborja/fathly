@@ -25,16 +25,15 @@ describe("budget math", () => {
         { amountCents: 50_000, status: "PAUSED" },
       ],
       [
-        { amountCents: 111_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" },
-        { amountCents: 120_000, category: "Anual", frequency: "ANNUAL", status: "ACTIVE", type: "BILL" },
-        { amountCents: 20_000, category: "Ahorro", frequency: "MONTHLY", status: "ACTIVE", type: "SAVINGS" },
+        { amountCents: 111_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE" },
+        { amountCents: 120_000, category: "Anual", frequency: "ANNUAL", status: "ACTIVE" },
+        { amountCents: 20_000, category: "Fondo", frequency: "MONTHLY", status: "ACTIVE" },
       ]
     )
 
     expect(summary.monthlyDepositsCents).toBe(360_000)
     expect(summary.monthlyCommitmentsCents).toBe(141_000)
     expect(summary.annualProratedCents).toBe(10_000)
-    expect(summary.savingsCents).toBe(20_000)
     expect(summary.coverageCents).toBe(219_000)
   })
 
@@ -68,9 +67,9 @@ describe("budget math", () => {
   it("groups active commitments by category", () => {
     expect(
       groupCommitmentsByCategory([
-        { amountCents: 100_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" },
-        { amountCents: 120_000, category: "Casa", frequency: "ANNUAL", status: "ACTIVE", type: "BILL" },
-        { amountCents: 50_000, category: "Paused", frequency: "MONTHLY", status: "PAUSED", type: "BILL" },
+        { amountCents: 100_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE" },
+        { amountCents: 120_000, category: "Casa", frequency: "ANNUAL", status: "ACTIVE" },
+        { amountCents: 50_000, category: "Paused", frequency: "MONTHLY", status: "PAUSED" },
       ])
     ).toEqual({ Casa: 110_000 })
   })
@@ -78,22 +77,22 @@ describe("budget math", () => {
   it("builds a concrete active commitment breakdown sorted by monthly impact", () => {
     expect(
       getCommitmentBreakdown([
-        { amountCents: 120_000, category: "Anual", frequency: "ANNUAL", name: "Seguro", status: "ACTIVE", type: "BILL" },
-        { amountCents: 90_000, category: "Casa", frequency: "MONTHLY", name: "Hipoteca", status: "ACTIVE", type: "BILL" },
-        { amountCents: 50_000, category: "Paused", frequency: "MONTHLY", name: "Paused", status: "PAUSED", type: "BILL" },
-        { amountCents: 20_000, category: "Ahorro", frequency: "MONTHLY", name: "Ahorro", status: "ACTIVE", type: "SAVINGS" },
+        { amountCents: 120_000, category: "Anual", frequency: "ANNUAL", name: "Seguro", status: "ACTIVE" },
+        { amountCents: 90_000, category: "Casa", frequency: "MONTHLY", name: "Hipoteca", status: "ACTIVE" },
+        { amountCents: 50_000, category: "Paused", frequency: "MONTHLY", name: "Paused", status: "PAUSED" },
+        { amountCents: 20_000, category: "Fondo", frequency: "MONTHLY", name: "Fondo", status: "ACTIVE" },
       ])
     ).toEqual([
-      { amountCents: 90_000, category: "Casa", frequency: "MONTHLY", monthlyAmountCents: 90_000, name: "Hipoteca", status: "ACTIVE", type: "BILL" },
-      { amountCents: 20_000, category: "Ahorro", frequency: "MONTHLY", monthlyAmountCents: 20_000, name: "Ahorro", status: "ACTIVE", type: "SAVINGS" },
-      { amountCents: 120_000, category: "Anual", frequency: "ANNUAL", monthlyAmountCents: 10_000, name: "Seguro", status: "ACTIVE", type: "BILL" },
+      { amountCents: 90_000, category: "Casa", frequency: "MONTHLY", monthlyAmountCents: 90_000, name: "Hipoteca", status: "ACTIVE" },
+      { amountCents: 20_000, category: "Fondo", frequency: "MONTHLY", monthlyAmountCents: 20_000, name: "Fondo", status: "ACTIVE" },
+      { amountCents: 120_000, category: "Anual", frequency: "ANNUAL", monthlyAmountCents: 10_000, name: "Seguro", status: "ACTIVE" },
     ])
   })
 
   it("groups commitments for table display with category totals", () => {
-    const mortgage = { amountCents: 90_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" } as const
-    const community = { amountCents: 15_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" } as const
-    const power = { amountCents: 12_000, category: "Suministros", frequency: "MONTHLY", status: "ACTIVE", type: "BILL" } as const
+    const mortgage = { amountCents: 90_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE" } as const
+    const community = { amountCents: 15_000, category: "Casa", frequency: "MONTHLY", status: "ACTIVE" } as const
+    const power = { amountCents: 12_000, category: "Suministros", frequency: "MONTHLY", status: "ACTIVE" } as const
 
     expect(groupCommitmentsForTable([mortgage, power, community])).toEqual([
       { category: "Casa", totalCents: 105_000, commitments: [mortgage, community] },

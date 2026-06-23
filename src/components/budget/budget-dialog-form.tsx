@@ -200,7 +200,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
       category: props.defaults?.category ?? categoryOptions[0] ?? "",
       icon: props.defaults?.icon ?? inferCommitmentIcon(props.defaults?.name ?? ""),
       frequency: props.defaults?.frequency ?? "MONTHLY",
-      type: props.defaults?.type ?? "BILL",
+      type: "BILL" as const,
       notes: props.defaults?.notes ?? "",
     }),
     [
@@ -210,7 +210,6 @@ function CommitmentDialog(props: CommitmentDialogProps) {
       props.defaults?.icon,
       props.defaults?.name,
       props.defaults?.notes,
-      props.defaults?.type,
       categoryOptions,
     ]
   )
@@ -257,14 +256,12 @@ function CommitmentDialog(props: CommitmentDialogProps) {
   const categoryValue = useWatch({ control: form.control, name: "category" })
   const iconValue = useWatch({ control: form.control, name: "icon" })
   const frequencyValue = useWatch({ control: form.control, name: "frequency" })
-  const typeValue = useWatch({ control: form.control, name: "type" })
   const trigger = props.trigger === undefined ? <Button /> : props.trigger
   const isAddingCategory = !categoryOptions.includes(categoryValue)
   const selectedIcon = commitmentIconOptions.find((option) => option.value === iconValue) ?? commitmentIconOptions.at(-1)!
   const SelectedIcon = selectedIcon.icon
   const frequencyLabel =
     frequencyValue === "ANNUAL" ? props.dictionary.forms.annual : props.dictionary.forms.monthly
-  const typeLabel = typeValue === "SAVINGS" ? props.dictionary.forms.savings : props.dictionary.forms.bill
 
   useEffect(() => {
     if (!open || manualIconOverrideRef.current || nameValue === previousAutoNameRef.current) {
@@ -407,46 +404,26 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               </Select>
               <FieldDescription>{props.dictionary.formHints.iconHelp}</FieldDescription>
             </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel>{props.dictionary.forms.frequency}</FieldLabel>
-                <Select
-                  value={frequencyValue}
-                  onValueChange={(value) =>
-                    form.setValue("frequency", value as CommitmentInput["frequency"], { shouldDirty: true })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <span>{frequencyLabel}</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="MONTHLY">{props.dictionary.forms.monthly}</SelectItem>
-                      <SelectItem value="ANNUAL">{props.dictionary.forms.annual}</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FieldDescription>{props.dictionary.formHints.frequencyHelp}</FieldDescription>
-              </Field>
-              <Field>
-                <FieldLabel>{props.dictionary.forms.type}</FieldLabel>
-                <Select
-                  value={typeValue}
-                  onValueChange={(value) => form.setValue("type", value as CommitmentInput["type"], { shouldDirty: true })}
-                >
-                  <SelectTrigger className="w-full">
-                    <span>{typeLabel}</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="BILL">{props.dictionary.forms.bill}</SelectItem>
-                      <SelectItem value="SAVINGS">{props.dictionary.forms.savings}</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FieldDescription>{props.dictionary.formHints.typeHelp}</FieldDescription>
-              </Field>
-            </div>
+            <Field>
+              <FieldLabel>{props.dictionary.forms.frequency}</FieldLabel>
+              <Select
+                value={frequencyValue}
+                onValueChange={(value) =>
+                  form.setValue("frequency", value as CommitmentInput["frequency"], { shouldDirty: true })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <span>{frequencyLabel}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="MONTHLY">{props.dictionary.forms.monthly}</SelectItem>
+                    <SelectItem value="ANNUAL">{props.dictionary.forms.annual}</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldDescription>{props.dictionary.formHints.frequencyHelp}</FieldDescription>
+            </Field>
             <Field>
               <FieldLabel htmlFor="commitment-notes">{props.dictionary.forms.notes}</FieldLabel>
               <Textarea id="commitment-notes" placeholder={props.dictionary.formHints.commitmentNotes} {...form.register("notes")} />

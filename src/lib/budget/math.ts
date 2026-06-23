@@ -1,4 +1,4 @@
-import type { CommitmentType, FinancialItemStatus, Frequency } from "@prisma/client"
+import type { FinancialItemStatus, Frequency } from "@prisma/client"
 
 export type BudgetDeposit = {
   amountCents: number
@@ -10,7 +10,6 @@ export type BudgetCommitment = {
   category: string
   frequency: Frequency
   status: FinancialItemStatus
-  type: CommitmentType
 }
 
 export type BudgetCommitmentBreakdown<T extends BudgetCommitment> = T & {
@@ -50,15 +49,10 @@ export function calculateBudgetSummary(deposits: BudgetDeposit[], commitments: B
   const annualProratedCents = activeCommitments
     .filter((commitment) => commitment.frequency === "ANNUAL")
     .reduce((sum, commitment) => sum + monthlyAmountCents(commitment), 0)
-  const savingsCents = activeCommitments
-    .filter((commitment) => commitment.type === "SAVINGS")
-    .reduce((sum, commitment) => sum + monthlyAmountCents(commitment), 0)
-
   return {
     monthlyDepositsCents,
     monthlyCommitmentsCents,
     annualProratedCents,
-    savingsCents,
     coverageCents: monthlyDepositsCents - monthlyCommitmentsCents,
     coverageRatio:
       monthlyDepositsCents === 0
