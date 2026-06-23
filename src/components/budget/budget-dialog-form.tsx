@@ -100,7 +100,7 @@ function DepositDialog(props: DepositDialogProps) {
           form.reset()
         }
         setOpen(false)
-        toast.success(mode === "edit" ? props.dictionary.actions.saved : title)
+        toast.success(mode === "edit" ? props.dictionary.actions.depositSaved : props.dictionary.actions.depositCreated)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : props.dictionary.actions.saveError)
       }
@@ -169,6 +169,7 @@ function DepositDialog(props: DepositDialogProps) {
                 dictionary={props.dictionary}
                 itemName={form.getValues("name")}
                 onDeleted={() => setOpen(false)}
+                successMessage={props.dictionary.actions.depositDeleted}
               />
             )}
             <Button className="sm:ml-auto" disabled={isPending} type="submit">
@@ -243,7 +244,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
           form.reset()
         }
         setOpen(false)
-        toast.success(mode === "edit" ? props.dictionary.actions.saved : title)
+        toast.success(mode === "edit" ? props.dictionary.actions.commitmentSaved : props.dictionary.actions.commitmentCreated)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : props.dictionary.actions.saveError)
       }
@@ -437,6 +438,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
                 dictionary={props.dictionary}
                 itemName={form.getValues("name")}
                 onDeleted={() => setOpen(false)}
+                successMessage={props.dictionary.actions.commitmentDeleted}
               />
             )}
             <Button className="sm:ml-auto" disabled={isPending} type="submit">
@@ -463,11 +465,13 @@ function DeleteConfirmation({
   dictionary,
   itemName,
   onDeleted,
+  successMessage,
 }: {
   action: () => Promise<void>
   dictionary: Dictionary
   itemName: string
   onDeleted: () => void
+  successMessage: string
 }) {
   const [confirming, setConfirming] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -494,7 +498,7 @@ function DeleteConfirmation({
             startTransition(async () => {
               try {
                 await action()
-                toast.success(dictionary.actions.deleted)
+                toast.success(successMessage)
                 onDeleted()
               } catch (error) {
                 toast.error(error instanceof Error ? error.message : dictionary.actions.deleteError)

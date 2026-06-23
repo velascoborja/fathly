@@ -163,6 +163,7 @@ function DeleteConfirmDialog({
   deleteAction,
   dictionary,
   item,
+  kind,
   onOpenChange,
   open,
 }: BudgetRowActionProps & {
@@ -170,6 +171,7 @@ function DeleteConfirmDialog({
   open: boolean
 }) {
   const [isPending, startTransition] = useTransition()
+  const successMessage = kind === "deposit" ? dictionary.actions.depositDeleted : dictionary.actions.commitmentDeleted
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,7 +190,7 @@ function DeleteConfirmDialog({
               startTransition(async () => {
                 try {
                   await deleteAction()
-                  toast.success(dictionary.actions.deleted)
+                  toast.success(successMessage)
                   onOpenChange(false)
                 } catch (error) {
                   toast.error(error instanceof Error ? error.message : dictionary.actions.deleteError)
