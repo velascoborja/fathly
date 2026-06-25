@@ -8,6 +8,7 @@ import { HouseholdRole } from "@prisma/client"
 import { signIn, signOut } from "@/auth"
 import { centsFromDecimalInput } from "@/lib/budget/format"
 import { inferCommitmentIcon } from "@/lib/budget/commitment-icons"
+import { inferDepositIcon } from "@/lib/budget/deposit-icons"
 import { isLocale } from "@/lib/i18n/dictionaries"
 import { getServerDictionary } from "@/lib/i18n/server"
 import {
@@ -233,6 +234,7 @@ export async function createDeposit(formData: FormData) {
   const parsed = getDepositSchema(dictionary.validation).safeParse({
     name: formData.get("name"),
     amount: formData.get("amount"),
+    icon: formData.get("icon") || inferDepositIcon(String(formData.get("name") ?? "")),
     notes: formData.get("notes") || undefined,
   })
 
@@ -248,6 +250,7 @@ export async function createDeposit(formData: FormData) {
       planId: context.plan.id,
       name: parsed.data.name,
       amountCents: centsFromDecimalInput(parsed.data.amount),
+      icon: parsed.data.icon,
       notes: parsed.data.notes,
     },
   })
@@ -289,6 +292,7 @@ export async function completeInitialSetup(formData: FormData) {
           planId: context.plan.id,
           name: deposit.name,
           amountCents: centsFromDecimalInput(deposit.amount),
+          icon: inferDepositIcon(deposit.name),
           sortOrder: nextDepositSortOrder + index,
         })),
       })
@@ -334,6 +338,7 @@ export async function updateDeposit(id: string, formData: FormData) {
   const parsed = getDepositSchema(dictionary.validation).safeParse({
     name: formData.get("name"),
     amount: formData.get("amount"),
+    icon: formData.get("icon") || inferDepositIcon(String(formData.get("name") ?? "")),
     notes: formData.get("notes") || undefined,
   })
 
@@ -352,6 +357,7 @@ export async function updateDeposit(id: string, formData: FormData) {
     data: {
       name: parsed.data.name,
       amountCents: centsFromDecimalInput(parsed.data.amount),
+      icon: parsed.data.icon,
       notes: parsed.data.notes,
     },
   })

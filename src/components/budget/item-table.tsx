@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatCurrency } from "@/lib/budget/format"
 import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
+import { getDepositIconOption } from "@/lib/budget/deposit-icons"
 import { groupCommitmentsForTable, monthlyAmountCents } from "@/lib/budget/math"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
@@ -58,7 +59,9 @@ export function DepositTable({
                   updateAction={onUpdate.bind(null, deposit.id)}
                 >
                   <TableRow>
-                    <TableCell className="font-medium">{deposit.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <DepositName deposit={deposit} />
+                    </TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">{deposit.notes}</TableCell>
                     <TableCell className="text-right font-mono">{formatCurrency(deposit.amountCents, locale)}</TableCell>
                     <TableCell>
@@ -259,6 +262,20 @@ function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | 
         <Icon className="size-4" />
       </span>
       <span className="truncate">{commitment.name}</span>
+    </span>
+  )
+}
+
+function DepositName({ deposit }: { deposit: Pick<Deposit, "icon" | "name"> }) {
+  const option = getDepositIconOption(deposit.icon)
+  const Icon = option.icon
+
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
+        <Icon className="size-4" />
+      </span>
+      <span className="truncate">{deposit.name}</span>
     </span>
   )
 }

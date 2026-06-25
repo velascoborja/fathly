@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
+import { getDepositIconOption } from "@/lib/budget/deposit-icons"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
 type Dictionary = (typeof dictionaries)[Locale]
@@ -114,11 +115,14 @@ function BudgetEditDialog(props: BudgetRowActionProps & {
   open: boolean
 }) {
   if (props.kind === "deposit") {
+    const icon = getDepositIconOption(props.item.icon).value
+
     return (
       <BudgetDialogForm
         action={props.updateAction}
         defaults={{
           amount: props.item.amountCents / 100,
+          icon,
           name: props.item.name,
           notes: props.item.notes ?? "",
         }}

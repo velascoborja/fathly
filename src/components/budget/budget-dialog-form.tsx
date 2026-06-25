@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { commitmentIconOptions, inferCommitmentIcon } from "@/lib/budget/commitment-icons"
+import { depositIconOptions, inferDepositIcon } from "@/lib/budget/deposit-icons"
 import { getCommitmentSchema, getDepositSchema, type CommitmentInput, type DepositInput } from "@/lib/validations/budget"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
@@ -62,15 +63,18 @@ export function BudgetDialogForm(props: BudgetDialogFormProps) {
 function DepositDialog(props: DepositDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const manualIconOverrideRef = useRef(false)
+  const previousAutoNameRef = useRef("")
   const mode = props.mode ?? "create"
   const title = props.triggerLabel ?? (mode === "edit" ? props.dictionary.actions.editDeposit : props.dictionary.actions.addDeposit)
   const defaultValues = useMemo(
     () => ({
       name: props.defaults?.name ?? "",
       amount: props.defaults?.amount ?? 0,
+      icon: props.defaults?.icon ?? inferDepositIcon(props.defaults?.name ?? ""),
       notes: props.defaults?.notes ?? "",
     }),
-    [props.defaults?.amount, props.defaults?.name, props.defaults?.notes]
+    [props.defaults?.amount, props.defaults?.icon, props.defaults?.name, props.defaults?.notes]
   )
   const form = useForm<DepositInput>({
     resolver: zodResolver(getDepositSchema(props.dictionary.validation)) as unknown as Resolver<DepositInput>,
@@ -82,6 +86,8 @@ function DepositDialog(props: DepositDialogProps) {
   useEffect(() => {
     if (open) {
       form.reset(defaultValues)
+      previousAutoNameRef.current = defaultValues.name
+      manualIconOverrideRef.current = false
     }
   }, [defaultValues, form, open])
 
@@ -108,7 +114,25 @@ function DepositDialog(props: DepositDialogProps) {
   }
 
   const errors = form.formState.errors
+  const iconLocale: Locale = props.dictionary.forms.icon === "Icon" ? "en" : "es"
+  const nameValue = useWatch({ control: form.control, name: "name" })
+  const iconValue = useWatch({ control: form.control, name: "icon" })
   const trigger = props.trigger === undefined ? <Button /> : props.trigger
+  const selectedIcon = depositIconOptions.find((option) => option.value === iconValue) ?? depositIconOptions[0]
+  const SelectedIcon = selectedIcon.icon
+
+  useEffect(() => {
+    if (!open || manualIconOverrideRef.current || nameValue === previousAutoNameRef.current) {
+      return
+    }
+
+    const nextIcon = inferDepositIcon(nameValue)
+    previousAutoNameRef.current = nameValue
+
+    if (nextIcon !== iconValue) {
+      form.setValue("icon", nextIcon, { shouldDirty: true })
+    }
+  }, [form, iconValue, nameValue, open])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -155,6 +179,44 @@ function DepositDialog(props: DepositDialogProps) {
               </div>
               <FieldDescription>{props.dictionary.formHints.depositAmountHelp}</FieldDescription>
               <FieldError>{errors.amount?.message}</FieldError>
+            </Field>
+            <Field>
+              <FieldLabel>{props.dictionary.forms.icon}</FieldLabel>
+              <Select
+                value={iconValue}
+                onValueChange={(value) => {
+                  manualIconOverrideRef.current = true
+                  form.setValue("icon", value as DepositInput["icon"], { shouldDirty: true })
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className={`-ml-1 flex size-7 shrink-0 items-center justify-center rounded-full ${selectedIcon.swatch}`}>
+                      <SelectedIcon />
+                    </span>
+                    <span className="truncate">{selectedIcon.label[iconLocale]}</span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {depositIconOptions.map((option) => {
+                      const Icon = option.icon
+
+                      return (
+                        <SelectItem key={option.value} value={option.value}>
+                          <span className="flex items-center gap-2">
+                            <span className={`flex size-7 items-center justify-center rounded-full ${option.swatch}`}>
+                              <Icon />
+                            </span>
+                            {option.label[iconLocale]}
+                          </span>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldDescription>{props.dictionary.formHints.depositIconHelp}</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor={`${props.kind}-notes`}>{props.dictionary.forms.notes}</FieldLabel>

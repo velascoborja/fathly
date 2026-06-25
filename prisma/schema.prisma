@@ -129,6 +129,7 @@ model Deposit {
   planId      String
   name        String
   amountCents Int
+  icon        String              @default("income")
   status      FinancialItemStatus @default(ACTIVE)
   notes       String?
   sortOrder   Int                 @default(0)

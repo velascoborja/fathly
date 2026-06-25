@@ -8,6 +8,18 @@ describe("budget validation", () => {
     expect(depositSchema.safeParse({ name: "Member deposit", amount: 1800 }).success).toBe(true)
   })
 
+  it("accepts known deposit icons and defaults missing icons", () => {
+    const parsed = depositSchema.parse({
+      name: "Ayuda del estado",
+      amount: 300,
+      icon: "state-aid",
+    })
+
+    expect(parsed.icon).toBe("state-aid")
+    expect(depositSchema.parse({ name: "Member deposit", amount: 1800 }).icon).toBe("income")
+    expect(depositSchema.safeParse({ name: "Member deposit", amount: 1800, icon: "receipt" }).success).toBe(false)
+  })
+
   it("rejects missing commitment categories", () => {
     expect(
       commitmentSchema.safeParse({

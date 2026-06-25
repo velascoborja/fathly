@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { createElement } from "react"
-import type { Commitment } from "@prisma/client"
+import type { Commitment, Deposit } from "@prisma/client"
 import { describe, expect, it } from "vitest"
 
-import { CommitmentTable } from "@/components/budget/item-table"
+import { CommitmentTable, DepositTable } from "@/components/budget/item-table"
 import { dictionaries } from "@/lib/i18n/dictionaries"
 
 function commitment(overrides: Partial<Commitment> = {}): Commitment {
@@ -19,6 +19,25 @@ function commitment(overrides: Partial<Commitment> = {}): Commitment {
     type: "BILL",
     frequency: "MONTHLY",
     amountCents: 4_000,
+    status: "ACTIVE",
+    notes: null,
+    sortOrder: 0,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  }
+}
+
+function deposit(overrides: Partial<Deposit> = {}): Deposit {
+  const now = new Date("2026-01-01T00:00:00.000Z")
+
+  return {
+    id: "deposit-1",
+    householdId: "household-1",
+    planId: "plan-1",
+    name: "Ayuda del estado",
+    amountCents: 300_00,
+    icon: "state-aid",
     status: "ACTIVE",
     notes: null,
     sortOrder: 0,
@@ -84,5 +103,23 @@ describe("CommitmentTable", () => {
 
     expect(html).toContain(dictionaries.es.actions.actionsMenu)
     expect(html).not.toContain("Delete Internet")
+  })
+})
+
+describe("DepositTable", () => {
+  it("renders income rows with their selected icon label data", () => {
+    const html = renderToStaticMarkup(
+      createElement(DepositTable, {
+        deposits: [deposit()],
+        dictionary: dictionaries.es,
+        locale: "es",
+        onDelete: async () => {},
+        onUpdate: async () => {},
+      })
+    )
+
+    expect(html).toContain("Ayuda del estado")
+    expect(html).toContain("300")
+    expect(html).toContain("text-warning")
   })
 })

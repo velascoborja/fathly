@@ -27,6 +27,7 @@ import {
   groupCommitmentsForTable,
 } from "@/lib/budget/math"
 import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
+import { getDepositIconOption } from "@/lib/budget/deposit-icons"
 import { formatBudgetUsagePercent, formatWholeCurrency } from "@/lib/budget/format"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 import {
@@ -327,10 +328,7 @@ function IncomePanel({
               >
                 <div className={depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"}>
                   <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{deposit.name}</p>
-                      {deposit.notes && <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>}
-                    </div>
+                    <DepositName deposit={deposit} />
                     <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
                     <BudgetRowActions
                       deleteAction={deleteDeposit.bind(null, deposit.id)}
@@ -456,6 +454,23 @@ function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | 
         <Icon className="size-4" />
       </span>
       <span className="truncate">{commitment.name}</span>
+    </span>
+  )
+}
+
+function DepositName({ deposit }: { deposit: Pick<Deposit, "icon" | "name" | "notes"> }) {
+  const option = getDepositIconOption(deposit.icon)
+  const Icon = option.icon
+
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
+        <Icon className="size-4" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-medium">{deposit.name}</span>
+        {deposit.notes && <span className="block truncate text-sm text-muted-foreground">{deposit.notes}</span>}
+      </span>
     </span>
   )
 }

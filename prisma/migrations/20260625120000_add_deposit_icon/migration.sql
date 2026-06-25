@@ -1,0 +1,1 @@
+ALTER TABLE "Deposit" ADD COLUMN "icon" TEXT NOT NULL DEFAULT 'income';

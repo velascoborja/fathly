@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { formatBudgetUsagePercent, formatWholeCurrency } from "@/lib/budget/format"
 import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
+import { getDepositIconOption } from "@/lib/budget/deposit-icons"
 import {
   calculateBudgetSummary,
   DEFAULT_LOW_MONTHLY_MARGIN_BASIS_POINTS,
@@ -32,14 +33,15 @@ import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 
 const demoDeposits: {
   id: string
+  icon: string
   name: string
   amountCents: number
   noteKey: "monthlyTransfer" | "sharedCushion"
   status: "ACTIVE"
 }[] = [
-  { id: "a", name: "Alex", amountCents: 180_000, noteKey: "monthlyTransfer", status: "ACTIVE" as const },
-  { id: "b", name: "Sam", amountCents: 180_000, noteKey: "monthlyTransfer", status: "ACTIVE" as const },
-  { id: "c", name: "Buffer", amountCents: 20_000, noteKey: "sharedCushion", status: "ACTIVE" as const },
+  { id: "a", icon: "salary", name: "Alex", amountCents: 180_000, noteKey: "monthlyTransfer", status: "ACTIVE" as const },
+  { id: "b", icon: "salary", name: "Sam", amountCents: 180_000, noteKey: "monthlyTransfer", status: "ACTIVE" as const },
+  { id: "c", icon: "state-aid", name: "Ayuda del estado", amountCents: 20_000, noteKey: "sharedCushion", status: "ACTIVE" as const },
 ]
 
 const demoCommitments = [
@@ -261,10 +263,7 @@ function DemoIncomePanel({ dictionary, locale }: { dictionary: Awaited<ReturnTyp
           {sortedDeposits.map((deposit, depositIndex) => (
             <div className={depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"} key={deposit.id}>
               <div className="grid grid-cols-[1fr_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{deposit.name}</p>
-                  <p className="truncate text-sm text-muted-foreground">{dictionary.demo[deposit.noteKey]}</p>
-                </div>
+                <DemoDepositName deposit={deposit} note={dictionary.demo[deposit.noteKey]} />
                 <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
               </div>
             </div>
@@ -338,6 +337,23 @@ function DemoCommitmentName({ row }: { row: Pick<(typeof demoCommitments)[number
         <Icon className="size-4" />
       </span>
       <span className="truncate">{row.name}</span>
+    </span>
+  )
+}
+
+function DemoDepositName({ deposit, note }: { deposit: Pick<(typeof demoDeposits)[number], "icon" | "name">; note: string }) {
+  const option = getDepositIconOption(deposit.icon)
+  const Icon = option.icon
+
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
+        <Icon className="size-4" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-medium">{deposit.name}</span>
+        <span className="block truncate text-sm text-muted-foreground">{note}</span>
+      </span>
     </span>
   )
 }

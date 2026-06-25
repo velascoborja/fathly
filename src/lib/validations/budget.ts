@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { commitmentIconValues } from "@/lib/budget/commitment-icons"
+import { depositIconValues } from "@/lib/budget/deposit-icons"
 import { dictionaries, type Locale } from "@/lib/i18n/dictionaries"
 
 type ValidationMessages = (typeof dictionaries)[Locale]["validation"]
@@ -18,6 +19,7 @@ export function getDepositSchema(messages: ValidationMessages = defaultValidatio
   return z.object({
     name: z.string().trim().min(1, messages.nameRequired).max(80),
     amount: getMoneyAmountSchema(messages),
+    icon: z.enum(depositIconValues).default("income"),
     notes: z.string().trim().max(240).optional(),
   })
 }
