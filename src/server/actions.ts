@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { HouseholdRole } from "@prisma/client"
+import { HouseholdRole, PlanStatus } from "@prisma/client"
 
 import { signIn, signOut } from "@/auth"
 import { centsFromDecimalInput } from "@/lib/budget/format"
@@ -13,6 +13,7 @@ import { isLocale } from "@/lib/i18n/dictionaries"
 import { getServerDictionary } from "@/lib/i18n/server"
 import {
   getCategoryNameSchema,
+  getCheckpointSchema,
   getCommitmentSchema,
   getDepositSchema,
   getInitialSetupSchema,
@@ -227,6 +228,100 @@ export async function updatePlanSettings(formData: FormData) {
 
   revalidatePath("/settings")
   revalidateBudgetPaths()
+}
+
+export async function createCheckpoint(formData: FormData) {
+  const dictionary = await getServerDictionary()
+  const parsed = getCheckpointSchema(dictionary.validation).safeParse({
+    name: formData.get("name"),
+  })
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCheckpointInvalid)
+  }
+
+  const context = await getActiveHouseholdContext()
+
+  await prisma.$transaction(async (tx) => {
+    const [deposits, commitments] = await Promise.all([
+      tx.deposit.findMany({
+        where: {
+          householdId: context.household.id,
+          planId: context.plan.id,
+        },
+        orderBy: [
+          {
+            sortOrder: "asc",
+          },
+          {
+            createdAt: "asc",
+          },
+        ],
+      }),
+      tx.commitment.findMany({
+        where: {
+          householdId: context.household.id,
+          planId: context.plan.id,
+        },
+        orderBy: [
+          {
+            sortOrder: "asc",
+          },
+          {
+            createdAt: "asc",
+          },
+        ],
+      }),
+    ])
+
+    const checkpoint = await tx.budgetPlan.create({
+      data: {
+        householdId: context.household.id,
+        name: parsed.data.name,
+        status: PlanStatus.ARCHIVED,
+        lowMonthlyMarginBasisPoints: context.plan.lowMonthlyMarginBasisPoints,
+        onboardingCompletedAt: context.plan.onboardingCompletedAt,
+        startsOn: context.plan.startsOn,
+        endsOn: context.plan.endsOn,
+      },
+    })
+
+    if (deposits.length > 0) {
+      await tx.deposit.createMany({
+        data: deposits.map((deposit) => ({
+          householdId: context.household.id,
+          planId: checkpoint.id,
+          name: deposit.name,
+          amountCents: deposit.amountCents,
+          icon: deposit.icon,
+          status: deposit.status,
+          notes: deposit.notes,
+          sortOrder: deposit.sortOrder,
+        })),
+      })
+    }
+
+    if (commitments.length > 0) {
+      await tx.commitment.createMany({
+        data: commitments.map((commitment) => ({
+          householdId: context.household.id,
+          planId: checkpoint.id,
+          name: commitment.name,
+          category: commitment.category,
+          icon: commitment.icon,
+          type: commitment.type,
+          frequency: commitment.frequency,
+          amountCents: commitment.amountCents,
+          status: commitment.status,
+          notes: commitment.notes,
+          sortOrder: commitment.sortOrder,
+        })),
+      })
+    }
+  })
+
+  revalidateBudgetPaths()
+  revalidatePath("/checkpoints")
 }
 
 export async function createDeposit(formData: FormData) {

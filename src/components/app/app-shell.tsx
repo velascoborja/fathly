@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useTransition } from "react"
-import { EllipsisIcon, HomeIcon, LanguagesIcon, Loader2Icon, LogOutIcon, SettingsIcon } from "lucide-react"
+import { ArchiveIcon, EllipsisIcon, HomeIcon, LanguagesIcon, Loader2Icon, LogOutIcon, SettingsIcon } from "lucide-react"
 
 import { AppIcon } from "@/components/app/app-icon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -54,6 +54,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
   const localeActionLabel = locale === "es" ? dictionary.actions.switchToEnglish : dictionary.actions.switchToSpanish
   const navItems = [
     { href: "/dashboard", icon: HomeIcon, label: dictionary.nav.dashboard },
+    { href: "/checkpoints", icon: ArchiveIcon, label: dictionary.nav.checkpoints },
     { href: "/settings", icon: SettingsIcon, label: dictionary.nav.settings },
   ]
 

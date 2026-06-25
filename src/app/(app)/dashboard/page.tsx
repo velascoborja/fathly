@@ -10,6 +10,7 @@ import { Fragment } from "react"
 import { redirect } from "next/navigation"
 
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
+import { CheckpointDialogForm } from "@/components/budget/checkpoint-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CategoryRenameDialog } from "@/components/budget/category-rename-dialog"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
@@ -32,6 +33,7 @@ import { formatBudgetUsagePercent, formatWholeCurrency } from "@/lib/budget/form
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 import {
   createCommitment,
+  createCheckpoint,
   createDeposit,
   deleteCommitment,
   deleteDeposit,
@@ -142,9 +144,12 @@ export default async function DashboardPage() {
 
 function DashboardHeader({ dictionary }: { dictionary: Dictionary }) {
   return (
-    <div className="flex flex-col gap-2">
-      <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">{dictionary.dashboard.title}</h1>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">{dictionary.dashboard.subtitle}</p>
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex min-w-0 flex-col gap-2">
+        <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">{dictionary.dashboard.title}</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">{dictionary.dashboard.subtitle}</p>
+      </div>
+      <CheckpointDialogForm action={createCheckpoint} dictionary={dictionary} />
     </div>
   )
 }

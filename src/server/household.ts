@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { PlanStatus, HouseholdRole } from "@prisma/client"
 
 import { auth } from "@/auth"
@@ -101,11 +101,92 @@ export async function getActiveHouseholdContext() {
 export async function getBudgetData() {
   const context = await getActiveHouseholdContext()
 
-  const [deposits, commitments] = await Promise.all([
+  const { deposits, commitments } = await getBudgetItems(context.household.id, context.plan.id)
+
+  return {
+    ...context,
+    deposits,
+    commitments,
+  }
+}
+
+export async function getCheckpoints() {
+  const context = await getActiveHouseholdContext()
+
+  const checkpoints = await prisma.budgetPlan.findMany({
+    where: {
+      householdId: context.household.id,
+      status: PlanStatus.ARCHIVED,
+    },
+    include: {
+      deposits: true,
+      commitments: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+
+  return {
+    ...context,
+    checkpoints,
+  }
+}
+
+export async function getCheckpointData(checkpointId: string) {
+  const context = await getActiveHouseholdContext()
+
+  const [checkpoint, activeItems] = await Promise.all([
+    prisma.budgetPlan.findFirst({
+      where: {
+        id: checkpointId,
+        householdId: context.household.id,
+        status: PlanStatus.ARCHIVED,
+      },
+      include: {
+        deposits: {
+          orderBy: [
+            {
+              sortOrder: "asc",
+            },
+            {
+              createdAt: "asc",
+            },
+          ],
+        },
+        commitments: {
+          orderBy: [
+            {
+              sortOrder: "asc",
+            },
+            {
+              createdAt: "asc",
+            },
+          ],
+        },
+      },
+    }),
+    getBudgetItems(context.household.id, context.plan.id),
+  ])
+
+  if (!checkpoint) {
+    notFound()
+  }
+
+  return {
+    ...context,
+    activeDeposits: activeItems.deposits,
+    activeCommitments: activeItems.commitments,
+    checkpoint,
+  }
+}
+
+function getBudgetItems(householdId: string, planId: string) {
+  return Promise.all([
     prisma.deposit.findMany({
       where: {
-        householdId: context.household.id,
-        planId: context.plan.id,
+        householdId,
+        planId,
       },
       orderBy: [
         {
@@ -118,8 +199,8 @@ export async function getBudgetData() {
     }),
     prisma.commitment.findMany({
       where: {
-        householdId: context.household.id,
-        planId: context.plan.id,
+        householdId,
+        planId,
       },
       orderBy: [
         {
@@ -130,11 +211,8 @@ export async function getBudgetData() {
         },
       ],
     }),
-  ])
-
-  return {
-    ...context,
+  ]).then(([deposits, commitments]) => ({
     deposits,
     commitments,
-  }
+  }))
 }

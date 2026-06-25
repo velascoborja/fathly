@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { categoryNameSchema, commitmentSchema, depositSchema, initialSetupSchema, planSettingsSchema } from "@/lib/validations/budget"
+import {
+  categoryNameSchema,
+  checkpointSchema,
+  commitmentSchema,
+  depositSchema,
+  initialSetupSchema,
+  planSettingsSchema,
+} from "@/lib/validations/budget"
 import { householdInviteSchema, householdNameSchema } from "@/lib/validations/household"
 
 describe("budget validation", () => {
@@ -90,6 +97,12 @@ describe("budget validation", () => {
     })
     expect(planSettingsSchema.safeParse({ lowMonthlyMarginPercent: -1 }).success).toBe(false)
     expect(planSettingsSchema.safeParse({ lowMonthlyMarginPercent: 101 }).success).toBe(false)
+  })
+
+  it("trims and validates checkpoint names", () => {
+    expect(checkpointSchema.parse({ name: " Antes del cole " })).toEqual({ name: "Antes del cole" })
+    expect(checkpointSchema.safeParse({ name: "" }).success).toBe(false)
+    expect(checkpointSchema.safeParse({ name: "x".repeat(81) }).success).toBe(false)
   })
 
   it("normalizes first-run setup rows and rejects incomplete onboarding data", () => {

@@ -18,6 +18,7 @@ export function CollapsibleCategoryGroup({
   total,
   totalClassName,
   totalLabel,
+  totalVariant = "badge",
 }: {
   actionColumn?: boolean
   category: string
@@ -30,6 +31,7 @@ export function CollapsibleCategoryGroup({
   total: string
   totalClassName?: string
   totalLabel: string
+  totalVariant?: "badge" | "inline"
 }) {
   const contentId = useId()
   const [expanded, setExpanded] = useState(true)
@@ -67,17 +69,24 @@ export function CollapsibleCategoryGroup({
         </TableCell>
         <TableCell
           className={cn(
-            "w-44 bg-muted/70 py-2 pr-2 pl-0 text-right max-sm:relative max-sm:w-28 max-sm:pl-1",
+            "w-44 bg-muted/70 py-2 pr-4 pl-1 text-right max-sm:w-20 max-sm:pr-3 max-sm:pl-0.5",
             totalCellIsLast && "rounded-r-2xl"
           )}
           colSpan={totalColSpan}
         >
-          <span className="inline-flex items-center justify-end gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 whitespace-nowrap max-sm:absolute max-sm:top-1/2 max-sm:right-3 max-sm:-translate-y-1/2 max-sm:gap-1 max-sm:px-1.5">
-            <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-destructive/80 max-sm:text-[0.6rem] max-sm:tracking-[0.08em]">
-              {totalLabel}
+          {totalVariant === "inline" ? (
+            <span className="inline-flex max-w-full items-baseline justify-end gap-1.5 whitespace-nowrap">
+              <span className="text-xs font-semibold text-muted-foreground max-sm:sr-only">{totalLabel}</span>
+              <span className={cn("font-mono text-sm font-bold", totalClassName)}>{total}</span>
             </span>
-            <span className={cn("font-mono font-semibold max-sm:text-[0.8rem]", totalClassName)}>{total}</span>
-          </span>
+          ) : (
+            <span className="inline-flex max-w-full items-center justify-end gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 whitespace-nowrap max-sm:gap-0 max-sm:px-1.5">
+              <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-destructive/80 max-sm:sr-only">
+                {totalLabel}
+              </span>
+              <span className={cn("font-mono font-semibold max-sm:text-[0.8rem]", totalClassName)}>{total}</span>
+            </span>
+          )}
         </TableCell>
         {!actionColumn && Array.from({ length: extraTrailingCells }, (_, index) => (
           <TableCell

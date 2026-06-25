@@ -124,13 +124,21 @@ export function getPlanSettingsSchema(messages: ValidationMessages = defaultVali
   })
 }
 
+export function getCheckpointSchema(messages: ValidationMessages = defaultValidationMessages) {
+  return z.object({
+    name: z.string().trim().min(1, messages.nameRequired).max(80),
+  })
+}
+
 export const moneyAmountSchema = getMoneyAmountSchema()
 export const depositSchema = getDepositSchema()
 export const commitmentSchema = getCommitmentSchema()
 export const categoryNameSchema = getCategoryNameSchema()
 export const initialSetupSchema = getInitialSetupSchema()
 export const planSettingsSchema = getPlanSettingsSchema()
+export const checkpointSchema = getCheckpointSchema()
 export type DepositInput = z.infer<typeof depositSchema>
 export type CommitmentInput = z.infer<typeof commitmentSchema>
 export type InitialSetupInput = z.infer<typeof initialSetupSchema>
 export type PlanSettingsInput = z.infer<typeof planSettingsSchema>
+export type CheckpointInput = z.infer<typeof checkpointSchema>
