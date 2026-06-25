@@ -4,6 +4,8 @@ import { dictionaries } from "@/lib/i18n/dictionaries"
 
 describe("dictionaries", () => {
   it("uses expenses nomenclature for budget commitments", () => {
+    expect(dictionaries.es.loading.title).toBe("Preparando tu presupuesto")
+    expect(dictionaries.es.loading.ariaLabel).toBe("Cargando Fathly")
     expect(dictionaries.es.dashboard.title).toBe("Resumen mensual")
     expect(dictionaries.es.dashboard.subtitle).toBe("Resumen del mes teniendo en cuenta ingresos y gastos.")
     expect(dictionaries.es.dashboard.covered).toBe("del presupuesto usado")
@@ -51,6 +53,8 @@ describe("dictionaries", () => {
     expect(dictionaries.es.monthlyBills.subtitle).toBe("Añade y revisa los gastos mensuales compartidos de la casa.")
     expect(dictionaries.es.annualCosts.subtitle).toBe("Registra los gastos anuales para prorratearlos mes a mes en el presupuesto familiar.")
 
+    expect(dictionaries.en.loading.title).toBe("Preparing your budget")
+    expect(dictionaries.en.loading.ariaLabel).toBe("Loading Fathly")
     expect(dictionaries.en.dashboard.title).toBe("Monthly summary")
     expect(dictionaries.en.dashboard.subtitle).toBe("Review the month across income and expenses.")
     expect(dictionaries.en.dashboard.covered).toBe("of budget used")

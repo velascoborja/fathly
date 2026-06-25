@@ -19,6 +19,18 @@ describe("legacy authenticated routes", () => {
   })
 })
 
+describe("root route", () => {
+  it("renders a visible loading state before client navigation to the dashboard", () => {
+    const source = readFileSync("src/app/page.tsx", "utf8")
+    const loadingSource = readFileSync("src/components/app/root-redirect-loading.tsx", "utf8")
+
+    expect(source).toContain("RootRedirectLoading")
+    expect(source).not.toContain('redirect("/dashboard")')
+    expect(loadingSource).toContain('router.replace("/dashboard")')
+    expect(loadingSource).toContain("dictionary.loading.title")
+  })
+})
+
 describe("settings route", () => {
   it("renders a dedicated settings page", () => {
     const source = readFileSync("src/app/(app)/settings/page.tsx", "utf8")

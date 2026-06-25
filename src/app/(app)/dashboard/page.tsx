@@ -312,11 +312,11 @@ function IncomePanel({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="divide-y divide-border">
+        <div className="space-y-1">
           {deposits.length === 0 ? (
             <p className="py-3 text-sm text-muted-foreground">{dictionary.dashboard.emptyBody}</p>
           ) : (
-            sortedDeposits.map((deposit) => (
+            sortedDeposits.map((deposit, depositIndex) => (
               <BudgetRowContextMenu
                 deleteAction={deleteDeposit.bind(null, deposit.id)}
                 dictionary={dictionary}
@@ -325,19 +325,21 @@ function IncomePanel({
                 kind="deposit"
                 updateAction={updateDeposit.bind(null, deposit.id)}
               >
-                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{deposit.name}</p>
-                    {deposit.notes && <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>}
+                <div className={depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"}>
+                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{deposit.name}</p>
+                      {deposit.notes && <p className="truncate text-sm text-muted-foreground">{deposit.notes}</p>}
+                    </div>
+                    <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
+                    <BudgetRowActions
+                      deleteAction={deleteDeposit.bind(null, deposit.id)}
+                      dictionary={dictionary}
+                      item={deposit}
+                      kind="deposit"
+                      updateAction={updateDeposit.bind(null, deposit.id)}
+                    />
                   </div>
-                  <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
-                  <BudgetRowActions
-                    deleteAction={deleteDeposit.bind(null, deposit.id)}
-                    dictionary={dictionary}
-                    item={deposit}
-                    kind="deposit"
-                    updateAction={updateDeposit.bind(null, deposit.id)}
-                  />
                 </div>
               </BudgetRowContextMenu>
             ))

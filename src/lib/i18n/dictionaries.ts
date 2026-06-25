@@ -16,6 +16,11 @@ export const dictionaries = {
       settings: "Ajustes",
       more: "Más",
     },
+    loading: {
+      ariaLabel: "Cargando Fathly",
+      title: "Preparando tu presupuesto",
+      body: "Estamos abriendo tu espacio y comprobando a dónde llevarte.",
+    },
     actions: {
       addBill: "Añadir gasto",
       addDeposit: "Añadir ingreso",
@@ -248,6 +253,11 @@ export const dictionaries = {
       settings: "Settings",
       more: "More",
     },
+    loading: {
+      ariaLabel: "Loading Fathly",
+      title: "Preparing your budget",
+      body: "We're opening your space and checking where to take you.",
+    },
     actions: {
       addBill: "Add bill",
       addDeposit: "Add deposit",
@@ -467,6 +477,8 @@ export const dictionaries = {
     },
   },
 } as const
+
+export type Dictionary = (typeof dictionaries)[Locale]
 
 export function getDictionary(locale: Locale) {
   return dictionaries[locale]

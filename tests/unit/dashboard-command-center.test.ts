@@ -72,4 +72,14 @@ describe("dashboard monthly overview", () => {
     expect(source).toContain("const sortedDeposits = deposits.toSorted((a, b) => b.amountCents - a.amountCents)")
     expect(source).toContain("sortedDeposits.map")
   })
+
+  it("uses table-like income row separators without divide artifacts", () => {
+    expect(source).toContain('<CardContent className="space-y-4">')
+    expect(source).toContain('<div className="space-y-1">')
+    expect(demoSource).toContain('<div className="space-y-1">')
+    expect(source).toContain('depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"')
+    expect(demoSource).toContain('depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"')
+    expect(source).not.toContain('<div className="divide-y divide-border">')
+    expect(demoSource).not.toContain('<div className="divide-y divide-border">')
+  })
 })
