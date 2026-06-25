@@ -2,12 +2,14 @@ import Link from "next/link"
 import { ArchiveIcon, ArrowDownCircleIcon, ArrowRightIcon, ArrowUpCircleIcon, WalletCardsIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { CheckpointDeleteDialog } from "@/components/budget/checkpoint-delete-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { calculateBudgetSummary } from "@/lib/budget/math"
 import { formatWholeCurrency } from "@/lib/budget/format"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
+import { deleteCheckpoint } from "@/server/actions"
 import { getCheckpoints } from "@/server/household"
 import type { Locale } from "@/lib/i18n/dictionaries"
 
@@ -47,7 +49,7 @@ export default async function CheckpointsPage() {
             return (
               <Card className="fathly-card border-primary/30" key={checkpoint.id}>
                 <CardHeader>
-                  <CardTitle className="text-2xl">{checkpoint.name}</CardTitle>
+                  <CardTitle className="truncate text-2xl">{checkpoint.name}</CardTitle>
                   <CardDescription>
                     {dictionary.checkpoints.snapshotDate}: {formatDate(checkpoint.createdAt, locale)}
                   </CardDescription>
@@ -73,10 +75,18 @@ export default async function CheckpointsPage() {
                       value={formatWholeCurrency(summary.coverageCents, locale)}
                     />
                   </div>
-                  <Button className="self-start" nativeButton={false} render={<Link href={`/checkpoints/${checkpoint.id}`} />} size="sm">
-                    {dictionary.checkpoints.viewDetails}
-                    <ArrowRightIcon data-icon="inline-end" />
-                  </Button>
+                  <div className="flex items-center justify-between gap-3">
+                    <Button className="self-start" nativeButton={false} render={<Link href={`/checkpoints/${checkpoint.id}`} />} size="sm">
+                      {dictionary.checkpoints.viewDetails}
+                      <ArrowRightIcon data-icon="inline-end" />
+                    </Button>
+                    <CheckpointDeleteDialog
+                      action={deleteCheckpoint.bind(null, checkpoint.id)}
+                      checkpointName={checkpoint.name}
+                      dictionary={dictionary}
+                      iconOnly
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )

@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import type { Commitment, Deposit } from "@prisma/client"
 
+import { CheckpointDeleteDialog } from "@/components/budget/checkpoint-delete-dialog"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,6 +25,7 @@ import {
   groupCommitmentsForTable,
 } from "@/lib/budget/math"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
+import { deleteCheckpoint } from "@/server/actions"
 import { getCheckpointData } from "@/server/household"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
@@ -63,6 +65,12 @@ export default async function CheckpointDetailPage({
             {dictionary.checkpoints.snapshotDate}: {formatDate(data.checkpoint.createdAt, locale)}
           </p>
         </div>
+        <CheckpointDeleteDialog
+          action={deleteCheckpoint.bind(null, data.checkpoint.id)}
+          checkpointName={data.checkpoint.name}
+          dictionary={dictionary}
+          redirectTo="/checkpoints"
+        />
       </div>
 
       <Card className="fathly-card border-primary/30">

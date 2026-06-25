@@ -324,6 +324,20 @@ export async function createCheckpoint(formData: FormData) {
   revalidatePath("/checkpoints")
 }
 
+export async function deleteCheckpoint(id: string) {
+  const context = await getActiveHouseholdContext()
+
+  await prisma.budgetPlan.delete({
+    where: {
+      id,
+      householdId: context.household.id,
+      status: PlanStatus.ARCHIVED,
+    },
+  })
+
+  revalidatePath("/checkpoints")
+}
+
 export async function createDeposit(formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getDepositSchema(dictionary.validation).safeParse({
