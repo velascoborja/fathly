@@ -66,7 +66,7 @@ export default async function DemoPage() {
       <header className="z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur md:sticky md:top-0">
         <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 md:px-6">
           <Link className="flex items-center gap-3" href="/auth/signin">
-            <AppIcon className="size-10" />
+            <AppIcon className="size-10" size={40} />
             <span className="fathly-wordmark text-xs">{dictionary.appName}</span>
           </Link>
           <Button nativeButton={false} render={<Link href="/auth/signin" />} variant="outline">

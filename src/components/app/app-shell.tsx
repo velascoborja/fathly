@@ -62,7 +62,7 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
       <header className="z-30 border-b border-border bg-card/95 shadow-[0_1px_4px_rgba(0,0,0,0.08)] backdrop-blur md:sticky md:top-0">
         <div className="mx-auto grid w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:px-6 lg:grid-cols-[minmax(220px,1fr)_auto_minmax(360px,1fr)]">
           <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
-            <AppIcon className="size-10 shrink-0" />
+            <AppIcon className="size-10 shrink-0" size={40} />
             <div className="min-w-0">
               <p className="fathly-wordmark text-[0.68rem] leading-tight">{dictionary.appName}</p>
               <p className="truncate text-lg font-bold leading-tight text-foreground">{householdName}</p>
