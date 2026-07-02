@@ -91,7 +91,7 @@ export default async function DemoPage() {
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(520px,1.55fr)]">
             <DemoIncomePanel dictionary={dictionary} locale={locale} />
 
-            <Card className="fathly-card border-destructive/35 max-sm:order-first lg:row-span-2">
+            <Card className="fathly-card border-destructive/35 max-lg:order-first lg:row-span-2">
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>

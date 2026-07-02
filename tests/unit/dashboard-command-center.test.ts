@@ -29,9 +29,9 @@ describe("dashboard monthly overview", () => {
     expect(source.indexOf("<IncomePanel")).toBeLessThan(source.indexOf("<CommitmentChart"))
   })
 
-  it("places expenses first on mobile without changing the desktop grid", () => {
-    expect(source).toContain('className="fathly-card border-destructive/35 max-sm:order-first"')
-    expect(demoSource).toContain('className="fathly-card border-destructive/35 max-sm:order-first lg:row-span-2"')
+  it("places expenses first below the desktop grid without changing the desktop grid", () => {
+    expect(source).toContain('className="fathly-card border-destructive/35 max-lg:order-first"')
+    expect(demoSource).toContain('className="fathly-card border-destructive/35 max-lg:order-first lg:row-span-2"')
   })
 
   it("uses green income and red expense emphasis for faster scanning", () => {
