@@ -31,6 +31,7 @@ import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { getDepositIconOption } from "@/lib/budget/deposit-icons"
 import { formatBudgetUsagePercent, formatWholeCurrency } from "@/lib/budget/format"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
+import { cn } from "@/lib/utils"
 import {
   createCommitment,
   createCheckpoint,
@@ -332,7 +333,7 @@ function IncomePanel({
                 updateAction={updateDeposit.bind(null, deposit.id)}
               >
                 <div className={depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"}>
-                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted">
+                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted/35">
                     <DepositName deposit={deposit} />
                     <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
                     <BudgetRowActions
@@ -419,7 +420,7 @@ function OutflowTable({
                       kind="commitment"
                       updateAction={updateCommitment.bind(null, commitment.id)}
                     >
-                      <TableRow className={commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined}>
+                      <TableRow className={cn("hover:[&>td]:bg-muted/35", commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined)}>
                         <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
                           <CommitmentName commitment={commitment} />
                         </TableCell>

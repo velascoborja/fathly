@@ -262,7 +262,7 @@ function DemoIncomePanel({ dictionary, locale }: { dictionary: Awaited<ReturnTyp
         <div className="space-y-1">
           {sortedDeposits.map((deposit, depositIndex) => (
             <div className={depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"} key={deposit.id}>
-              <div className="grid grid-cols-[1fr_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted/35">
                 <DemoDepositName deposit={deposit} note={dictionary.demo[deposit.noteKey]} />
                 <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
               </div>
@@ -309,7 +309,14 @@ function DemoOutflowTable({
                 totalLabel={dictionary.dashboard.categoryTotal}
               >
                 {group.commitments.map((row, rowIndex) => (
-                  <TableRow className={rowIndex === group.commitments.length - 1 ? "border-b-0" : undefined} key={row.id}>
+                  <TableRow
+                    className={
+                      rowIndex === group.commitments.length - 1
+                        ? "border-b-0 hover:[&>td]:bg-muted/35"
+                        : "hover:[&>td]:bg-muted/35"
+                    }
+                    key={row.id}
+                  >
                     <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
                       <DemoCommitmentName row={row} />
                     </TableCell>

@@ -154,7 +154,7 @@
 
   .fathly-table-row:hover > td,
   .fathly-table-row[data-state="selected"] > td {
-    background-color: var(--muted);
+    background-color: color-mix(in oklab, var(--muted) 35%, transparent);
   }
 
   .fathly-row-hover-transparent:hover > td {
