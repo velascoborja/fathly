@@ -36,9 +36,11 @@ export function CollapsibleCategoryGroup({
   const contentId = useId()
   const [expanded, setExpanded] = useState(true)
   const toggleLabel = `${expanded ? collapseLabel : expandLabel} ${category}`
-  const totalColSpan = actionColumn ? 2 + extraTrailingCells : 1
-  const totalCellIsLast = actionColumn || extraTrailingCells === 0
-  const groupColSpan = (leadingColSpan ?? 1) + totalColSpan + (actionColumn ? 0 : extraTrailingCells)
+  const hasCategoryActionCell = Boolean(actionColumn && categoryAction)
+  const totalColSpan = actionColumn ? (hasCategoryActionCell ? 1 : 2) + extraTrailingCells : 1
+  const totalCellIsLast = !hasCategoryActionCell && (actionColumn || extraTrailingCells === 0)
+  const groupColSpan =
+    (leadingColSpan ?? 1) + totalColSpan + (actionColumn ? 0 : extraTrailingCells) + Number(hasCategoryActionCell)
 
   return (
     <>
@@ -64,7 +66,6 @@ export function CollapsibleCategoryGroup({
               </span>
               <span className="truncate">{category}</span>
             </button>
-            {categoryAction}
           </div>
         </TableCell>
         <TableCell
@@ -88,6 +89,11 @@ export function CollapsibleCategoryGroup({
             </span>
           )}
         </TableCell>
+        {hasCategoryActionCell && (
+          <TableCell className="w-9 rounded-r-2xl bg-muted/70 py-2 pr-2 pl-0 text-right">
+            {categoryAction}
+          </TableCell>
+        )}
         {!actionColumn && Array.from({ length: extraTrailingCells }, (_, index) => (
           <TableCell
             className={cn(
