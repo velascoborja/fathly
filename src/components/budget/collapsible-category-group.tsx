@@ -76,6 +76,7 @@ export function CollapsibleCategoryGroup({
           colSpan={totalColSpan}
         >
           <span className="inline-flex max-w-full items-center justify-end gap-1.5 whitespace-nowrap max-sm:gap-1">
+            {hasCategoryActionInTotal && categoryAction}
             {totalVariant === "inline" ? (
               <span className="inline-flex max-w-full items-baseline justify-end gap-1.5 whitespace-nowrap">
                 <span className="text-xs font-semibold text-muted-foreground max-sm:sr-only">{totalLabel}</span>
@@ -89,7 +90,6 @@ export function CollapsibleCategoryGroup({
                 <span className={cn("font-mono font-semibold max-sm:text-[0.8rem]", totalClassName)}>{total}</span>
               </span>
             )}
-            {hasCategoryActionInTotal && categoryAction}
           </span>
         </TableCell>
         {!actionColumn && Array.from({ length: extraTrailingCells }, (_, index) => (
