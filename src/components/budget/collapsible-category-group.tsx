@@ -36,11 +36,10 @@ export function CollapsibleCategoryGroup({
   const contentId = useId()
   const [expanded, setExpanded] = useState(true)
   const toggleLabel = `${expanded ? collapseLabel : expandLabel} ${category}`
-  const hasCategoryActionCell = Boolean(actionColumn && categoryAction)
-  const totalColSpan = actionColumn ? (hasCategoryActionCell ? 1 : 2) + extraTrailingCells : 1
-  const totalCellIsLast = !hasCategoryActionCell && (actionColumn || extraTrailingCells === 0)
-  const groupColSpan =
-    (leadingColSpan ?? 1) + totalColSpan + (actionColumn ? 0 : extraTrailingCells) + Number(hasCategoryActionCell)
+  const hasCategoryActionInTotal = Boolean(actionColumn && categoryAction)
+  const totalColSpan = actionColumn ? 2 + extraTrailingCells : 1
+  const totalCellIsLast = actionColumn || extraTrailingCells === 0
+  const groupColSpan = (leadingColSpan ?? 1) + totalColSpan + (actionColumn ? 0 : extraTrailingCells)
 
   return (
     <>
@@ -66,6 +65,7 @@ export function CollapsibleCategoryGroup({
               </span>
               <span className="truncate">{category}</span>
             </button>
+            {!hasCategoryActionInTotal && categoryAction}
           </div>
         </TableCell>
         <TableCell
@@ -75,25 +75,23 @@ export function CollapsibleCategoryGroup({
           )}
           colSpan={totalColSpan}
         >
-          {totalVariant === "inline" ? (
-            <span className="inline-flex max-w-full items-baseline justify-end gap-1.5 whitespace-nowrap">
-              <span className="text-xs font-semibold text-muted-foreground max-sm:sr-only">{totalLabel}</span>
-              <span className={cn("font-mono text-sm font-bold", totalClassName)}>{total}</span>
-            </span>
-          ) : (
-            <span className="inline-flex max-w-full items-center justify-end gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 whitespace-nowrap max-sm:gap-0 max-sm:px-1.5">
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-destructive/80 max-sm:sr-only">
-                {totalLabel}
+          <span className="inline-flex max-w-full items-center justify-end gap-1.5 whitespace-nowrap max-sm:gap-1">
+            {totalVariant === "inline" ? (
+              <span className="inline-flex max-w-full items-baseline justify-end gap-1.5 whitespace-nowrap">
+                <span className="text-xs font-semibold text-muted-foreground max-sm:sr-only">{totalLabel}</span>
+                <span className={cn("font-mono text-sm font-bold", totalClassName)}>{total}</span>
               </span>
-              <span className={cn("font-mono font-semibold max-sm:text-[0.8rem]", totalClassName)}>{total}</span>
-            </span>
-          )}
+            ) : (
+              <span className="inline-flex max-w-full items-center justify-end gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 whitespace-nowrap max-sm:gap-0 max-sm:px-1.5">
+                <span className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-destructive/80 max-sm:sr-only">
+                  {totalLabel}
+                </span>
+                <span className={cn("font-mono font-semibold max-sm:text-[0.8rem]", totalClassName)}>{total}</span>
+              </span>
+            )}
+            {hasCategoryActionInTotal && categoryAction}
+          </span>
         </TableCell>
-        {hasCategoryActionCell && (
-          <TableCell className="w-9 rounded-r-2xl bg-muted/70 py-2 pr-2 pl-0 text-right">
-            {categoryAction}
-          </TableCell>
-        )}
         {!actionColumn && Array.from({ length: extraTrailingCells }, (_, index) => (
           <TableCell
             className={cn(
