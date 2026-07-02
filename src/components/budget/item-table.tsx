@@ -58,7 +58,7 @@ export function DepositTable({
                   kind="deposit"
                   updateAction={onUpdate.bind(null, deposit.id)}
                 >
-                  <TableRow>
+                  <TableRow className="hover:[&>td]:bg-muted/35">
                     <TableCell className="font-medium">
                       <DepositName deposit={deposit} />
                     </TableCell>
@@ -165,7 +165,13 @@ export function CommitmentTable({
                           kind="commitment"
                           updateAction={onUpdate.bind(null, commitment.id)}
                         >
-                          <TableRow className={index === group.commitments.length - 1 ? "border-b-0" : undefined}>
+                          <TableRow
+                            className={
+                              index === group.commitments.length - 1
+                                ? "border-b-0 hover:[&>td]:bg-muted/35"
+                                : "hover:[&>td]:bg-muted/35"
+                            }
+                          >
                             <TableCell className="pl-6 font-medium">
                               <CommitmentName commitment={commitment} />
                             </TableCell>
@@ -208,7 +214,7 @@ export function CommitmentTable({
                     kind="commitment"
                     updateAction={onUpdate.bind(null, commitment.id)}
                   >
-                    <TableRow>
+                    <TableRow className="hover:[&>td]:bg-muted/35">
                       <TableCell className="font-medium">
                         <CommitmentName commitment={commitment} />
                       </TableCell>
