@@ -10,6 +10,7 @@ import { Fragment } from "react"
 import { redirect } from "next/navigation"
 
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
+import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { CheckpointDialogForm } from "@/components/budget/checkpoint-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CategoryRenameDialog } from "@/components/budget/category-rename-dialog"
@@ -422,7 +423,7 @@ function OutflowTable({
                     >
                       <TableRow className={cn("hover:[&>td]:bg-muted/35", commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined)}>
                         <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
-                          <CommitmentName commitment={commitment} />
+                          <CommitmentName commitment={commitment} dictionary={dictionary} />
                         </TableCell>
                         <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
                           {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
@@ -450,7 +451,13 @@ function OutflowTable({
   )
 }
 
-function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | "name"> }) {
+function CommitmentName({
+  commitment,
+  dictionary,
+}: {
+  commitment: Pick<Commitment, "frequency" | "icon" | "name">
+  dictionary: Dictionary
+}) {
   const option = getCommitmentIconOption(commitment.icon)
   const Icon = option.icon
 
@@ -459,7 +466,14 @@ function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | 
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
         <Icon className="size-4" />
       </span>
-      <span className="truncate">{commitment.name}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate">{commitment.name}</span>
+        <AnnualProratedIndicator
+          accessibleLabel={dictionary.forms.annualProratedIndicator}
+          frequency={commitment.frequency}
+          label={dictionary.forms.annual}
+        />
+      </span>
     </span>
   )
 }

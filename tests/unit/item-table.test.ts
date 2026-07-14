@@ -84,9 +84,25 @@ describe("CommitmentTable", () => {
 
     expect(html).toContain(dictionaries.es.forms.prorated)
     expect(html).not.toContain(dictionaries.es.forms.frequency)
-    expect(html).not.toContain(dictionaries.es.forms.annual)
+    expect(html).toContain(dictionaries.es.forms.annual)
+    expect(html).toContain(dictionaries.es.forms.annualProratedIndicator)
     expect(html).toContain("1200")
     expect(html).toContain("100")
+  })
+
+  it("only labels annual expenses as prorated", () => {
+    const html = renderToStaticMarkup(
+      createElement(CommitmentTable, {
+        commitments: [commitment()],
+        dictionary: dictionaries.es,
+        locale: "es",
+        onDelete: async () => {},
+        onUpdate: async () => {},
+        title: dictionaries.es.nav.monthlyBills,
+      })
+    )
+
+    expect(html).not.toContain(dictionaries.es.forms.annualProratedIndicator)
   })
 
   it("renders row actions without inline delete labels", () => {

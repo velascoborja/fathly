@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import type { Commitment, Deposit } from "@prisma/client"
 
+import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { CheckpointDeleteDialog } from "@/components/budget/checkpoint-delete-dialog"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Button } from "@/components/ui/button"
@@ -314,7 +315,7 @@ function CommitmentTable({
                 {group.commitments.map((commitment, commitmentIndex) => (
                   <TableRow className={commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined} key={commitment.id}>
                     <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
-                      <CommitmentName commitment={commitment} />
+                      <CommitmentName commitment={commitment} dictionary={dictionary} />
                     </TableCell>
                     <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
                       {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
@@ -330,7 +331,13 @@ function CommitmentTable({
   )
 }
 
-function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | "name"> }) {
+function CommitmentName({
+  commitment,
+  dictionary,
+}: {
+  commitment: Pick<Commitment, "frequency" | "icon" | "name">
+  dictionary: Dictionary
+}) {
   const option = getCommitmentIconOption(commitment.icon)
   const Icon = option.icon
 
@@ -339,7 +346,14 @@ function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | 
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
         <Icon className="size-4" />
       </span>
-      <span className="truncate">{commitment.name}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate">{commitment.name}</span>
+        <AnnualProratedIndicator
+          accessibleLabel={dictionary.forms.annualProratedIndicator}
+          frequency={commitment.frequency}
+          label={dictionary.forms.annual}
+        />
+      </span>
     </span>
   )
 }

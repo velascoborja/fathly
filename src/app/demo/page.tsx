@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { AppIcon } from "@/components/app/app-icon"
+import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { CoverageProgress } from "@/components/budget/coverage-progress"
@@ -318,7 +319,7 @@ function DemoOutflowTable({
                     key={row.id}
                   >
                     <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
-                      <DemoCommitmentName row={row} />
+                      <DemoCommitmentName dictionary={dictionary} row={row} />
                     </TableCell>
                     <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
                       {formatWholeCurrency(row.monthlyAmountCents, locale)}
@@ -334,7 +335,13 @@ function DemoOutflowTable({
   )
 }
 
-function DemoCommitmentName({ row }: { row: Pick<(typeof demoCommitments)[number], "icon" | "name"> }) {
+function DemoCommitmentName({
+  dictionary,
+  row,
+}: {
+  dictionary: Awaited<ReturnType<typeof getServerDictionary>>
+  row: Pick<(typeof demoCommitments)[number], "frequency" | "icon" | "name">
+}) {
   const option = getCommitmentIconOption(row.icon)
   const Icon = option.icon
 
@@ -343,7 +350,14 @@ function DemoCommitmentName({ row }: { row: Pick<(typeof demoCommitments)[number
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
         <Icon className="size-4" />
       </span>
-      <span className="truncate">{row.name}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate">{row.name}</span>
+        <AnnualProratedIndicator
+          accessibleLabel={dictionary.forms.annualProratedIndicator}
+          frequency={row.frequency}
+          label={dictionary.forms.annual}
+        />
+      </span>
     </span>
   )
 }

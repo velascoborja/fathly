@@ -1,6 +1,7 @@
 import type { Commitment, Deposit } from "@prisma/client"
 import { Fragment } from "react"
 
+import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -173,7 +174,7 @@ export function CommitmentTable({
                             }
                           >
                             <TableCell className="pl-6 font-medium">
-                              <CommitmentName commitment={commitment} />
+                              <CommitmentName commitment={commitment} dictionary={dictionary} />
                             </TableCell>
                             {!hideFrequency && (
                               <TableCell className="hidden sm:table-cell">
@@ -216,7 +217,7 @@ export function CommitmentTable({
                   >
                     <TableRow className="hover:[&>td]:bg-muted/35">
                       <TableCell className="font-medium">
-                        <CommitmentName commitment={commitment} />
+                        <CommitmentName commitment={commitment} dictionary={dictionary} />
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">{commitment.category}</TableCell>
                       {!hideFrequency && (
@@ -258,7 +259,13 @@ function getCategoryOptions(commitments: Pick<Commitment, "category">[]) {
   )
 }
 
-function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | "name"> }) {
+function CommitmentName({
+  commitment,
+  dictionary,
+}: {
+  commitment: Pick<Commitment, "frequency" | "icon" | "name">
+  dictionary: Dictionary
+}) {
   const option = getCommitmentIconOption(commitment.icon)
   const Icon = option.icon
 
@@ -267,7 +274,14 @@ function CommitmentName({ commitment }: { commitment: Pick<Commitment, "icon" | 
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
         <Icon className="size-4" />
       </span>
-      <span className="truncate">{commitment.name}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate">{commitment.name}</span>
+        <AnnualProratedIndicator
+          accessibleLabel={dictionary.forms.annualProratedIndicator}
+          frequency={commitment.frequency}
+          label={dictionary.forms.annual}
+        />
+      </span>
     </span>
   )
 }
