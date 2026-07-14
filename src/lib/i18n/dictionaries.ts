@@ -190,6 +190,7 @@ export const dictionaries = {
       prorated: "Prorrateado",
       monthly: "Mensual",
       annual: "Anual",
+      annualProratedIndicator: "Gasto anual prorrateado",
       newCategory: "Añadir categoría nueva",
     },
     formHints: {
@@ -465,6 +466,7 @@ export const dictionaries = {
       prorated: "Prorated",
       monthly: "Monthly",
       annual: "Annual",
+      annualProratedIndicator: "Prorated annual expense",
       newCategory: "Add new category",
     },
     formHints: {
