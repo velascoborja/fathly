@@ -16,6 +16,7 @@ import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budg
 import { CategoryRenameDialog } from "@/components/budget/category-rename-dialog"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
+import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
 import { CoverageProgress } from "@/components/budget/coverage-progress"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
@@ -45,6 +46,7 @@ import {
 } from "@/server/actions"
 import { getBudgetData } from "@/server/household"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
+import type { CommitmentWithParts } from "@/lib/budget/types"
 
 export const dynamic = "force-dynamic"
 
@@ -366,7 +368,7 @@ function OutflowTable({
   locale,
 }: {
   categoryOptions: string[]
-  commitments: (Commitment & { monthlyAmountCents: number })[]
+  commitments: (CommitmentWithParts & { monthlyAmountCents: number })[]
   dictionary: Dictionary
   locale: Locale
 }) {
@@ -455,7 +457,7 @@ function CommitmentName({
   commitment,
   dictionary,
 }: {
-  commitment: Pick<Commitment, "frequency" | "icon" | "name">
+  commitment: Pick<Commitment, "amountMode" | "frequency" | "icon" | "name">
   dictionary: Dictionary
 }) {
   const option = getCommitmentIconOption(commitment.icon)
@@ -472,6 +474,11 @@ function CommitmentName({
           accessibleLabel={dictionary.forms.annualProratedIndicator}
           frequency={commitment.frequency}
           label={dictionary.forms.annual}
+        />
+        <ItemizedAmountIndicator
+          accessibleLabel={dictionary.forms.itemizedAmountIndicator}
+          amountMode={commitment.amountMode}
+          label={dictionary.forms.itemized}
         />
       </span>
     </span>

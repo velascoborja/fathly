@@ -26,6 +26,11 @@ enum CommitmentType {
   BILL
 }
 
+enum CommitmentAmountMode {
+  FIXED
+  ITEMIZED
+}
+
 enum FinancialItemStatus {
   ACTIVE
   PAUSED
@@ -150,7 +155,8 @@ model Commitment {
   icon        String              @default("receipt")
   type        CommitmentType      @default(BILL)
   frequency   Frequency           @default(MONTHLY)
-  amountCents Int
+  amountMode  CommitmentAmountMode @default(FIXED)
+  amountCents Int?
   status      FinancialItemStatus @default(ACTIVE)
   notes       String?
   sortOrder   Int                 @default(0)
@@ -158,7 +164,21 @@ model Commitment {
   updatedAt   DateTime            @updatedAt
   household   Household           @relation(fields: [householdId], references: [id], onDelete: Cascade)
   plan        BudgetPlan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+  parts       CommitmentPart[]
 
   @@index([householdId, planId, status])
   @@index([category])
+}
+
+model CommitmentPart {
+  id           String     @id @default(cuid())
+  commitmentId String
+  name         String
+  amountCents  Int
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  commitment   Commitment @relation(fields: [commitmentId], references: [id], onDelete: Cascade)
+
+  @@index([commitmentId, sortOrder])
 }

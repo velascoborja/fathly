@@ -10,4 +10,7 @@ test("mock demo renders without authentication", async ({ page }) => {
   await page.goto("/demo")
   await expect(page.getByRole("heading", { name: /resumen mensual|monthly summary/i })).toBeVisible()
   await expect(page.getByText(/^demo$/i)).toBeVisible()
+  await expect(page.getByText(/^suma$|^sum$/i)).toBeVisible()
+  await expect(page.getByText(/seguro de hogar|home insurance/i)).toHaveCount(0)
+  await expect(page.getByText(/^IBI$/i)).toHaveCount(0)
 })

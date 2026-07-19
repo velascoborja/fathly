@@ -18,6 +18,7 @@ import {
   getDepositSchema,
   getInitialSetupSchema,
   getPlanSettingsSchema,
+  type CommitmentInput,
 } from "@/lib/validations/budget"
 import { getHouseholdInviteSchema, getHouseholdNameSchema } from "@/lib/validations/household"
 import { prisma } from "@/lib/prisma"
@@ -271,6 +272,11 @@ export async function createCheckpoint(formData: FormData) {
             createdAt: "asc",
           },
         ],
+        include: {
+          parts: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          },
+        },
       }),
     ])
 
@@ -302,8 +308,9 @@ export async function createCheckpoint(formData: FormData) {
     }
 
     if (commitments.length > 0) {
-      await tx.commitment.createMany({
-        data: commitments.map((commitment) => ({
+      await Promise.all(
+        commitments.map((commitment) => tx.commitment.create({
+          data: {
           householdId: context.household.id,
           planId: checkpoint.id,
           name: commitment.name,
@@ -311,12 +318,21 @@ export async function createCheckpoint(formData: FormData) {
           icon: commitment.icon,
           type: commitment.type,
           frequency: commitment.frequency,
+          amountMode: commitment.amountMode,
           amountCents: commitment.amountCents,
           status: commitment.status,
           notes: commitment.notes,
           sortOrder: commitment.sortOrder,
-        })),
-      })
+          parts: commitment.parts.length > 0 ? {
+            create: commitment.parts.map((part) => ({
+              name: part.name,
+              amountCents: part.amountCents,
+              sortOrder: part.sortOrder,
+            })),
+          } : undefined,
+          },
+        }))
+      )
     }
   })
 
@@ -490,15 +506,7 @@ export async function deleteDeposit(id: string) {
 
 export async function createCommitment(formData: FormData) {
   const dictionary = await getServerDictionary()
-  const parsed = getCommitmentSchema(dictionary.validation).safeParse({
-    name: formData.get("name"),
-    amount: formData.get("amount"),
-    category: formData.get("category"),
-    icon: formData.get("icon") || inferCommitmentIcon(String(formData.get("name") ?? "")),
-    frequency: formData.get("frequency"),
-    type: "BILL",
-    notes: formData.get("notes") || undefined,
-  })
+  const parsed = getCommitmentSchema(dictionary.validation).safeParse(parseCommitmentFormData(formData))
 
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCommitmentInvalid)
@@ -506,18 +514,14 @@ export async function createCommitment(formData: FormData) {
 
   const context = await getActiveHouseholdContext()
 
-  await prisma.commitment.create({
-    data: {
-      householdId: context.household.id,
-      planId: context.plan.id,
-      name: parsed.data.name,
-      amountCents: centsFromDecimalInput(parsed.data.amount),
-      category: parsed.data.category,
-      icon: parsed.data.icon,
-      frequency: parsed.data.frequency,
-      type: parsed.data.type,
-      notes: parsed.data.notes,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.commitment.create({
+      data: {
+        householdId: context.household.id,
+        planId: context.plan.id,
+        ...getCommitmentMutationData(parsed.data),
+      },
+    })
   })
 
   revalidateBudgetPaths()
@@ -525,15 +529,7 @@ export async function createCommitment(formData: FormData) {
 
 export async function updateCommitment(id: string, formData: FormData) {
   const dictionary = await getServerDictionary()
-  const parsed = getCommitmentSchema(dictionary.validation).safeParse({
-    name: formData.get("name"),
-    amount: formData.get("amount"),
-    category: formData.get("category"),
-    icon: formData.get("icon") || inferCommitmentIcon(String(formData.get("name") ?? "")),
-    frequency: formData.get("frequency"),
-    type: "BILL",
-    notes: formData.get("notes") || undefined,
-  })
+  const parsed = getCommitmentSchema(dictionary.validation).safeParse(parseCommitmentFormData(formData))
 
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCommitmentInvalid)
@@ -541,21 +537,27 @@ export async function updateCommitment(id: string, formData: FormData) {
 
   const context = await getActiveHouseholdContext()
 
-  await prisma.commitment.update({
-    where: {
-      id,
-      householdId: context.household.id,
-      planId: context.plan.id,
-    },
-    data: {
-      name: parsed.data.name,
-      amountCents: centsFromDecimalInput(parsed.data.amount),
-      category: parsed.data.category,
-      icon: parsed.data.icon,
-      frequency: parsed.data.frequency,
-      type: parsed.data.type,
-      notes: parsed.data.notes,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.commitment.update({
+      where: {
+        id,
+        householdId: context.household.id,
+        planId: context.plan.id,
+      },
+      data: {
+        ...getCommitmentMutationData(parsed.data),
+        parts: {
+          deleteMany: {},
+          ...(parsed.data.amountMode === "ITEMIZED" ? {
+            create: parsed.data.parts.map((part, index) => ({
+              name: part.name,
+              amountCents: centsFromDecimalInput(part.amount),
+              sortOrder: index,
+            })),
+          } : {}),
+        },
+      },
+    })
   })
 
   revalidateBudgetPaths()
@@ -639,6 +641,56 @@ function parseSetupItems(formData: FormData, prefix: string) {
     name: String(names[index] ?? ""),
     amount: String(amounts[index] ?? ""),
   }))
+}
+
+function parseCommitmentFormData(formData: FormData) {
+  const amountMode = formData.get("amountMode") === "ITEMIZED" ? "ITEMIZED" : "FIXED"
+  let parts: unknown = []
+
+  try {
+    parts = JSON.parse(String(formData.get("parts") ?? "[]"))
+  } catch {
+    parts = []
+  }
+
+  return {
+    name: formData.get("name"),
+    amountMode,
+    ...(amountMode === "FIXED" ? { amount: formData.get("amount") } : { parts }),
+    category: formData.get("category"),
+    icon: formData.get("icon") || inferCommitmentIcon(String(formData.get("name") ?? "")),
+    frequency: formData.get("frequency"),
+    type: "BILL",
+    notes: formData.get("notes") || undefined,
+  }
+}
+
+function getCommitmentMutationData(
+  input: CommitmentInput
+) {
+  const common = {
+    name: input.name,
+    amountMode: input.amountMode,
+    amountCents: input.amountMode === "FIXED" ? centsFromDecimalInput(input.amount) : null,
+    category: input.category,
+    icon: input.icon,
+    frequency: input.frequency,
+    type: input.type,
+    notes: input.notes,
+  }
+
+  return input.amountMode === "ITEMIZED"
+    ? {
+        ...common,
+        parts: {
+          create: input.parts.map((part, index) => ({
+            name: part.name,
+            amountCents: centsFromDecimalInput(part.amount),
+            sortOrder: index,
+          })),
+        },
+      }
+    : common
 }
 
 function revalidateBudgetPaths() {

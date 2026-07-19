@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   calculateBudgetSummary,
+  commitmentAmountCents,
   formatLowMonthlyMarginPercent,
   getCommitmentBreakdown,
   getLowMonthlyMarginCents,
@@ -15,6 +16,19 @@ describe("budget math", () => {
   it("normalizes annual commitments to monthly cents", () => {
     expect(monthlyAmountCents({ amountCents: 120_000, frequency: "ANNUAL" })).toBe(10_000)
     expect(monthlyAmountCents({ amountCents: 75_000, frequency: "MONTHLY" })).toBe(75_000)
+  })
+
+  it("derives itemized totals and rounds annual commitments only after summing", () => {
+    const annual = {
+      amountCents: null,
+      amountMode: "ITEMIZED" as const,
+      parts: [{ amountCents: 50 }, { amountCents: 51 }],
+      frequency: "ANNUAL" as const,
+    }
+
+    expect(commitmentAmountCents(annual)).toBe(101)
+    expect(monthlyAmountCents(annual)).toBe(8)
+    expect(monthlyAmountCents({ ...annual, frequency: "MONTHLY" })).toBe(101)
   })
 
   it("calculates coverage from active deposits and commitments", () => {

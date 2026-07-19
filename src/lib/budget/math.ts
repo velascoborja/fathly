@@ -1,4 +1,4 @@
-import type { FinancialItemStatus, Frequency } from "@prisma/client"
+import type { CommitmentAmountMode, FinancialItemStatus, Frequency } from "@prisma/client"
 
 export type BudgetDeposit = {
   amountCents: number
@@ -6,9 +6,11 @@ export type BudgetDeposit = {
 }
 
 export type BudgetCommitment = {
-  amountCents: number
+  amountCents: number | null
+  amountMode?: CommitmentAmountMode
   category: string
   frequency: Frequency
+  parts?: { amountCents: number }[]
   status: FinancialItemStatus
 }
 
@@ -18,8 +20,21 @@ export type BudgetCommitmentBreakdown<T extends BudgetCommitment> = T & {
 
 export const DEFAULT_LOW_MONTHLY_MARGIN_BASIS_POINTS = 500
 
-export function monthlyAmountCents(item: Pick<BudgetCommitment, "amountCents" | "frequency">) {
-  return item.frequency === "ANNUAL" ? Math.round(item.amountCents / 12) : item.amountCents
+export function commitmentAmountCents(
+  item: Pick<BudgetCommitment, "amountCents" | "amountMode" | "parts">
+) {
+  if (item.amountMode === "ITEMIZED" || item.amountCents === null) {
+    return (item.parts ?? []).reduce((sum, part) => sum + part.amountCents, 0)
+  }
+
+  return item.amountCents
+}
+
+export function monthlyAmountCents(
+  item: Pick<BudgetCommitment, "amountCents" | "amountMode" | "frequency" | "parts">
+) {
+  const amountCents = commitmentAmountCents(item)
+  return item.frequency === "ANNUAL" ? Math.round(amountCents / 12) : amountCents
 }
 
 export function getLowMonthlyMarginCents(

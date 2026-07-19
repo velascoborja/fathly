@@ -13,6 +13,7 @@ import type { Commitment, Deposit } from "@prisma/client"
 
 import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { CheckpointDeleteDialog } from "@/components/budget/checkpoint-delete-dialog"
+import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,6 +30,7 @@ import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 import { deleteCheckpoint } from "@/server/actions"
 import { getCheckpointData } from "@/server/household"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
+import type { CommitmentWithParts } from "@/lib/budget/types"
 
 export const dynamic = "force-dynamic"
 
@@ -275,7 +277,7 @@ function CommitmentTable({
   dictionary,
   locale,
 }: {
-  commitments: Commitment[]
+  commitments: CommitmentWithParts[]
   dictionary: Dictionary
   locale: Locale
 }) {
@@ -335,7 +337,7 @@ function CommitmentName({
   commitment,
   dictionary,
 }: {
-  commitment: Pick<Commitment, "frequency" | "icon" | "name">
+  commitment: Pick<Commitment, "amountMode" | "frequency" | "icon" | "name">
   dictionary: Dictionary
 }) {
   const option = getCommitmentIconOption(commitment.icon)
@@ -352,6 +354,11 @@ function CommitmentName({
           accessibleLabel={dictionary.forms.annualProratedIndicator}
           frequency={commitment.frequency}
           label={dictionary.forms.annual}
+        />
+        <ItemizedAmountIndicator
+          accessibleLabel={dictionary.forms.itemizedAmountIndicator}
+          amountMode={commitment.amountMode}
+          label={dictionary.forms.itemized}
         />
       </span>
     </span>

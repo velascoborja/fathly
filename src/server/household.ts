@@ -120,7 +120,13 @@ export async function getCheckpoints() {
     },
     include: {
       deposits: true,
-      commitments: true,
+      commitments: {
+        include: {
+          parts: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -163,6 +169,11 @@ export async function getCheckpointData(checkpointId: string) {
               createdAt: "asc",
             },
           ],
+          include: {
+            parts: {
+              orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            },
+          },
         },
       },
     }),
@@ -210,6 +221,11 @@ function getBudgetItems(householdId: string, planId: string) {
           createdAt: "asc",
         },
       ],
+      include: {
+        parts: {
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        },
+      },
     }),
   ]).then(([deposits, commitments]) => ({
     deposits,

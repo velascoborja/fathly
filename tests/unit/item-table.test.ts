@@ -1,12 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { createElement } from "react"
-import type { Commitment, Deposit } from "@prisma/client"
+import type { Deposit } from "@prisma/client"
 import { describe, expect, it } from "vitest"
 
 import { CommitmentTable, DepositTable } from "@/components/budget/item-table"
 import { dictionaries } from "@/lib/i18n/dictionaries"
+import type { CommitmentWithParts } from "@/lib/budget/types"
 
-function commitment(overrides: Partial<Commitment> = {}): Commitment {
+function commitment(overrides: Partial<CommitmentWithParts> = {}): CommitmentWithParts {
   const now = new Date("2026-01-01T00:00:00.000Z")
 
   return {
@@ -18,7 +19,9 @@ function commitment(overrides: Partial<Commitment> = {}): Commitment {
     icon: "receipt",
     type: "BILL",
     frequency: "MONTHLY",
+    amountMode: "FIXED",
     amountCents: 4_000,
+    parts: [],
     status: "ACTIVE",
     notes: null,
     sortOrder: 0,
@@ -103,6 +106,37 @@ describe("CommitmentTable", () => {
     )
 
     expect(html).not.toContain(dictionaries.es.forms.annualProratedIndicator)
+  })
+
+  it("labels itemized expenses without exposing their parts", () => {
+    const html = renderToStaticMarkup(
+      createElement(CommitmentTable, {
+        commitments: [commitment({
+          amountCents: null,
+          amountMode: "ITEMIZED",
+          frequency: "ANNUAL",
+          parts: [{
+            id: "part-1",
+            commitmentId: "commitment-1",
+            name: "Partida privada",
+            amountCents: 12_000,
+            sortOrder: 0,
+            createdAt: new Date("2026-01-01T00:00:00.000Z"),
+            updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+          }],
+        })],
+        dictionary: dictionaries.es,
+        locale: "es",
+        onDelete: async () => {},
+        onUpdate: async () => {},
+        title: dictionaries.es.nav.annualCosts,
+      })
+    )
+
+    expect(html).toContain(dictionaries.es.forms.itemized)
+    expect(html).toContain(dictionaries.es.forms.itemizedAmountIndicator)
+    expect(html).toContain(dictionaries.es.forms.annualProratedIndicator)
+    expect(html).not.toContain("Partida privada")
   })
 
   it("renders row actions without inline delete labels", () => {

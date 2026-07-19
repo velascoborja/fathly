@@ -61,6 +61,8 @@ describe("dictionaries", () => {
     expect(dictionaries.es.monthlyBills.subtitle).toBe("Añade y revisa los gastos mensuales compartidos de la casa.")
     expect(dictionaries.es.annualCosts.subtitle).toBe("Registra los gastos anuales para prorratearlos mes a mes en el presupuesto familiar.")
     expect(dictionaries.es.forms.annualProratedIndicator).toBe("Gasto anual prorrateado")
+    expect(dictionaries.es.forms.itemized).toBe("Suma")
+    expect(dictionaries.es.forms.itemizedAmountIndicator).toContain("suma de partidas")
 
     expect(dictionaries.en.loading.title).toBe("Preparing your budget")
     expect(dictionaries.en.loading.ariaLabel).toBe("Loading Fathly")
@@ -118,5 +120,7 @@ describe("dictionaries", () => {
     expect(dictionaries.en.monthlyBills.subtitle).toBe("Add and review the household's shared monthly expenses.")
     expect(dictionaries.en.annualCosts.subtitle).toBe("Track annual costs so they are prorated month by month in the household budget.")
     expect(dictionaries.en.forms.annualProratedIndicator).toBe("Prorated annual expense")
+    expect(dictionaries.en.forms.itemized).toBe("Sum")
+    expect(dictionaries.en.forms.itemizedAmountIndicator).toContain("sum of items")
   })
 })

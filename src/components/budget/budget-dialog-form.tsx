@@ -3,7 +3,7 @@
 import { type ReactElement, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
-import { type Resolver, useForm, useWatch } from "react-hook-form"
+import { type Resolver, type UseFormRegisterReturn, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { commitmentIconOptions, inferCommitmentIcon } from "@/lib/budget/commitment-icons"
 import { depositIconOptions, inferDepositIcon } from "@/lib/budget/deposit-icons"
+import { formatCurrency } from "@/lib/budget/format"
 import { getCommitmentSchema, getDepositSchema, type CommitmentInput, type DepositInput } from "@/lib/validations/budget"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
 
@@ -45,7 +46,7 @@ type CommitmentDialogProps = {
   dictionary: Dictionary
   action: (formData: FormData) => Promise<void>
   categoryOptions?: string[]
-  defaults?: Partial<CommitmentInput>
+  defaults?: CommitmentFormDefaults
   deleteAction?: () => Promise<void>
   mode?: "create" | "edit"
   onOpenChange?: (open: boolean) => void
@@ -53,6 +54,20 @@ type CommitmentDialogProps = {
   trigger?: ReactElement | null
   triggerLabel?: string
 }
+
+type CommitmentFormValues = {
+  name: string
+  amount?: number
+  amountMode: "FIXED" | "ITEMIZED"
+  parts: { name: string; amount?: number }[]
+  category: string
+  icon: CommitmentInput["icon"]
+  frequency: "MONTHLY" | "ANNUAL"
+  type: "BILL"
+  notes?: string
+}
+
+type CommitmentFormDefaults = Partial<CommitmentFormValues>
 
 type BudgetDialogFormProps = DepositDialogProps | CommitmentDialogProps
 
@@ -260,6 +275,8 @@ function CommitmentDialog(props: CommitmentDialogProps) {
     () => ({
       name: props.defaults?.name ?? "",
       amount: props.defaults?.amount ?? 0,
+      amountMode: props.defaults?.amountMode ?? "FIXED",
+      parts: props.defaults?.parts ?? [],
       category: props.defaults?.category ?? categoryOptions[0] ?? "",
       icon: props.defaults?.icon ?? inferCommitmentIcon(props.defaults?.name ?? ""),
       frequency: props.defaults?.frequency ?? "MONTHLY",
@@ -268,18 +285,21 @@ function CommitmentDialog(props: CommitmentDialogProps) {
     }),
     [
       props.defaults?.amount,
+      props.defaults?.amountMode,
       props.defaults?.category,
       props.defaults?.frequency,
       props.defaults?.icon,
       props.defaults?.name,
       props.defaults?.notes,
+      props.defaults?.parts,
       categoryOptions,
     ]
   )
-  const form = useForm<CommitmentInput>({
-    resolver: zodResolver(getCommitmentSchema(props.dictionary.validation)) as unknown as Resolver<CommitmentInput>,
+  const form = useForm<CommitmentFormValues>({
+    resolver: zodResolver(getCommitmentSchema(props.dictionary.validation)) as unknown as Resolver<CommitmentFormValues>,
     defaultValues,
   })
+  const partFields = useFieldArray({ control: form.control, name: "parts" })
   const open = props.open ?? uncontrolledOpen
   const setOpen = props.onOpenChange ?? setUncontrolledOpen
 
@@ -291,13 +311,19 @@ function CommitmentDialog(props: CommitmentDialogProps) {
     }
   }, [defaultValues, form, open])
 
-  function onSubmit(values: CommitmentInput) {
+  function onSubmit(values: CommitmentFormValues) {
     const formData = new FormData()
     Object.entries(values).forEach(([key, value]) => {
+      if (key === "parts" || (key === "amount" && values.amountMode === "ITEMIZED")) {
+        return
+      }
       if (value !== undefined && value !== null) {
         formData.set(key, String(value))
       }
     })
+    if (values.amountMode === "ITEMIZED") {
+      formData.set("parts", JSON.stringify(values.parts))
+    }
 
     startTransition(async () => {
       try {
@@ -319,12 +345,43 @@ function CommitmentDialog(props: CommitmentDialogProps) {
   const categoryValue = useWatch({ control: form.control, name: "category" })
   const iconValue = useWatch({ control: form.control, name: "icon" })
   const frequencyValue = useWatch({ control: form.control, name: "frequency" })
+  const amountModeValue = useWatch({ control: form.control, name: "amountMode" })
+  const partsValue = useWatch({ control: form.control, name: "parts" }) ?? []
+  const amountValue = useWatch({ control: form.control, name: "amount" })
   const trigger = props.trigger === undefined ? <Button /> : props.trigger
   const isAddingCategory = !categoryOptions.includes(categoryValue)
   const selectedIcon = commitmentIconOptions.find((option) => option.value === iconValue) ?? commitmentIconOptions.at(-1)!
   const SelectedIcon = selectedIcon.icon
   const frequencyLabel =
     frequencyValue === "ANNUAL" ? props.dictionary.forms.annual : props.dictionary.forms.monthly
+  const partsTotalCents = partsValue.reduce(
+    (sum, part) => sum + Math.round((Number(part.amount) || 0) * 100),
+    0
+  )
+
+  function changeAmountMode(nextMode: "FIXED" | "ITEMIZED") {
+    if (nextMode === amountModeValue) {
+      return
+    }
+
+    if (nextMode === "ITEMIZED") {
+      const currentAmount = Number(form.getValues("amount")) || 0
+      form.setValue("amountMode", "ITEMIZED", { shouldDirty: true })
+      form.setValue("parts", [
+        { name: props.dictionary.forms.currentAmountPart, amount: currentAmount },
+        { name: "", amount: undefined },
+      ], { shouldDirty: true })
+      return
+    }
+
+    if (!window.confirm(props.dictionary.actions.itemizedToFixedConfirmation)) {
+      return
+    }
+
+    form.setValue("amount", partsTotalCents / 100, { shouldDirty: true })
+    form.setValue("parts", [], { shouldDirty: true })
+    form.setValue("amountMode", "FIXED", { shouldDirty: true })
+  }
 
   useEffect(() => {
     if (!open || manualIconOverrideRef.current || nameValue === previousAutoNameRef.current) {
@@ -347,7 +404,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
           {title}
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{props.dictionary.dashboard.subtitle}</DialogDescription>
@@ -365,26 +422,94 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <FieldDescription>{props.dictionary.formHints.commitmentNameHelp}</FieldDescription>
               <FieldError>{errors.name?.message}</FieldError>
             </Field>
-            <Field data-invalid={Boolean(errors.amount)}>
-              <FieldLabel htmlFor="commitment-amount">{props.dictionary.forms.amount}</FieldLabel>
-              <div className="relative">
-                <Input
-                  id="commitment-amount"
-                  aria-invalid={Boolean(errors.amount)}
-                  className="pr-9"
-                  inputMode="decimal"
-                  placeholder={props.dictionary.formHints.amount}
-                  step="0.01"
-                  type="number"
-                  {...form.register("amount")}
-                />
-                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-muted-foreground">
-                  €
-                </span>
-              </div>
-              <FieldDescription>{props.dictionary.formHints.commitmentAmountHelp}</FieldDescription>
-              <FieldError>{errors.amount?.message}</FieldError>
+            <Field>
+              <FieldLabel>{props.dictionary.forms.amountCalculation}</FieldLabel>
+              <Select value={amountModeValue} onValueChange={(value) => changeAmountMode(value as "FIXED" | "ITEMIZED")}>
+                <SelectTrigger className="w-full">
+                  <span>{amountModeValue === "ITEMIZED" ? props.dictionary.forms.itemizedAmount : props.dictionary.forms.fixedAmount}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="FIXED">{props.dictionary.forms.fixedAmount}</SelectItem>
+                    <SelectItem value="ITEMIZED">{props.dictionary.forms.itemizedAmount}</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldDescription>{props.dictionary.formHints.amountCalculationHelp}</FieldDescription>
             </Field>
+            {amountModeValue === "FIXED" ? (
+              <Field data-invalid={Boolean(errors.amount)}>
+                <FieldLabel htmlFor="commitment-amount">{props.dictionary.forms.amount}</FieldLabel>
+                <MoneyInput
+                  id="commitment-amount"
+                  invalid={Boolean(errors.amount)}
+                  placeholder={props.dictionary.formHints.amount}
+                  registration={form.register("amount")}
+                />
+                <FieldDescription>{props.dictionary.formHints.commitmentAmountHelp}</FieldDescription>
+                <FieldError>{errors.amount?.message}</FieldError>
+                <AmountSummary
+                  dictionary={props.dictionary}
+                  frequency={frequencyValue}
+                  locale={iconLocale}
+                  totalCents={Math.round((Number(amountValue) || 0) * 100)}
+                />
+              </Field>
+            ) : (
+              <Field data-invalid={Boolean(errors.parts)}>
+                <div className="flex items-center justify-between gap-3">
+                  <FieldLabel>{props.dictionary.forms.commitmentParts}</FieldLabel>
+                  <span className="text-xs font-semibold text-muted-foreground">{partFields.fields.length}/20</span>
+                </div>
+                <div className="space-y-3">
+                  {partFields.fields.map((part, index) => (
+                    <div className="grid gap-2 rounded-2xl border border-border/70 bg-muted/25 p-3 sm:grid-cols-[minmax(0,1fr)_10rem_auto] sm:items-start" key={part.id}>
+                      <div>
+                        <Input
+                          aria-label={`${props.dictionary.forms.partName} ${index + 1}`}
+                          aria-invalid={Boolean(errors.parts?.[index]?.name)}
+                          placeholder={props.dictionary.formHints.commitmentPartName}
+                          {...form.register(`parts.${index}.name`)}
+                        />
+                        <FieldError>{errors.parts?.[index]?.name?.message}</FieldError>
+                      </div>
+                      <div>
+                        <MoneyInput
+                          id={`commitment-part-${index}-amount`}
+                          invalid={Boolean(errors.parts?.[index]?.amount)}
+                          label={`${props.dictionary.forms.amount} ${index + 1}`}
+                          placeholder={props.dictionary.formHints.amount}
+                          registration={form.register(`parts.${index}.amount`)}
+                        />
+                        <FieldError>{errors.parts?.[index]?.amount?.message}</FieldError>
+                      </div>
+                      <Button
+                        aria-label={`${props.dictionary.actions.removeCommitmentPart} ${index + 1}`}
+                        onClick={() => partFields.remove(index)}
+                        size="icon"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Trash2Icon />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  className="w-fit"
+                  disabled={partFields.fields.length >= 20}
+                  onClick={() => partFields.append({ name: "", amount: undefined })}
+                  type="button"
+                  variant="outline"
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  {props.dictionary.actions.addCommitmentPart}
+                </Button>
+                <FieldDescription>{props.dictionary.formHints.commitmentPartsHelp}</FieldDescription>
+                <FieldError>{typeof errors.parts?.message === "string" ? errors.parts.message : undefined}</FieldError>
+                <AmountSummary dictionary={props.dictionary} frequency={frequencyValue} locale={iconLocale} totalCents={partsTotalCents} />
+              </Field>
+            )}
             <Field data-invalid={Boolean(errors.category)}>
               <FieldLabel>{props.dictionary.forms.category}</FieldLabel>
               <Select
@@ -515,6 +640,73 @@ function CommitmentDialog(props: CommitmentDialogProps) {
 }
 
 const newCategorySelectValue = "__new_category__"
+
+function MoneyInput({
+  id,
+  invalid,
+  label,
+  placeholder,
+  registration,
+}: {
+  id: string
+  invalid: boolean
+  label?: string
+  placeholder: string
+  registration: UseFormRegisterReturn
+}) {
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        aria-label={label}
+        aria-invalid={invalid}
+        className="pr-9"
+        inputMode="decimal"
+        placeholder={placeholder}
+        step="0.01"
+        type="number"
+        {...registration}
+      />
+      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-muted-foreground">
+        €
+      </span>
+    </div>
+  )
+}
+
+function SummaryAmount({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="flex items-baseline gap-2">
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <strong className="font-mono text-lg text-primary">{value}</strong>
+    </span>
+  )
+}
+
+function AmountSummary({
+  dictionary,
+  frequency,
+  locale,
+  totalCents,
+}: {
+  dictionary: Dictionary
+  frequency: "MONTHLY" | "ANNUAL"
+  locale: Locale
+  totalCents: number
+}) {
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4" aria-live="polite">
+      {frequency === "ANNUAL" ? (
+        <div className="flex flex-wrap justify-between gap-x-6 gap-y-2">
+          <SummaryAmount label={dictionary.forms.annualTotal} value={formatCurrency(totalCents, locale)} />
+          <SummaryAmount label={dictionary.forms.monthlyEquivalent} value={formatCurrency(Math.round(totalCents / 12), locale)} />
+        </div>
+      ) : (
+        <SummaryAmount label={dictionary.forms.monthlyTotal} value={formatCurrency(totalCents, locale)} />
+      )}
+    </div>
+  )
+}
 
 function normalizeCategoryOptions(categoryOptions: string[] | undefined, currentCategory: string | undefined) {
   return Array.from(new Set([...(categoryOptions ?? []), currentCategory].filter(Boolean).map((category) => category!.trim()).filter(Boolean))).sort((a, b) =>

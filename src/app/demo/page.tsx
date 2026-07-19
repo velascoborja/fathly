@@ -13,6 +13,7 @@ import { AppIcon } from "@/components/app/app-icon"
 import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
+import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
 import { CoverageProgress } from "@/components/budget/coverage-progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -46,17 +47,31 @@ const demoDeposits: {
 ]
 
 const demoCommitments = [
-  { id: "mortgage", name: "Hipoteca", category: "Casa", icon: "home", amountCents: 111_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "groceries", name: "Compra", category: "Casa", icon: "shopping", amountCents: 60_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "cleaning", name: "Limpieza", category: "Casa", icon: "cleaning", amountCents: 46_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "childcare", name: "Guarderia Teresa", category: "Hijos", icon: "childcare", amountCents: 17_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "school", name: "Colegio Martin", category: "Hijos", icon: "school", amountCents: 20_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "fuel", name: "Gasolina RAV4", category: "Transporte", icon: "car", amountCents: 20_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "leisure", name: "Ocio", category: "Casa", icon: "leisure", amountCents: 15_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "gas", name: "Gas", category: "Suministros", icon: "gas", amountCents: 7_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "water", name: "Agua", category: "Suministros", icon: "water", amountCents: 3_000, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "power", name: "Luz", category: "Suministros", icon: "power", amountCents: 9_500, frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
-  { id: "insurance", name: "Seguro hogar + IBI", category: "Prorrateados", icon: "insurance", amountCents: 185_500, frequency: "ANNUAL" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "mortgage", name: "Hipoteca", category: "Casa", icon: "home", amountMode: "FIXED" as const, amountCents: 111_000, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "groceries", name: "Compra", category: "Casa", icon: "shopping", amountMode: "FIXED" as const, amountCents: 60_000, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "cleaning", name: "Limpieza", category: "Casa", icon: "cleaning", amountMode: "FIXED" as const, amountCents: 46_000, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "childcare", name: "Guarderia Teresa", category: "Hijos", icon: "childcare", amountMode: "FIXED" as const, amountCents: 17_500, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "school", name: "Colegio Martin", category: "Hijos", icon: "school", amountMode: "FIXED" as const, amountCents: 20_500, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "fuel", name: "Gasolina RAV4", category: "Transporte", icon: "car", amountMode: "FIXED" as const, amountCents: 20_000, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "leisure", name: "Ocio", category: "Casa", icon: "leisure", amountMode: "FIXED" as const, amountCents: 15_000, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "gas", name: "Gas", category: "Suministros", icon: "gas", amountMode: "FIXED" as const, amountCents: 7_000, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "water", name: "Agua", category: "Suministros", icon: "water", amountMode: "FIXED" as const, amountCents: 3_000, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  { id: "power", name: "Luz", category: "Suministros", icon: "power", amountMode: "FIXED" as const, amountCents: 9_500, parts: [], frequency: "MONTHLY" as const, status: "ACTIVE" as const, type: "BILL" as const },
+  {
+    id: "insurance",
+    name: "Seguro hogar + IBI",
+    category: "Prorrateados",
+    icon: "insurance",
+    amountMode: "ITEMIZED" as const,
+    amountCents: null,
+    parts: [
+      { id: "insurance-part", name: "Seguro de hogar", amountCents: 95_500 },
+      { id: "ibi-part", name: "IBI", amountCents: 90_000 },
+    ],
+    frequency: "ANNUAL" as const,
+    status: "ACTIVE" as const,
+    type: "BILL" as const,
+  },
 ]
 
 export default async function DemoPage() {
@@ -340,7 +355,7 @@ function DemoCommitmentName({
   row,
 }: {
   dictionary: Awaited<ReturnType<typeof getServerDictionary>>
-  row: Pick<(typeof demoCommitments)[number], "frequency" | "icon" | "name">
+  row: Pick<(typeof demoCommitments)[number], "amountMode" | "frequency" | "icon" | "name">
 }) {
   const option = getCommitmentIconOption(row.icon)
   const Icon = option.icon
@@ -356,6 +371,11 @@ function DemoCommitmentName({
           accessibleLabel={dictionary.forms.annualProratedIndicator}
           frequency={row.frequency}
           label={dictionary.forms.annual}
+        />
+        <ItemizedAmountIndicator
+          accessibleLabel={dictionary.forms.itemizedAmountIndicator}
+          amountMode={row.amountMode}
+          label={dictionary.forms.itemized}
         />
       </span>
     </span>

@@ -2,6 +2,7 @@ import type { Commitment, Deposit } from "@prisma/client"
 import { Fragment } from "react"
 
 import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
+import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency } from "@/lib/budget/format"
 import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { getDepositIconOption } from "@/lib/budget/deposit-icons"
-import { groupCommitmentsForTable, monthlyAmountCents } from "@/lib/budget/math"
+import { commitmentAmountCents, groupCommitmentsForTable, monthlyAmountCents } from "@/lib/budget/math"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
+import type { CommitmentWithParts } from "@/lib/budget/types"
 
 type Dictionary = (typeof dictionaries)[Locale]
 
@@ -96,7 +98,7 @@ export function CommitmentTable({
   showProratedAmount = false,
   title,
 }: {
-  commitments: Commitment[]
+  commitments: CommitmentWithParts[]
   dictionary: Dictionary
   groupByCategory?: boolean
   hideFrequency?: boolean
@@ -108,8 +110,8 @@ export function CommitmentTable({
 }) {
   const categoryGroups = groupByCategory ? groupCommitmentsForTable(commitments) : []
   const categoryOptions = getCategoryOptions(commitments)
-  const displayAmountCents = (commitment: Commitment) =>
-    showProratedAmount ? commitment.amountCents : monthlyAmountCents(commitment)
+  const displayAmountCents = (commitment: CommitmentWithParts) =>
+    showProratedAmount ? commitmentAmountCents(commitment) : monthlyAmountCents(commitment)
 
   return (
     <Card className="fathly-card">
@@ -263,7 +265,7 @@ function CommitmentName({
   commitment,
   dictionary,
 }: {
-  commitment: Pick<Commitment, "frequency" | "icon" | "name">
+  commitment: Pick<Commitment, "amountMode" | "frequency" | "icon" | "name">
   dictionary: Dictionary
 }) {
   const option = getCommitmentIconOption(commitment.icon)
@@ -280,6 +282,11 @@ function CommitmentName({
           accessibleLabel={dictionary.forms.annualProratedIndicator}
           frequency={commitment.frequency}
           label={dictionary.forms.annual}
+        />
+        <ItemizedAmountIndicator
+          accessibleLabel={dictionary.forms.itemizedAmountIndicator}
+          amountMode={commitment.amountMode}
+          label={dictionary.forms.itemized}
         />
       </span>
     </span>

@@ -1,6 +1,6 @@
 "use client"
 
-import type { Commitment, Deposit } from "@prisma/client"
+import type { Deposit } from "@prisma/client"
 import { EllipsisIcon, Loader2Icon, PencilIcon, Trash2Icon } from "lucide-react"
 import { type ReactElement, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -32,6 +32,7 @@ import {
 import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { getDepositIconOption } from "@/lib/budget/deposit-icons"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
+import type { CommitmentWithParts } from "@/lib/budget/types"
 
 type Dictionary = (typeof dictionaries)[Locale]
 
@@ -47,7 +48,7 @@ type CommitmentActionsProps = {
   categoryOptions?: string[]
   deleteAction: () => Promise<void>
   dictionary: Dictionary
-  item: Commitment
+  item: CommitmentWithParts
   kind: "commitment"
   updateAction: (formData: FormData) => Promise<void>
 }
@@ -144,7 +145,9 @@ function BudgetEditDialog(props: BudgetRowActionProps & {
       action={props.updateAction}
       categoryOptions={props.categoryOptions}
       defaults={{
-        amount: props.item.amountCents / 100,
+        amount: (props.item.amountCents ?? 0) / 100,
+        amountMode: props.item.amountMode ?? "FIXED",
+        parts: (props.item.parts ?? []).map((part) => ({ name: part.name, amount: part.amountCents / 100 })),
         category: props.item.category,
         frequency: props.item.frequency,
         icon,

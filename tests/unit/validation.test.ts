@@ -31,6 +31,7 @@ describe("budget validation", () => {
     expect(
       commitmentSchema.safeParse({
         name: "Hipoteca",
+        amountMode: "FIXED",
         amount: 1110,
         category: "",
         frequency: "MONTHLY",
@@ -49,6 +50,7 @@ describe("budget validation", () => {
     expect(
       commitmentSchema.safeParse({
         name: "Holiday fund",
+        amountMode: "FIXED",
         amount: 150,
         category: "Fund",
         frequency: "MONTHLY",
@@ -60,6 +62,7 @@ describe("budget validation", () => {
   it("accepts known commitment icons and defaults missing icons", () => {
     const parsed = commitmentSchema.parse({
       name: "Hipoteca",
+      amountMode: "FIXED",
       amount: 1110,
       category: "Casa",
       icon: "home",
@@ -71,12 +74,36 @@ describe("budget validation", () => {
     expect(
       commitmentSchema.parse({
         name: "Recibo",
+        amountMode: "FIXED",
         amount: 40,
         category: "Casa",
         frequency: "MONTHLY",
         type: "BILL",
       }).icon
     ).toBe("receipt")
+  })
+
+  it("validates itemized commitments and their limits", () => {
+    const valid = {
+      name: "Suministros",
+      amountMode: "ITEMIZED" as const,
+      parts: [
+        { name: "Luz", amount: 50 },
+        { name: "Agua", amount: 25 },
+      ],
+      category: "Casa",
+      frequency: "MONTHLY" as const,
+      type: "BILL" as const,
+    }
+
+    expect(commitmentSchema.safeParse(valid).success).toBe(true)
+    expect(commitmentSchema.parse({ ...valid, amount: 125 })).toMatchObject({
+      amountMode: "ITEMIZED",
+      amount: undefined,
+    })
+    expect(commitmentSchema.safeParse({ ...valid, parts: valid.parts.slice(0, 1) }).success).toBe(false)
+    expect(commitmentSchema.safeParse({ ...valid, parts: [{ name: "", amount: 50 }, valid.parts[1]] }).success).toBe(false)
+    expect(commitmentSchema.safeParse({ ...valid, parts: [...valid.parts, ...Array.from({ length: 19 }, (_, index) => ({ name: `Part ${index}`, amount: 1 }))] }).success).toBe(false)
   })
 
   it("trims and validates household names", () => {

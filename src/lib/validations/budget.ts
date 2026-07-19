@@ -25,15 +25,33 @@ export function getDepositSchema(messages: ValidationMessages = defaultValidatio
 }
 
 export function getCommitmentSchema(messages: ValidationMessages = defaultValidationMessages) {
-  return z.object({
+  const common = z.object({
     name: z.string().trim().min(1, messages.nameRequired).max(80),
-    amount: getMoneyAmountSchema(messages),
     category: getCategoryNameSchema(messages),
     icon: z.enum(commitmentIconValues).default("receipt"),
     frequency: z.enum(["MONTHLY", "ANNUAL"]),
     type: z.literal("BILL").default("BILL"),
     notes: z.string().trim().max(240).optional(),
   })
+  const part = z.object({
+    name: z.string().trim().min(1, messages.nameRequired).max(80),
+    amount: getMoneyAmountSchema(messages),
+  })
+
+  return z.discriminatedUnion("amountMode", [
+    common.extend({
+      amountMode: z.literal("FIXED"),
+      amount: getMoneyAmountSchema(messages),
+      parts: z.array(part).max(0).optional(),
+    }),
+    common.extend({
+      amountMode: z.literal("ITEMIZED"),
+      // React Hook Form retains the hidden fixed amount when switching modes.
+      // Accept it as input but discard it so itemized totals remain derived only from parts.
+      amount: z.unknown().optional().transform(() => undefined),
+      parts: z.array(part).min(2, messages.commitmentPartsMinimum).max(20, messages.commitmentPartsMaximum),
+    }),
+  ])
 }
 
 export function getCategoryNameSchema(messages: ValidationMessages = defaultValidationMessages) {
