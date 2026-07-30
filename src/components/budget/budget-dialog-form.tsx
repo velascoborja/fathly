@@ -262,6 +262,7 @@ function DepositDialog(props: DepositDialogProps) {
 
 function CommitmentDialog(props: CommitmentDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const [isDeleteConfirming, setIsDeleteConfirming] = useState(false)
   const [isPending, startTransition] = useTransition()
   const manualIconOverrideRef = useRef(false)
   const previousAutoNameRef = useRef("")
@@ -303,6 +304,13 @@ function CommitmentDialog(props: CommitmentDialogProps) {
   const open = props.open ?? uncontrolledOpen
   const setOpen = props.onOpenChange ?? setUncontrolledOpen
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setIsDeleteConfirming(false)
+    }
+    setOpen(nextOpen)
+  }
+
   useEffect(() => {
     if (open) {
       form.reset(defaultValues)
@@ -331,7 +339,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
         if (mode === "create") {
           form.reset()
         }
-        setOpen(false)
+        handleOpenChange(false)
         toast.success(mode === "edit" ? props.dictionary.actions.commitmentSaved : props.dictionary.actions.commitmentCreated)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : props.dictionary.actions.saveError)
@@ -397,7 +405,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
   }, [form, iconValue, nameValue, open])
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger && (
         <DialogTrigger render={trigger}>
           <PlusIcon data-icon="inline-start" />
@@ -461,21 +469,26 @@ function CommitmentDialog(props: CommitmentDialogProps) {
                   <FieldLabel>{props.dictionary.forms.commitmentParts}</FieldLabel>
                   <span className="text-xs font-semibold text-muted-foreground">{partFields.fields.length}/20</span>
                 </div>
-                <div className="space-y-3">
+                <div className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-muted/25">
                   {partFields.fields.map((part, index) => (
-                    <div className="grid gap-2 rounded-2xl border border-border/70 bg-muted/25 p-3 sm:grid-cols-[minmax(0,1fr)_10rem_auto] sm:items-start" key={part.id}>
-                      <div>
+                    <div
+                      className="grid grid-cols-[minmax(0,1fr)_2.75rem] gap-2 p-2 sm:grid-cols-[minmax(0,1fr)_10rem_2.5rem] sm:items-start sm:p-3"
+                      key={part.id}
+                    >
+                      <div className="min-w-0">
                         <Input
                           aria-label={`${props.dictionary.forms.partName} ${index + 1}`}
                           aria-invalid={Boolean(errors.parts?.[index]?.name)}
+                          className="h-11 rounded-xl sm:h-10"
                           placeholder={props.dictionary.formHints.commitmentPartName}
                           {...form.register(`parts.${index}.name`)}
                         />
                         <FieldError>{errors.parts?.[index]?.name?.message}</FieldError>
                       </div>
-                      <div>
+                      <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1">
                         <MoneyInput
                           id={`commitment-part-${index}-amount`}
+                          inputClassName="h-11 rounded-xl sm:h-10"
                           invalid={Boolean(errors.parts?.[index]?.amount)}
                           label={`${props.dictionary.forms.amount} ${index + 1}`}
                           placeholder={props.dictionary.formHints.amount}
@@ -485,6 +498,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
                       </div>
                       <Button
                         aria-label={`${props.dictionary.actions.removeCommitmentPart} ${index + 1}`}
+                        className="col-start-2 row-start-1 size-11 self-start text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:col-start-3 sm:size-10"
                         onClick={() => partFields.remove(index)}
                         size="icon"
                         type="button"
@@ -618,17 +632,24 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <FieldDescription>{props.dictionary.formHints.notesHelp}</FieldDescription>
             </Field>
           </FieldGroup>
-          <DialogFooter className="sticky bottom-[-1.25rem] -mx-5 -mb-5 border-t bg-popover/95 px-5 pb-5 pt-4 backdrop-blur supports-[backdrop-filter]:bg-popover/85">
+          <DialogFooter className="sticky bottom-[-1.25rem] -mx-5 -mb-5 grid grid-cols-2 gap-2 border-t bg-popover/95 px-5 pb-5 pt-4 backdrop-blur supports-[backdrop-filter]:bg-popover/85 sm:flex">
             {props.deleteAction && (
               <DeleteConfirmation
                 action={props.deleteAction}
+                buttonClassName="h-11 w-full sm:h-9 sm:w-auto"
+                confirmationClassName="col-span-2 w-full sm:w-auto"
                 dictionary={props.dictionary}
                 itemName={form.getValues("name")}
-                onDeleted={() => setOpen(false)}
+                onConfirmingChange={setIsDeleteConfirming}
+                onDeleted={() => handleOpenChange(false)}
                 successMessage={props.dictionary.actions.commitmentDeleted}
               />
             )}
-            <Button className="sm:ml-auto" disabled={isPending} type="submit">
+            <Button
+              className={`${props.deleteAction ? "" : "col-span-2"} h-11 w-full sm:ml-auto sm:h-9 sm:w-auto ${isDeleteConfirming ? "max-sm:hidden" : ""}`}
+              disabled={isPending}
+              type="submit"
+            >
               {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
               {props.dictionary.actions.save}
             </Button>
@@ -643,12 +664,14 @@ const newCategorySelectValue = "__new_category__"
 
 function MoneyInput({
   id,
+  inputClassName,
   invalid,
   label,
   placeholder,
   registration,
 }: {
   id: string
+  inputClassName?: string
   invalid: boolean
   label?: string
   placeholder: string
@@ -660,7 +683,7 @@ function MoneyInput({
         id={id}
         aria-label={label}
         aria-invalid={invalid}
-        className="pr-9"
+        className={`pr-9 ${inputClassName ?? ""}`}
         inputMode="decimal"
         placeholder={placeholder}
         step="0.01"
@@ -716,23 +739,34 @@ function normalizeCategoryOptions(categoryOptions: string[] | undefined, current
 
 function DeleteConfirmation({
   action,
+  buttonClassName,
+  confirmationClassName,
   dictionary,
   itemName,
+  onConfirmingChange,
   onDeleted,
   successMessage,
 }: {
   action: () => Promise<void>
+  buttonClassName?: string
+  confirmationClassName?: string
   dictionary: Dictionary
   itemName: string
+  onConfirmingChange?: (confirming: boolean) => void
   onDeleted: () => void
   successMessage: string
 }) {
   const [confirming, setConfirming] = useState(false)
   const [isPending, startTransition] = useTransition()
 
+  function updateConfirming(nextConfirming: boolean) {
+    setConfirming(nextConfirming)
+    onConfirmingChange?.(nextConfirming)
+  }
+
   if (!confirming) {
     return (
-      <Button onClick={() => setConfirming(true)} type="button" variant="destructive">
+      <Button className={buttonClassName} onClick={() => updateConfirming(true)} type="button" variant="destructive">
         <Trash2Icon data-icon="inline-start" />
         {dictionary.actions.delete}
       </Button>
@@ -740,10 +774,10 @@ function DeleteConfirmation({
   }
 
   return (
-    <div className="flex flex-col gap-2 sm:mr-auto">
+    <div className={`flex flex-col gap-2 sm:mr-auto ${confirmationClassName ?? ""}`}>
       <p className="max-w-72 text-sm text-muted-foreground">{dictionary.actions.deleteConfirmation.replace("{name}", itemName)}</p>
       <div className="flex flex-wrap gap-2">
-        <Button disabled={isPending} onClick={() => setConfirming(false)} size="sm" type="button" variant="outline">
+        <Button disabled={isPending} onClick={() => updateConfirming(false)} size="sm" type="button" variant="outline">
           {dictionary.actions.cancel}
         </Button>
         <Button
