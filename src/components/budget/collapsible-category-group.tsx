@@ -14,6 +14,7 @@ export function CollapsibleCategoryGroup({
   collapseLabel,
   expandLabel,
   extraTrailingCells = 0,
+  fixedTableLayout = false,
   leadingColSpan,
   total,
   totalClassName,
@@ -27,6 +28,7 @@ export function CollapsibleCategoryGroup({
   collapseLabel: string
   expandLabel: string
   extraTrailingCells?: number
+  fixedTableLayout?: boolean
   leadingColSpan?: number
   total: string
   totalClassName?: string
@@ -114,7 +116,7 @@ export function CollapsibleCategoryGroup({
             inert={!expanded ? true : undefined}
           >
             <div className="min-h-0 overflow-hidden">
-              <table className="w-full caption-bottom text-sm">
+              <table className={cn("w-full caption-bottom text-sm", fixedTableLayout && "table-fixed")}>
                 <TableBody>{children}</TableBody>
               </table>
             </div>

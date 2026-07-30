@@ -22,7 +22,7 @@ export function ItemizedAmountIndicator({
       variant="outline"
     >
       <SquareSigmaIcon aria-hidden="true" className="size-3.5" />
-      <span aria-hidden="true">{label}</span>
+      <span aria-hidden="true" className="max-sm:hidden">{label}</span>
       <span className="sr-only">{accessibleLabel}</span>
     </Badge>
   )

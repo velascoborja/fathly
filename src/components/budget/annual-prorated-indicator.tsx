@@ -1,3 +1,5 @@
+import { CalendarDaysIcon } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 
 export function AnnualProratedIndicator({
@@ -19,7 +21,8 @@ export function AnnualProratedIndicator({
       title={accessibleLabel}
       variant="outline"
     >
-      <span aria-hidden="true">{label}</span>
+      <CalendarDaysIcon aria-hidden="true" className="size-3.5 sm:hidden" />
+      <span aria-hidden="true" className="max-sm:hidden">{label}</span>
       <span className="sr-only">{accessibleLabel}</span>
     </Badge>
   )

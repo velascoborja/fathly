@@ -320,6 +320,7 @@ function DemoOutflowTable({
                 category={group.category}
                 collapseLabel={dictionary.actions.collapseCategory}
                 expandLabel={dictionary.actions.expandCategory}
+                fixedTableLayout
                 total={formatWholeCurrency(group.totalCents, locale)}
                 totalClassName="text-destructive"
                 totalLabel={dictionary.dashboard.categoryTotal}
