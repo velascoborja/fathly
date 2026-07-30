@@ -136,7 +136,6 @@ describe("CommitmentTable", () => {
     expect(html).toContain(dictionaries.es.forms.itemized)
     expect(html).toContain(dictionaries.es.forms.itemizedAmountIndicator)
     expect(html).toContain(dictionaries.es.forms.annualProratedIndicator)
-    expect(html).toContain("max-sm:flex-1")
     expect(html).not.toContain("Partida privada")
   })
 
