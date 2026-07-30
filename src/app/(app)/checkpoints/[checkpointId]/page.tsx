@@ -349,8 +349,8 @@ function CommitmentName({
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${option.swatch}`}>
         <Icon className="size-4" />
       </span>
-      <span className="flex min-w-0 items-center gap-2">
-        <span className="truncate">{commitment.name}</span>
+      <span className="flex min-w-0 items-center gap-2 max-sm:flex-1">
+        <span className="truncate max-sm:min-w-0 max-sm:flex-1">{commitment.name}</span>
         <AnnualProratedIndicator
           accessibleLabel={dictionary.forms.annualProratedIndicator}
           frequency={commitment.frequency}

@@ -16,9 +16,28 @@ test("mock demo renders without authentication", async ({ page }) => {
     await expect(page.getByText(/^suma$|^sum$/i)).toBeHidden()
 
     const itemizedRow = page.getByText(/seguro hogar \+ ibi/i).locator("xpath=ancestor::tr[1]")
+    const nameCell = itemizedRow.locator("td").first()
+    const itemizedIndicator = itemizedRow.getByTitle(
+      /gasto calculado como suma de partidas|expense calculated as the sum of items/i
+    )
     const amountCell = itemizedRow.locator("td").last()
 
     await expect(amountCell).toBeVisible()
+    await expect
+      .poll(async () => {
+        const [cellBounds, indicatorBounds] = await Promise.all([
+          nameCell.boundingBox(),
+          itemizedIndicator.boundingBox(),
+        ])
+
+        if (!cellBounds || !indicatorBounds) {
+          return false
+        }
+
+        const trailingGap = cellBounds.x + cellBounds.width - indicatorBounds.x - indicatorBounds.width
+        return trailingGap >= 0 && trailingGap <= 10
+      })
+      .toBe(true)
     await expect
       .poll(() =>
         amountCell.evaluate((element) => {
