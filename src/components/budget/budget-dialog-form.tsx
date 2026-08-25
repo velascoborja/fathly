@@ -467,12 +467,14 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <Field data-invalid={Boolean(errors.parts)}>
                 <div className="flex items-center justify-between gap-3">
                   <FieldLabel>{props.dictionary.forms.commitmentParts}</FieldLabel>
-                  <span className="text-xs font-semibold text-muted-foreground">{partFields.fields.length}/20</span>
+                  <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold tabular-nums text-muted-foreground">
+                    {partFields.fields.length}/20
+                  </span>
                 </div>
-                <div className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-muted/25">
+                <div className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-card">
                   {partFields.fields.map((part, index) => (
                     <div
-                      className="grid grid-cols-[minmax(0,1fr)_2.75rem] gap-2 p-2 sm:grid-cols-[minmax(0,1fr)_10rem_2.5rem] sm:items-start sm:p-3"
+                      className="grid grid-cols-[minmax(0,1fr)_minmax(6.5rem,0.55fr)_2.75rem] items-start gap-2 p-2.5 sm:grid-cols-[minmax(0,1fr)_10rem_2.5rem] sm:p-3"
                       key={part.id}
                     >
                       <div className="min-w-0">
@@ -485,7 +487,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
                         />
                         <FieldError>{errors.parts?.[index]?.name?.message}</FieldError>
                       </div>
-                      <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+                      <div className="min-w-0">
                         <MoneyInput
                           id={`commitment-part-${index}-amount`}
                           inputClassName="h-11 rounded-xl sm:h-10"
@@ -498,7 +500,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
                       </div>
                       <Button
                         aria-label={`${props.dictionary.actions.removeCommitmentPart} ${index + 1}`}
-                        className="col-start-2 row-start-1 size-11 self-start text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:col-start-3 sm:size-10"
+                        className="size-11 self-start text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:size-10"
                         onClick={() => partFields.remove(index)}
                         size="icon"
                         type="button"
@@ -632,7 +634,7 @@ function CommitmentDialog(props: CommitmentDialogProps) {
               <FieldDescription>{props.dictionary.formHints.notesHelp}</FieldDescription>
             </Field>
           </FieldGroup>
-          <DialogFooter className="sticky bottom-[-1.25rem] -mx-5 -mb-5 grid grid-cols-2 gap-2 border-t bg-popover/95 px-5 pb-5 pt-4 backdrop-blur supports-[backdrop-filter]:bg-popover/85 sm:flex">
+          <DialogFooter className="sticky bottom-[-1.25rem] -mx-5 -mb-5 grid grid-cols-2 gap-2 border-t bg-popover/95 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-popover/85 sm:flex sm:pb-5">
             {props.deleteAction && (
               <DeleteConfirmation
                 action={props.deleteAction}
