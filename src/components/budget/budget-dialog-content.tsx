@@ -2,7 +2,7 @@
 
 import { type ReactElement, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
+import { Loader2Icon, PlusIcon, SigmaIcon, Trash2Icon } from "lucide-react"
 import { type Resolver, type UseFormRegisterReturn, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -14,9 +14,10 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { commitmentIconOptions, inferCommitmentIcon } from "@/lib/budget/commitment-icons"
 import { depositIconOptions, inferDepositIcon } from "@/lib/budget/deposit-icons"
-import { formatCurrency } from "@/lib/budget/format"
+import { centsFromDecimalInput, formatCurrency } from "@/lib/budget/format"
 import { getCommitmentSchema, getDepositSchema, type CommitmentInput, type DepositInput } from "@/lib/validations/budget"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
+import { cn } from "@/lib/utils"
 
 type Dictionary = (typeof dictionaries)[Locale]
 
@@ -341,7 +342,7 @@ function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) 
   const frequencyLabel =
     frequencyValue === "ANNUAL" ? props.dictionary.forms.annual : props.dictionary.forms.monthly
   const partsTotalCents = partsValue.reduce(
-    (sum, part) => sum + Math.round((Number(part.amount) || 0) * 100),
+    (sum, part) => sum + centsFromDecimalInput(part.amount ?? 0),
     0
   )
 
@@ -431,64 +432,92 @@ function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) 
             />
           </Field>
         ) : (
-          <Field data-invalid={Boolean(errors.parts)}>
+          <Field aria-labelledby="commitment-parts-heading" aria-describedby="commitment-parts-help" data-invalid={Boolean(errors.parts)}>
             <div className="flex items-center justify-between gap-3">
-              <FieldLabel>{props.dictionary.forms.commitmentParts}</FieldLabel>
-              <span className="text-xs font-semibold text-muted-foreground">{partFields.fields.length}/20</span>
+              <h3 className="flex items-center gap-2 text-sm font-semibold" id="commitment-parts-heading">
+                <SigmaIcon aria-hidden="true" className="size-4 text-primary" />
+                {props.dictionary.forms.commitmentParts}
+              </h3>
+              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium tabular-nums text-muted-foreground">
+                {partFields.fields.length} / 20
+              </span>
             </div>
-            <div className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-muted/25">
-              {partFields.fields.map((part, index) => (
-                <div
-                  className="grid grid-cols-[minmax(0,1fr)_2.75rem] gap-2 p-2 sm:grid-cols-[minmax(0,1fr)_10rem_2.5rem] sm:items-start sm:p-3"
-                  key={part.id}
-                >
-                  <div className="min-w-0">
-                    <Input
-                      aria-label={`${props.dictionary.forms.partName} ${index + 1}`}
-                      aria-invalid={Boolean(errors.parts?.[index]?.name)}
-                      className="h-11 rounded-xl sm:h-10"
-                      placeholder={props.dictionary.formHints.commitmentPartName}
-                      {...form.register(`parts.${index}.name`)}
-                    />
-                    <FieldError>{errors.parts?.[index]?.name?.message}</FieldError>
-                  </div>
-                  <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1">
-                    <MoneyInput
-                      id={`commitment-part-${index}-amount`}
-                      inputClassName="h-11 rounded-xl sm:h-10"
-                      invalid={Boolean(errors.parts?.[index]?.amount)}
-                      label={`${props.dictionary.forms.amount} ${index + 1}`}
-                      placeholder={props.dictionary.formHints.amount}
-                      registration={form.register(`parts.${index}.amount`)}
-                    />
-                    <FieldError>{errors.parts?.[index]?.amount?.message}</FieldError>
-                  </div>
-                  <Button
-                    aria-label={`${props.dictionary.actions.removeCommitmentPart} ${index + 1}`}
-                    className="col-start-2 row-start-1 size-11 self-start text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:col-start-3 sm:size-10"
-                    onClick={() => partFields.remove(index)}
-                    size="icon"
-                    type="button"
-                    variant="ghost"
+            <FieldDescription id="commitment-parts-help">{props.dictionary.formHints.commitmentPartsHelp}</FieldDescription>
+            <div className="rounded-lg border border-border/80 bg-card">
+              <div aria-hidden="true" className="hidden grid-cols-[1.5rem_minmax(0,1fr)_9rem_2.75rem] items-center gap-2 rounded-t-lg border-b border-border/60 bg-muted/40 px-3 py-2.5 text-xs font-medium text-muted-foreground sm:grid">
+                <span className="text-center">#</span>
+                <span className="pl-3">{props.dictionary.forms.partName}</span>
+                <span className="pr-3 text-right">{props.dictionary.forms.amount}</span>
+              </div>
+              <div className="divide-y divide-border/60">
+                {partFields.fields.map((part, index) => (
+                  <div
+                    className="grid grid-cols-[1.5rem_minmax(0,1fr)_2.75rem] items-start gap-x-2 gap-y-1 p-3 sm:grid-cols-[1.5rem_minmax(0,1fr)_9rem_2.75rem]"
+                    key={part.id}
                   >
-                    <Trash2Icon />
-                  </Button>
-                </div>
-              ))}
+                    <span aria-hidden="true" className="flex h-11 items-center justify-center text-xs font-medium tabular-nums text-muted-foreground">{index + 1}</span>
+                    <div className="col-start-2 min-w-0">
+                      <Input
+                        id={`commitment-part-${index}-name`}
+                        aria-label={`${props.dictionary.forms.partName} ${index + 1}`}
+                        aria-describedby={errors.parts?.[index]?.name ? `commitment-part-${index}-name-error` : undefined}
+                        aria-invalid={Boolean(errors.parts?.[index]?.name)}
+                        className="h-11 rounded-md border-transparent bg-transparent hover:border-border hover:bg-muted/30 focus-visible:bg-card"
+                        placeholder={props.dictionary.formHints.commitmentPartName}
+                        {...form.register(`parts.${index}.name`)}
+                      />
+                      <FieldError className="mt-1" id={`commitment-part-${index}-name-error`}>{errors.parts?.[index]?.name?.message}</FieldError>
+                    </div>
+                    <div className="col-span-2 col-start-2 grid min-w-0 grid-cols-[auto_minmax(0,8rem)] items-center gap-x-2 sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:block">
+                      <label className="pl-3 text-xs text-muted-foreground sm:hidden" htmlFor={`commitment-part-${index}-amount`}>
+                        {props.dictionary.forms.amount}
+                      </label>
+                      <MoneyInput
+                        id={`commitment-part-${index}-amount`}
+                        describedBy={errors.parts?.[index]?.amount ? `commitment-part-${index}-amount-error` : undefined}
+                        inputClassName="h-11 rounded-md border-border/70 bg-muted/20 text-right font-semibold tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        invalid={Boolean(errors.parts?.[index]?.amount)}
+                        label={`${props.dictionary.forms.amount} ${index + 1}`}
+                        placeholder={props.dictionary.formHints.amount}
+                        registration={form.register(`parts.${index}.amount`)}
+                      />
+                      <FieldError className="col-span-2 mt-1" id={`commitment-part-${index}-amount-error`}>{errors.parts?.[index]?.amount?.message}</FieldError>
+                    </div>
+                    <Button
+                      aria-label={`${props.dictionary.actions.removeCommitmentPart} ${index + 1}`}
+                      className="col-start-3 row-start-1 size-11 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:col-start-4"
+                      disabled={isPending}
+                      onClick={() => {
+                        partFields.remove(index)
+                        if (partFields.fields.length > 1) {
+                          requestAnimationFrame(() => form.setFocus(`parts.${Math.min(index, partFields.fields.length - 2)}.name`))
+                        }
+                      }}
+                      size="icon"
+                      title={`${props.dictionary.actions.removeCommitmentPart} ${index + 1}`}
+                      type="button"
+                      variant="ghost"
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-border/60 px-3 py-2">
+                <Button
+                  className="h-11 w-full justify-start text-primary sm:w-auto"
+                  disabled={isPending || partFields.fields.length >= 20}
+                  onClick={() => partFields.append({ name: "", amount: undefined })}
+                  type="button"
+                  variant="ghost"
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  {props.dictionary.actions.addCommitmentPart}
+                </Button>
+              </div>
+              <AmountSummary className="rounded-t-none rounded-b-lg border-0 border-t border-border/60" dictionary={props.dictionary} frequency={frequencyValue} locale={iconLocale} totalCents={partsTotalCents} />
             </div>
-            <Button
-              className="w-fit"
-              disabled={partFields.fields.length >= 20}
-              onClick={() => partFields.append({ name: "", amount: undefined })}
-              type="button"
-              variant="outline"
-            >
-              <PlusIcon data-icon="inline-start" />
-              {props.dictionary.actions.addCommitmentPart}
-            </Button>
-            <FieldDescription>{props.dictionary.formHints.commitmentPartsHelp}</FieldDescription>
             <FieldError>{typeof errors.parts?.message === "string" ? errors.parts.message : undefined}</FieldError>
-            <AmountSummary dictionary={props.dictionary} frequency={frequencyValue} locale={iconLocale} totalCents={partsTotalCents} />
           </Field>
         )}
         <Field data-invalid={Boolean(errors.category)}>
@@ -599,12 +628,13 @@ function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) 
           <FieldDescription>{props.dictionary.formHints.notesHelp}</FieldDescription>
         </Field>
       </FieldGroup>
-      <DialogFooter className="sticky bottom-[-1.25rem] -mx-5 -mb-5 grid grid-cols-2 gap-2 border-t bg-popover/95 px-5 pb-5 pt-4 backdrop-blur supports-[backdrop-filter]:bg-popover/85 sm:flex">
+      <DialogFooter className="sticky bottom-[-1.25rem] z-10 -mx-5 -mb-5 flex flex-row items-center justify-between gap-3 border-t bg-popover/95 px-5 pb-5 pt-3 backdrop-blur supports-[backdrop-filter]:bg-popover/85">
         {props.deleteAction && (
           <DeleteConfirmation
             action={props.deleteAction}
-            buttonClassName="h-11 w-full sm:h-9 sm:w-auto"
-            confirmationClassName="col-span-2 w-full sm:w-auto"
+            buttonClassName="h-11 bg-transparent px-3 hover:bg-destructive/10"
+            confirmationClassName="w-full"
+            disabled={isPending}
             dictionary={props.dictionary}
             itemName={form.getValues("name")}
             onConfirmingChange={setIsDeleteConfirming}
@@ -613,12 +643,13 @@ function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) 
           />
         )}
         <Button
-          className={`${props.deleteAction ? "" : "col-span-2"} h-11 w-full sm:ml-auto sm:h-9 sm:w-auto ${isDeleteConfirming ? "max-sm:hidden" : ""}`}
+          aria-busy={isPending}
+          className={`ml-auto h-11 min-w-32 px-6 shadow-none ${isDeleteConfirming ? "hidden" : ""}`}
           disabled={isPending}
           type="submit"
         >
           {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
-          {props.dictionary.actions.save}
+          {isPending ? props.dictionary.actions.saving : props.dictionary.actions.save}
         </Button>
       </DialogFooter>
     </form>
@@ -628,6 +659,7 @@ function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) 
 const newCategorySelectValue = "__new_category__"
 
 function MoneyInput({
+  describedBy,
   id,
   inputClassName,
   invalid,
@@ -635,6 +667,7 @@ function MoneyInput({
   placeholder,
   registration,
 }: {
+  describedBy?: string
   id: string
   inputClassName?: string
   invalid: boolean
@@ -646,6 +679,7 @@ function MoneyInput({
     <div className="relative">
       <Input
         id={id}
+        aria-describedby={describedBy}
         aria-label={label}
         aria-invalid={invalid}
         className={`pr-9 ${inputClassName ?? ""}`}
@@ -664,28 +698,30 @@ function MoneyInput({
 
 function SummaryAmount({ label, value }: { label: string; value: string }) {
   return (
-    <span className="flex items-baseline gap-2">
+    <span className="flex items-baseline justify-between gap-4">
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      <strong className="font-mono text-lg text-primary">{value}</strong>
+      <strong className="shrink-0 text-lg font-semibold tabular-nums text-primary">{value}</strong>
     </span>
   )
 }
 
 function AmountSummary({
+  className,
   dictionary,
   frequency,
   locale,
   totalCents,
 }: {
+  className?: string
   dictionary: Dictionary
   frequency: "MONTHLY" | "ANNUAL"
   locale: Locale
   totalCents: number
 }) {
   return (
-    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4" aria-live="polite">
+    <div className={cn("rounded-2xl border border-primary/20 bg-primary/5 p-4", className)} aria-live="polite" aria-atomic="true">
       {frequency === "ANNUAL" ? (
-        <div className="flex flex-wrap justify-between gap-x-6 gap-y-2">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-6">
           <SummaryAmount label={dictionary.forms.annualTotal} value={formatCurrency(totalCents, locale)} />
           <SummaryAmount label={dictionary.forms.monthlyEquivalent} value={formatCurrency(Math.round(totalCents / 12), locale)} />
         </div>
@@ -707,6 +743,7 @@ function DeleteConfirmation({
   buttonClassName,
   confirmationClassName,
   dictionary,
+  disabled = false,
   itemName,
   onConfirmingChange,
   onDeleted,
@@ -716,6 +753,7 @@ function DeleteConfirmation({
   buttonClassName?: string
   confirmationClassName?: string
   dictionary: Dictionary
+  disabled?: boolean
   itemName: string
   onConfirmingChange?: (confirming: boolean) => void
   onDeleted: () => void
@@ -731,7 +769,7 @@ function DeleteConfirmation({
 
   if (!confirming) {
     return (
-      <Button className={buttonClassName} onClick={() => updateConfirming(true)} type="button" variant="destructive">
+      <Button className={buttonClassName} disabled={disabled} onClick={() => updateConfirming(true)} type="button" variant="destructive">
         <Trash2Icon data-icon="inline-start" />
         {dictionary.actions.delete}
       </Button>
