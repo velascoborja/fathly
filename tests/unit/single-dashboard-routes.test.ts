@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
+import Home from "@/app/page"
+import manifest from "@/app/manifest"
+
 const legacyPages = [
   "src/app/(app)/deposits/page.tsx",
   "src/app/(app)/monthly-bills/page.tsx",
@@ -20,14 +23,17 @@ describe("legacy authenticated routes", () => {
 })
 
 describe("root route", () => {
-  it("renders a visible loading state before client navigation to the dashboard", () => {
-    const source = readFileSync("src/app/page.tsx", "utf8")
-    const loadingSource = readFileSync("src/components/app/root-redirect-loading.tsx", "utf8")
+  it("redirects on the server before rendering or hydration", () => {
+    expect(Home).toThrow("NEXT_REDIRECT")
+    try {
+      Home()
+    } catch (error) {
+      expect(error).toHaveProperty("digest", "NEXT_REDIRECT;replace;/dashboard;307;")
+    }
+  })
 
-    expect(source).toContain("RootRedirectLoading")
-    expect(source).not.toContain('redirect("/dashboard")')
-    expect(loadingSource).toContain('router.replace("/dashboard")')
-    expect(loadingSource).toContain("dictionary.loading.title")
+  it("opens the installed app directly on the dashboard", () => {
+    expect(manifest().start_url).toBe("/dashboard")
   })
 })
 

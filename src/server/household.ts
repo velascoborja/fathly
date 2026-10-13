@@ -1,11 +1,12 @@
 import { notFound, redirect } from "next/navigation"
 import { PlanStatus, HouseholdRole } from "@prisma/client"
+import { cache } from "react"
 
 import { auth } from "@/auth"
 import { getServerDictionary } from "@/lib/i18n/server"
 import { prisma } from "@/lib/prisma"
 
-export async function requireUser() {
+export const requireUser = cache(async function requireUser() {
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -13,9 +14,9 @@ export async function requireUser() {
   }
 
   return session.user
-}
+})
 
-export async function getActiveHouseholdContext() {
+export const getActiveHouseholdContext = cache(async function getActiveHouseholdContext() {
   const user = await requireUser()
 
   const existingMembership = await prisma.householdMember.findFirst({
@@ -96,7 +97,7 @@ export async function getActiveHouseholdContext() {
     membership: household.members[0],
     plan: household.budgetPlans[0],
   }
-}
+})
 
 export async function getBudgetData() {
   const context = await getActiveHouseholdContext()

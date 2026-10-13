@@ -99,6 +99,7 @@ export default async function DashboardPage() {
                     showMore: dictionary.dashboard.showMore,
                   }}
                   locale={locale}
+                  loadingLabels={dictionary.loading}
                   wholeCurrency
                 />
               </CardContent>

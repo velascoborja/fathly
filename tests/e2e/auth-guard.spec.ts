@@ -1,5 +1,21 @@
 import { expect, test } from "@playwright/test"
 
+test("root redirects without client JavaScript", async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
+  const page = await context.newPage()
+  try {
+    const response = await context.request.get("/", { maxRedirects: 0 })
+    expect(response.status()).toBe(307)
+    expect(response.headers().location).toBe("/dashboard")
+
+    await page.goto("/")
+    await expect(page).toHaveURL(/\/auth\/signin/)
+    await expect(page.getByRole("button", { name: /google/i })).toBeVisible()
+  } finally {
+    await context.close()
+  }
+})
+
 test("dashboard redirects anonymous visitors to sign-in", async ({ page }) => {
   await page.goto("/dashboard")
   await expect(page).toHaveURL(/\/auth\/signin/)

@@ -67,6 +67,14 @@ The demo uses static mock data and does not save changes.
 - `npm run test:e2e` runs Playwright smoke tests.
 - `npm run db:seed` runs the no-data seed placeholder.
 
+The authenticated loading and editor tests are opt-in:
+
+```bash
+FATHLY_E2E_DATABASE=1 npm run test:e2e
+```
+
+They require a configured PostgreSQL database with the migrations applied. Each test creates its own user, session, and household and removes them afterward; Google OAuth is not needed.
+
 ## MVP Notes
 
 - Default UI language is Spanish with an English toggle.

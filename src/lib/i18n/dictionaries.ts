@@ -21,6 +21,10 @@ export const dictionaries = {
       ariaLabel: "Cargando Fathly",
       title: "Preparando tu presupuesto",
       body: "Estamos abriendo tu espacio y comprobando a dónde llevarte.",
+      form: "Cargando formulario…",
+      chart: "Cargando gráfico…",
+      contentError: "No se ha podido cargar. Comprueba tu conexión e inténtalo de nuevo.",
+      reloadPage: "Recargar página",
     },
     actions: {
       addBill: "Añadir gasto",
@@ -316,6 +320,10 @@ export const dictionaries = {
       ariaLabel: "Loading Fathly",
       title: "Preparing your budget",
       body: "We're opening your space and checking where to take you.",
+      form: "Loading form…",
+      chart: "Loading chart…",
+      contentError: "Could not load. Check your connection and try again.",
+      reloadPage: "Reload page",
     },
     actions: {
       addBill: "Add bill",

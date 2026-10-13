@@ -144,6 +144,7 @@ export default async function DemoPage() {
                     showMore: dictionary.dashboard.showMore,
                   }}
                   locale={locale}
+                  loadingLabels={dictionary.loading}
                   wholeCurrency
                 />
               </CardContent>

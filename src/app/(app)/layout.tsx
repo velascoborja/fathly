@@ -1,10 +1,21 @@
+import { Suspense } from "react"
+
 import { AppShell } from "@/components/app/app-shell"
+import { AppShellLoading } from "@/components/app/app-shell-loading"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 import { getActiveHouseholdContext } from "@/server/household"
 
 export const dynamic = "force-dynamic"
 
-export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
+export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<AppShellLoading />}>
+      <AuthenticatedAppShell>{children}</AuthenticatedAppShell>
+    </Suspense>
+  )
+}
+
+async function AuthenticatedAppShell({ children }: { children: React.ReactNode }) {
   const [context, dictionary, locale] = await Promise.all([
     getActiveHouseholdContext(),
     getServerDictionary(),

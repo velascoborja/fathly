@@ -6,6 +6,10 @@ describe("dictionaries", () => {
   it("uses expenses nomenclature for budget commitments", () => {
     expect(dictionaries.es.loading.title).toBe("Preparando tu presupuesto")
     expect(dictionaries.es.loading.ariaLabel).toBe("Cargando Fathly")
+    expect(dictionaries.es.loading.form).toBe("Cargando formulario…")
+    expect(dictionaries.es.loading.chart).toBe("Cargando gráfico…")
+    expect(dictionaries.es.loading.reloadPage).toBe("Recargar página")
+    expect(dictionaries.es.loading.contentError).toContain("conexión")
     expect(dictionaries.es.dashboard.title).toBe("Resumen mensual")
     expect(dictionaries.es.dashboard.subtitle).toBe("Resumen del mes teniendo en cuenta ingresos y gastos.")
     expect(dictionaries.es.nav.checkpoints).toBe("Checkpoints")
@@ -66,6 +70,10 @@ describe("dictionaries", () => {
 
     expect(dictionaries.en.loading.title).toBe("Preparing your budget")
     expect(dictionaries.en.loading.ariaLabel).toBe("Loading Fathly")
+    expect(dictionaries.en.loading.form).toBe("Loading form…")
+    expect(dictionaries.en.loading.chart).toBe("Loading chart…")
+    expect(dictionaries.en.loading.reloadPage).toBe("Reload page")
+    expect(dictionaries.en.loading.contentError).toContain("connection")
     expect(dictionaries.en.dashboard.title).toBe("Monthly summary")
     expect(dictionaries.en.dashboard.subtitle).toBe("Review the month across income and expenses.")
     expect(dictionaries.en.nav.checkpoints).toBe("Checkpoints")

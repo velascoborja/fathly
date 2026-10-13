@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Fathly",
     short_name: "Fathly",
     description: "Control compartido del presupuesto mensual del hogar.",
-    start_url: "/",
+    start_url: "/dashboard",
     display: "standalone",
     background_color: "#fffdf4",
     theme_color: "#fbbf24",

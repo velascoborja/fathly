@@ -1,8 +1,5 @@
-import { RootRedirectLoading } from "@/components/app/root-redirect-loading"
-import { getServerDictionary } from "@/lib/i18n/server"
+import { redirect } from "next/navigation"
 
-export default async function Home() {
-  const dictionary = await getServerDictionary()
-
-  return <RootRedirectLoading dictionary={dictionary} />
+export default function Home() {
+  redirect("/dashboard")
 }
