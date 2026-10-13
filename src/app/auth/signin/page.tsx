@@ -20,7 +20,7 @@ export default async function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-background p-4">
+    <main data-fathly-signin className="flex min-h-svh items-center justify-center bg-background p-4">
       <Card className="fathly-card w-full max-w-md border-primary/30">
         <CardHeader className="gap-4 text-center">
           <AppIcon className="mx-auto size-14" size={56} />

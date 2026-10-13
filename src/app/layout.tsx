@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fira_Code, Inter } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   description: "Control compartido del presupuesto mensual del hogar.",
 };
 
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#ffffff",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,8 +35,17 @@ export default function RootLayout({
     <html
       lang="es"
       className={`${inter.variable} ${firaCode.variable} h-full antialiased`}
+      style={{ backgroundColor: "#ffffff", colorScheme: "light" }}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col" style={{ backgroundColor: "#ffffff" }}>
+        <noscript>
+          <style>{`
+            @layer base {
+              [data-fathly-loading] { display: none !important; }
+              [hidden]:has(> [data-fathly-signin]) { display: block !important; }
+            }
+          `}</style>
+        </noscript>
         <TooltipProvider>{children}</TooltipProvider>
         <Toaster richColors />
       </body>

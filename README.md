@@ -67,6 +67,8 @@ The demo uses static mock data and does not save changes.
 - `npm run test:e2e` runs Playwright smoke tests.
 - `npm run db:seed` runs the no-data seed placeholder.
 
+Playwright covers desktop Chromium, Pixel 7, and iPhone 13 through WebKit. Install the browser binaries with `npx playwright install chromium webkit` before running E2E tests. The startup tests pause the HTML response and JavaScript downloads to check the initial skeleton in light and dark appearances.
+
 The authenticated loading and editor tests are opt-in:
 
 ```bash

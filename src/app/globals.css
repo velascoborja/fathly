@@ -120,6 +120,8 @@
   }
   html {
     @apply font-sans;
+    background-color: #ffffff;
+    color-scheme: light;
   }
 }
 
