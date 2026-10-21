@@ -121,6 +121,68 @@ test.describe("deferred budget editors", () => {
     await expect.poll(async () => (await prisma.commitment.findFirst({ where: { householdId, name: "Gasto prueba" } }))?.amountCents).toBe(27_500)
   })
 
+  test("keeps the close button fixed while an expense scrolls and discards unsaved edits", async ({ page, household }, testInfo) => {
+    const expense = await household.prisma.commitment.findFirstOrThrow({ where: { householdId: household.id } })
+    await household.prisma.commitment.update({
+      where: { id: expense.id },
+      data: {
+        amountMode: "ITEMIZED",
+        amountCents: null,
+        parts: { create: Array.from({ length: 12 }, (_, index) => ({
+          name: `Partida ${index + 1}`,
+          amountCents: 1000,
+          sortOrder: index,
+        })) },
+      },
+    })
+    await page.goto("/dashboard")
+    const row = page.getByRole("row").filter({ has: page.getByText("Gasto prueba", { exact: true }) })
+    const openEditor = async () => {
+      await row.getByRole("button", { name: "Abrir acciones" }).click()
+      await page.getByRole("menuitem", { name: "Editar", exact: true }).click()
+    }
+
+    for (const [index, viewport] of [page.viewportSize()!, { width: 320, height: 700 }].entries()) {
+      await page.setViewportSize(viewport)
+      await openEditor()
+      const dialog = page.getByRole("dialog")
+      const scrollArea = dialog.locator('[data-slot="dialog-scroll-area"]')
+      const close = dialog.getByRole("button", { name: "Close", exact: true })
+      await expect(dialog.getByLabel("Nombre", { exact: true })).toBeFocused()
+      await dialog.getByLabel("Nombre", { exact: true }).fill("Cambio sin guardar")
+      await close.click({ trial: true })
+      const initialBounds = await close.boundingBox()
+      expect(initialBounds!.width).toBeGreaterThanOrEqual(44)
+      expect(initialBounds!.height).toBeGreaterThanOrEqual(44)
+
+      for (const fraction of [0.5, 1]) {
+        await scrollArea.evaluate((element, fraction) => {
+          element.scrollTop = (element.scrollHeight - element.clientHeight) * fraction
+        }, fraction)
+        await expect.poll(() => scrollArea.evaluate((element) => element.scrollTop)).toBeGreaterThan(0)
+        await expect.poll(() => close.boundingBox()).toEqual(initialBounds)
+        await expect(close).toBeInViewport()
+        await expect.poll(() => dialog.locator('[data-slot="dialog-header"]').evaluate((element) =>
+          element.getBoundingClientRect().bottom <= element.parentElement!.getBoundingClientRect().top
+        )).toBe(true)
+      }
+
+      await expect.poll(() => scrollArea.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+      await expect(dialog.getByRole("button", { name: "Guardar", exact: true })).toBeInViewport()
+      await expect(dialog.getByRole("button", { name: "Eliminar", exact: true })).toBeInViewport()
+      await testInfo.attach(`fixed-close-${index}`, { body: await dialog.screenshot({ path: testInfo.outputPath(`fixed-close-${index}.png`) }), contentType: "image/png" })
+      await close.click()
+      await expect(dialog).toBeHidden()
+      await expect(row.getByRole("button", { name: "Abrir acciones" })).toBeFocused()
+      expect((await household.prisma.commitment.findUniqueOrThrow({ where: { id: expense.id } })).name).toBe("Gasto prueba")
+
+      await openEditor()
+      await expect(dialog.getByLabel("Nombre", { exact: true })).toHaveValue("Gasto prueba")
+      await page.keyboard.press("Escape")
+      await expect(dialog).toBeHidden()
+    }
+  })
+
   test("loads the checkpoint editor and creates a snapshot", async ({ page, household }) => {
     const { id: householdId, prisma } = household
     await page.goto("/dashboard")
@@ -134,6 +196,33 @@ test.describe("deferred budget editors", () => {
     await expect.poll(async () => prisma.budgetPlan.count({ where: { householdId, name: "Snapshot de prueba", status: "ARCHIVED" } })).toBe(1)
     await expect(page.getByRole("heading", { name: "Resumen mensual" })).toBeVisible()
     await expect(page.getByText("Ingreso prueba", { exact: true })).toBeVisible()
+  })
+
+  test("dismisses a short dialog with close, Escape and the backdrop and restores focus", async ({ page, household }) => {
+    const plansBefore = await household.prisma.budgetPlan.count({ where: { householdId: household.id } })
+    await page.goto("/dashboard")
+    const trigger = page.getByRole("button", { name: "Crear checkpoint", exact: true }).first()
+    const dialog = page.getByRole("dialog")
+
+    for (const method of ["close", "escape", "backdrop"]) {
+      await trigger.click()
+      await expect(dialog.getByLabel("Nombre", { exact: true })).toBeFocused()
+      await expect(dialog.getByRole("heading")).toBeInViewport()
+      const titleBounds = await dialog.getByRole("heading").boundingBox()
+      const closeBounds = await dialog.getByRole("button", { name: "Close", exact: true }).boundingBox()
+      expect(titleBounds!.x + titleBounds!.width).toBeLessThanOrEqual(closeBounds!.x)
+      if (method === "close") {
+        await dialog.getByRole("button", { name: "Close", exact: true }).click()
+      } else if (method === "escape") {
+        await page.keyboard.press("Escape")
+      } else {
+        await page.locator('[data-slot="dialog-overlay"]').click({ position: { x: 5, y: 5 } })
+      }
+      await expect(dialog).toBeHidden()
+      await expect(trigger).toBeFocused()
+    }
+
+    expect(await household.prisma.budgetPlan.count({ where: { householdId: household.id } })).toBe(plansBefore)
   })
 
   test("edits compact itemized expenses, updates totals and saves the parts", async ({ page, household }, testInfo) => {
@@ -181,16 +270,16 @@ test.describe("deferred budget editors", () => {
       expect(amountBox!.y).toBe(nameBox!.y)
       expect(amountBox!.x).toBeGreaterThanOrEqual(nameBox!.x + nameBox!.width)
     }
-    await expect.poll(() => dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+    await expect.poll(() => dialog.locator('[data-slot="dialog-scroll-area"]').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
     await parts.evaluate((element) => {
-      const dialog = element.closest('[role="dialog"]')!
-      dialog.scrollTop += element.getBoundingClientRect().top - dialog.getBoundingClientRect().top - 20
+      const scrollArea = element.closest('[data-slot="dialog-scroll-area"]')!
+      scrollArea.scrollTop += element.getBoundingClientRect().top - scrollArea.getBoundingClientRect().top - 20
     })
     await testInfo.attach("itemized-editor", { body: await dialog.screenshot({ path: testInfo.outputPath("itemized-editor.png") }), contentType: "image/png" })
     if (testInfo.project.name === "mobile") {
       const originalViewport = page.viewportSize()!
       await page.setViewportSize({ width: 320, height: 700 })
-      await expect.poll(() => dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+      await expect.poll(() => dialog.locator('[data-slot="dialog-scroll-area"]').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
       const amountBounds = await amount.boundingBox()
       const partsBounds = await parts.boundingBox()
       expect(amountBounds!.x + amountBounds!.width).toBeLessThanOrEqual(partsBounds!.x + partsBounds!.width)
@@ -261,7 +350,7 @@ test.describe("deferred budget editors", () => {
     }
     await expect(parts.getByRole("button", { name: "Añadir partida" })).toBeDisabled()
     await expect(parts.getByText("20 / 20", { exact: true })).toBeVisible()
-    await expect.poll(() => dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+    await expect.poll(() => dialog.locator('[data-slot="dialog-scroll-area"]').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
   })
 
   test("shows an actionable error if the editor cannot be downloaded", async ({ page, household }) => {
