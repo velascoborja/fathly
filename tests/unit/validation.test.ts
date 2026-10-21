@@ -114,8 +114,11 @@ describe("budget validation", () => {
   it("normalizes and validates household share emails", () => {
     expect(householdInviteSchema.parse({ email: " PERSON@example.COM " })).toEqual({
       email: "person@example.com",
+      role: "VIEWER",
     })
     expect(householdInviteSchema.safeParse({ email: "not-an-email" }).success).toBe(false)
+    expect(householdInviteSchema.safeParse({ email: "person@example.com", role: "OWNER" }).success).toBe(false)
+    expect(householdInviteSchema.parse({ email: "person@example.com", role: "EDITOR" }).role).toBe("EDITOR")
   })
 
   it("validates the monthly result margin percentage", () => {

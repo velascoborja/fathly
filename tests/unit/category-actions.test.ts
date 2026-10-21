@@ -4,7 +4,7 @@ import { dictionaries } from "@/lib/i18n/dictionaries"
 
 const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
-  getActiveHouseholdContext: vi.fn(),
+  requireHouseholdPermission: vi.fn(),
   getServerDictionary: vi.fn(),
   revalidatePath: vi.fn(),
   updateMany: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock("@/lib/prisma", () => ({
 }))
 
 vi.mock("@/server/household", () => ({
-  getActiveHouseholdContext: mocks.getActiveHouseholdContext,
+  requireHouseholdPermission: mocks.requireHouseholdPermission,
 }))
 
 function formData(category: string) {
@@ -54,7 +54,7 @@ describe("renameCommitmentCategory", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getServerDictionary.mockResolvedValue(dictionaries.es)
-    mocks.getActiveHouseholdContext.mockResolvedValue({
+    mocks.requireHouseholdPermission.mockResolvedValue({
       household: { id: "household-1" },
       plan: { id: "plan-1" },
     })
@@ -65,18 +65,18 @@ describe("renameCommitmentCategory", () => {
   it("rejects empty category names", async () => {
     const { renameCommitmentCategory } = await import("@/server/actions")
 
-    await expect(renameCommitmentCategory("Casa", formData(""))).rejects.toThrow("La categoría es obligatoria.")
-    expect(mocks.getActiveHouseholdContext).not.toHaveBeenCalled()
+    await expect(renameCommitmentCategory("household-1", "Casa", formData(""))).rejects.toThrow("La categoría es obligatoria.")
+    expect(mocks.requireHouseholdPermission).not.toHaveBeenCalled()
     expect(mocks.updateMany).not.toHaveBeenCalled()
   })
 
   it("rejects unchanged names after trimming", async () => {
     const { renameCommitmentCategory } = await import("@/server/actions")
 
-    await expect(renameCommitmentCategory("Casa", formData(" Casa "))).rejects.toThrow(
+    await expect(renameCommitmentCategory("household-1", "Casa", formData(" Casa "))).rejects.toThrow(
       "El nombre de la categoría no ha cambiado."
     )
-    expect(mocks.getActiveHouseholdContext).not.toHaveBeenCalled()
+    expect(mocks.requireHouseholdPermission).not.toHaveBeenCalled()
     expect(mocks.updateMany).not.toHaveBeenCalled()
   })
 
@@ -84,7 +84,7 @@ describe("renameCommitmentCategory", () => {
     mocks.findFirst.mockResolvedValue({ id: "commitment-2" })
     const { renameCommitmentCategory } = await import("@/server/actions")
 
-    await expect(renameCommitmentCategory("Casa", formData("Suministros"))).rejects.toThrow(
+    await expect(renameCommitmentCategory("household-1", "Casa", formData("Suministros"))).rejects.toThrow(
       "Ya existe una categoría con ese nombre."
     )
     expect(mocks.findFirst).toHaveBeenCalledWith({
@@ -109,7 +109,7 @@ describe("renameCommitmentCategory", () => {
   it("renames every matching commitment in the active plan", async () => {
     const { renameCommitmentCategory } = await import("@/server/actions")
 
-    await renameCommitmentCategory("Casa", formData("Hogar"))
+    await renameCommitmentCategory("household-1", "Casa", formData("Hogar"))
 
     expect(mocks.updateMany).toHaveBeenCalledWith({
       where: {

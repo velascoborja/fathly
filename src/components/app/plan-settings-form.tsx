@@ -16,6 +16,7 @@ import { getPlanSettingsSchema, type PlanSettingsInput } from "@/lib/validations
 type Dictionary = (typeof dictionaries)[Locale]
 
 type PlanSettingsFormProps = {
+  readOnly?: boolean
   action: (formData: FormData) => Promise<void>
   dictionary: Dictionary
   lowMonthlyMarginBasisPoints: number
@@ -25,6 +26,7 @@ export function PlanSettingsForm({
   action,
   dictionary,
   lowMonthlyMarginBasisPoints,
+  readOnly = false,
 }: PlanSettingsFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -39,6 +41,7 @@ export function PlanSettingsForm({
   }, [form, lowMonthlyMarginPercent])
 
   function onSubmit(values: PlanSettingsInput) {
+    if (readOnly) return
     const formData = new FormData()
     formData.set("lowMonthlyMarginPercent", String(values.lowMonthlyMarginPercent))
 
@@ -59,13 +62,13 @@ export function PlanSettingsForm({
   return (
     <form aria-busy={isPending} className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
       <FieldGroup>
-        <Field data-disabled={isPending} data-invalid={Boolean(error)}>
+        <Field data-disabled={isPending || readOnly} data-invalid={Boolean(error)}>
           <FieldLabel htmlFor="low-monthly-margin-percent">{dictionary.settings.lowMonthlyMarginPercent}</FieldLabel>
           <div className="flex max-w-40 items-center gap-2">
             <Input
               id="low-monthly-margin-percent"
               aria-invalid={Boolean(error)}
-              disabled={isPending}
+              disabled={isPending || readOnly}
               inputMode="decimal"
               max={100}
               min={0}
@@ -79,10 +82,10 @@ export function PlanSettingsForm({
           <FieldError>{error?.message}</FieldError>
         </Field>
       </FieldGroup>
-      <Button className="self-start" disabled={isPending || !form.formState.isDirty} type="submit">
+      {!readOnly ? <Button className="self-start" disabled={isPending || !form.formState.isDirty} type="submit">
         {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
         {isPending ? dictionary.actions.saving : dictionary.actions.save}
-      </Button>
+      </Button> : null}
     </form>
   )
 }

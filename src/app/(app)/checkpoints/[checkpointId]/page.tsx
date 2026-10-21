@@ -27,6 +27,7 @@ import {
   groupCommitmentsForTable,
 } from "@/lib/budget/math"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
+import { canEditBudget } from "@/lib/household-access"
 import { deleteCheckpoint } from "@/server/actions"
 import { getCheckpointData } from "@/server/household"
 import type { Locale, dictionaries } from "@/lib/i18n/dictionaries"
@@ -68,12 +69,12 @@ export default async function CheckpointDetailPage({
             {dictionary.checkpoints.snapshotDate}: {formatDate(data.checkpoint.createdAt, locale)}
           </p>
         </div>
-        <CheckpointDeleteDialog
-          action={deleteCheckpoint.bind(null, data.checkpoint.id)}
+        {canEditBudget(data.membership.role) ? <CheckpointDeleteDialog
+          action={deleteCheckpoint.bind(null, data.household.id, data.checkpoint.id)}
           checkpointName={data.checkpoint.name}
           dictionary={dictionary}
           redirectTo="/checkpoints"
-        />
+        /> : null}
       </div>
 
       <Card className="fathly-card border-primary/30">

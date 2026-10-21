@@ -5,6 +5,7 @@ import { InitialSetupForm } from "@/components/app/initial-setup-form"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { getServerDictionary } from "@/lib/i18n/server"
+import { canEditBudget } from "@/lib/household-access"
 import { completeInitialSetup } from "@/server/actions"
 import { getBudgetData } from "@/server/household"
 
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic"
 export default async function SetupPage() {
   const [data, dictionary] = await Promise.all([getBudgetData(), getServerDictionary()])
 
-  if (data.plan.onboardingCompletedAt) {
+  if (!canEditBudget(data.membership.role) || data.plan.onboardingCompletedAt) {
     redirect("/dashboard")
   }
 
@@ -74,7 +75,7 @@ export default async function SetupPage() {
         </Card>
       </div>
 
-      <InitialSetupForm action={completeInitialSetup} dictionary={dictionary} />
+      <InitialSetupForm action={completeInitialSetup.bind(null, data.household.id)} dictionary={dictionary} />
     </section>
   )
 }

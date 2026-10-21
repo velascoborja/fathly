@@ -19,6 +19,7 @@ export function getHouseholdNameFormSchema(messages: ValidationMessages = defaul
 export function getHouseholdInviteSchema(messages: ValidationMessages = defaultValidationMessages) {
   return z.object({
     email: z.string().trim().toLowerCase().max(254).email(messages.emailInvalid),
+    role: z.enum(["VIEWER", "EDITOR"], { error: messages.roleInvalid }).default("VIEWER"),
   })
 }
 

@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { HouseholdRole, PlanStatus } from "@prisma/client"
+import { PlanStatus } from "@prisma/client"
 
-import { signIn, signOut } from "@/auth"
+import { auth, signIn, signOut } from "@/auth"
 import { centsFromDecimalInput } from "@/lib/budget/format"
 import { inferCommitmentIcon } from "@/lib/budget/commitment-icons"
 import { inferDepositIcon } from "@/lib/budget/deposit-icons"
@@ -20,87 +20,40 @@ import {
   getPlanSettingsSchema,
   type CommitmentInput,
 } from "@/lib/validations/budget"
-import { getHouseholdInviteSchema, getHouseholdNameSchema } from "@/lib/validations/household"
+import { getHouseholdNameSchema } from "@/lib/validations/household"
 import { prisma } from "@/lib/prisma"
-import { getActiveHouseholdContext } from "@/server/household"
+import { requireHouseholdPermission, requireUser } from "@/server/household"
+import { safeReturnTo } from "@/lib/household-access"
+import { deleteAccountData } from "@/server/account"
 
-export async function signInWithGoogle() {
-  await signIn("google", {
-    redirectTo: "/dashboard",
-  })
+export async function signInWithGoogle(formData: FormData) {
+  if ((await auth())?.user) {
+    await signOut({ redirect: false })
+    const cookieStore = await cookies()
+    cookieStore.delete("fathly-household")
+  }
+  await signIn("google", { redirectTo: safeReturnTo(formData.get("returnTo")) }, { prompt: "select_account" })
 }
 
 export async function signOutUser() {
-  await signOut({
-    redirectTo: "/auth/signin",
-  })
+  const cookieStore = await cookies()
+  cookieStore.delete("fathly-household")
+  await signOut({ redirectTo: "/auth/signin" })
 }
 
-export async function deleteUserAccount() {
-  const context = await getActiveHouseholdContext()
-  const userId = context.user.id
-
-  await prisma.$transaction(async (tx) => {
-    const memberships = await tx.householdMember.findMany({
-      where: {
-        userId,
-      },
-      select: {
-        householdId: true,
-        role: true,
-      },
-    })
-
-    for (const membership of memberships) {
-      const remainingMembers = await tx.householdMember.findMany({
-        where: {
-          householdId: membership.householdId,
-          userId: {
-            not: userId,
-          },
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-        select: {
-          id: true,
-          role: true,
-        },
-      })
-
-      if (remainingMembers.length === 0) {
-        await tx.household.delete({
-          where: {
-            id: membership.householdId,
-          },
-        })
-        continue
-      }
-
-      const householdKeepsOwner = remainingMembers.some((member) => member.role === HouseholdRole.OWNER)
-
-      if (membership.role === HouseholdRole.OWNER && !householdKeepsOwner) {
-        await tx.householdMember.update({
-          where: {
-            id: remainingMembers[0].id,
-          },
-          data: {
-            role: HouseholdRole.OWNER,
-          },
-        })
-      }
+export async function deleteUserAccount(successors: Record<string, string> = {}) {
+  const user = await requireUser()
+  try {
+    await deleteAccountData(user.id, successors)
+  } catch (error) {
+    const dictionary = await getServerDictionary()
+    return {
+      error: error instanceof Error && error.message === dictionary.sharing.successorRequired
+        ? error.message
+        : dictionary.settings.deleteAccountError,
     }
-
-    await tx.user.delete({
-      where: {
-        id: userId,
-      },
-    })
-  })
-
-  await signOut({
-    redirectTo: "/auth/signin",
-  })
+  }
+  await signOutUser()
 }
 
 export async function setLocaleAction(locale: string) {
@@ -118,7 +71,7 @@ export async function setLocaleAction(locale: string) {
   revalidatePath("/", "layout")
 }
 
-export async function updateHouseholdName(formData: FormData) {
+export async function updateHouseholdName(householdId: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getHouseholdNameSchema(dictionary.validation).safeParse(formData.get("name"))
 
@@ -126,7 +79,7 @@ export async function updateHouseholdName(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericHouseholdNameInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "owner")
 
   await prisma.household.update({
     where: {
@@ -141,71 +94,7 @@ export async function updateHouseholdName(formData: FormData) {
   revalidatePath("/", "layout")
 }
 
-export async function shareHouseholdAccess(formData: FormData) {
-  const dictionary = await getServerDictionary()
-  const parsed = getHouseholdInviteSchema(dictionary.validation).safeParse({
-    email: formData.get("email"),
-  })
-
-  if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericEmailInvalid)
-  }
-
-  const context = await getActiveHouseholdContext()
-
-  if (context.membership.role !== "OWNER") {
-    throw new Error(dictionary.validation.shareAccessOwnerOnly)
-  }
-
-  if (context.user.email?.toLowerCase() === parsed.data.email) {
-    return
-  }
-
-  const user = await prisma.user.findFirst({
-    where: {
-      email: {
-        equals: parsed.data.email,
-        mode: "insensitive",
-      },
-    },
-    include: {
-      memberships: {
-        select: {
-          householdId: true,
-        },
-      },
-    },
-  })
-
-  if (!user) {
-    return
-  }
-
-  const existingMembership = user.memberships.find(
-    (membership) => membership.householdId === context.household.id
-  )
-
-  if (existingMembership) {
-    return
-  }
-
-  if (user.memberships.length > 0) {
-    return
-  }
-
-  await prisma.householdMember.create({
-    data: {
-      householdId: context.household.id,
-      userId: user.id,
-      role: HouseholdRole.MEMBER,
-    },
-  })
-
-  revalidatePath("/settings")
-  revalidatePath("/", "layout")
-}
-
-export async function updatePlanSettings(formData: FormData) {
+export async function updatePlanSettings(householdId: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getPlanSettingsSchema(dictionary.validation).safeParse({
     lowMonthlyMarginPercent: formData.get("lowMonthlyMarginPercent"),
@@ -215,7 +104,7 @@ export async function updatePlanSettings(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericPlanSettingsInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "owner")
 
   await prisma.budgetPlan.update({
     where: {
@@ -231,7 +120,7 @@ export async function updatePlanSettings(formData: FormData) {
   revalidateBudgetPaths()
 }
 
-export async function createCheckpoint(formData: FormData) {
+export async function createCheckpoint(householdId: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getCheckpointSchema(dictionary.validation).safeParse({
     name: formData.get("name"),
@@ -241,7 +130,7 @@ export async function createCheckpoint(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCheckpointInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.$transaction(async (tx) => {
     const [deposits, commitments] = await Promise.all([
@@ -340,8 +229,8 @@ export async function createCheckpoint(formData: FormData) {
   revalidatePath("/checkpoints")
 }
 
-export async function deleteCheckpoint(id: string) {
-  const context = await getActiveHouseholdContext()
+export async function deleteCheckpoint(householdId: string, id: string) {
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.budgetPlan.delete({
     where: {
@@ -354,7 +243,7 @@ export async function deleteCheckpoint(id: string) {
   revalidatePath("/checkpoints")
 }
 
-export async function createDeposit(formData: FormData) {
+export async function createDeposit(householdId: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getDepositSchema(dictionary.validation).safeParse({
     name: formData.get("name"),
@@ -367,7 +256,7 @@ export async function createDeposit(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericDepositInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.deposit.create({
     data: {
@@ -383,7 +272,7 @@ export async function createDeposit(formData: FormData) {
   revalidateBudgetPaths()
 }
 
-export async function completeInitialSetup(formData: FormData) {
+export async function completeInitialSetup(householdId: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getInitialSetupSchema(dictionary.validation).safeParse({
     deposits: parseSetupItems(formData, "deposit"),
@@ -394,7 +283,7 @@ export async function completeInitialSetup(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericSetupInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.$transaction(async (tx) => {
     const nextDepositSortOrder = await tx.deposit.count({
@@ -458,7 +347,7 @@ export async function completeInitialSetup(formData: FormData) {
   revalidatePath("/setup")
 }
 
-export async function updateDeposit(id: string, formData: FormData) {
+export async function updateDeposit(householdId: string, id: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getDepositSchema(dictionary.validation).safeParse({
     name: formData.get("name"),
@@ -471,7 +360,7 @@ export async function updateDeposit(id: string, formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericDepositInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.deposit.update({
     where: {
@@ -490,8 +379,8 @@ export async function updateDeposit(id: string, formData: FormData) {
   revalidateBudgetPaths()
 }
 
-export async function deleteDeposit(id: string) {
-  const context = await getActiveHouseholdContext()
+export async function deleteDeposit(householdId: string, id: string) {
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.deposit.delete({
     where: {
@@ -504,7 +393,7 @@ export async function deleteDeposit(id: string) {
   revalidateBudgetPaths()
 }
 
-export async function createCommitment(formData: FormData) {
+export async function createCommitment(householdId: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getCommitmentSchema(dictionary.validation).safeParse(parseCommitmentFormData(formData))
 
@@ -512,7 +401,7 @@ export async function createCommitment(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCommitmentInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.$transaction(async (tx) => {
     await tx.commitment.create({
@@ -527,7 +416,7 @@ export async function createCommitment(formData: FormData) {
   revalidateBudgetPaths()
 }
 
-export async function updateCommitment(id: string, formData: FormData) {
+export async function updateCommitment(householdId: string, id: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getCommitmentSchema(dictionary.validation).safeParse(parseCommitmentFormData(formData))
 
@@ -535,7 +424,7 @@ export async function updateCommitment(id: string, formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCommitmentInvalid)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.$transaction(async (tx) => {
     await tx.commitment.update({
@@ -563,7 +452,7 @@ export async function updateCommitment(id: string, formData: FormData) {
   revalidateBudgetPaths()
 }
 
-export async function renameCommitmentCategory(oldCategory: string, formData: FormData) {
+export async function renameCommitmentCategory(householdId: string, oldCategory: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getCategoryNameSchema(dictionary.validation).safeParse(formData.get("category"))
 
@@ -578,7 +467,7 @@ export async function renameCommitmentCategory(oldCategory: string, formData: Fo
     throw new Error(dictionary.validation.categoryUnchanged)
   }
 
-  const context = await getActiveHouseholdContext()
+  const context = await requireHouseholdPermission(householdId, "edit")
   const categoryExists = await prisma.commitment.findFirst({
     where: {
       householdId: context.household.id,
@@ -614,8 +503,8 @@ export async function renameCommitmentCategory(oldCategory: string, formData: Fo
   revalidateBudgetPaths()
 }
 
-export async function deleteCommitment(id: string) {
-  const context = await getActiveHouseholdContext()
+export async function deleteCommitment(householdId: string, id: string) {
+  const context = await requireHouseholdPermission(householdId, "edit")
 
   await prisma.commitment.delete({
     where: {
@@ -695,4 +584,5 @@ function getCommitmentMutationData(
 
 function revalidateBudgetPaths() {
   revalidatePath("/dashboard")
+  revalidatePath("/checkpoints", "layout")
 }

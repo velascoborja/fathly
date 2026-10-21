@@ -132,3 +132,12 @@ describe("dictionaries", () => {
     expect(dictionaries.en.forms.itemizedAmountIndicator).toContain("sum of items")
   })
 })
+
+
+describe("household sharing copy", () => {
+  it("provides matching Spanish and English keys and all three permission labels", () => {
+    expect(Object.keys(dictionaries.es.sharing).sort()).toEqual(Object.keys(dictionaries.en.sharing).sort())
+    expect(dictionaries.es.sharing.roles).toEqual({ OWNER: "Propietario", EDITOR: "Editor", VIEWER: "Solo lectura" })
+    expect(dictionaries.en.sharing.roles).toEqual({ OWNER: "Owner", EDITOR: "Editor", VIEWER: "Viewer" })
+  })
+})

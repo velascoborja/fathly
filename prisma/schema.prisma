@@ -8,7 +8,8 @@ datasource db {
 
 enum HouseholdRole {
   OWNER
-  MEMBER
+  EDITOR
+  VIEWER
 }
 
 enum PlanStatus {
@@ -37,17 +38,18 @@ enum FinancialItemStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  locale        String    @default("es")
-  accounts      Account[]
-  sessions      Session[]
-  memberships   HouseholdMember[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String                @id @default(cuid())
+  name               String?
+  email              String?               @unique
+  emailVerified      DateTime?
+  image              String?
+  locale             String                @default("es")
+  accounts           Account[]
+  sessions           Session[]
+  memberships        HouseholdMember[]
+  invitationsCreated HouseholdInvitation[]
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
 }
 
 model Account {
@@ -87,21 +89,22 @@ model VerificationToken {
 }
 
 model Household {
-  id          String            @id @default(cuid())
+  id          String                @id @default(cuid())
   name        String
   members     HouseholdMember[]
+  invitations HouseholdInvitation[]
   budgetPlans BudgetPlan[]
   deposits    Deposit[]
   commitments Commitment[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
 }
 
 model HouseholdMember {
   id          String        @id @default(cuid())
   householdId String
   userId      String
-  role        HouseholdRole @default(MEMBER)
+  role        HouseholdRole @default(EDITOR)
   createdAt   DateTime      @default(now())
   household   Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -111,19 +114,19 @@ model HouseholdMember {
 }
 
 model BudgetPlan {
-  id                            String       @id @default(cuid())
-  householdId                   String
-  name                          String
-  status                        PlanStatus   @default(ACTIVE)
-  lowMonthlyMarginBasisPoints   Int          @default(500)
-  onboardingCompletedAt         DateTime?
-  startsOn                      DateTime?
-  endsOn                        DateTime?
-  createdAt                     DateTime     @default(now())
-  updatedAt                     DateTime     @updatedAt
-  household                     Household    @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  deposits                      Deposit[]
-  commitments                   Commitment[]
+  id                          String       @id @default(cuid())
+  householdId                 String
+  name                        String
+  status                      PlanStatus   @default(ACTIVE)
+  lowMonthlyMarginBasisPoints Int          @default(500)
+  onboardingCompletedAt       DateTime?
+  startsOn                    DateTime?
+  endsOn                      DateTime?
+  createdAt                   DateTime     @default(now())
+  updatedAt                   DateTime     @updatedAt
+  household                   Household    @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  deposits                    Deposit[]
+  commitments                 Commitment[]
 
   @@index([householdId, status])
 }
@@ -147,23 +150,23 @@ model Deposit {
 }
 
 model Commitment {
-  id          String              @id @default(cuid())
+  id          String               @id @default(cuid())
   householdId String
   planId      String
   name        String
   category    String
-  icon        String              @default("receipt")
-  type        CommitmentType      @default(BILL)
-  frequency   Frequency           @default(MONTHLY)
+  icon        String               @default("receipt")
+  type        CommitmentType       @default(BILL)
+  frequency   Frequency            @default(MONTHLY)
   amountMode  CommitmentAmountMode @default(FIXED)
   amountCents Int?
-  status      FinancialItemStatus @default(ACTIVE)
+  status      FinancialItemStatus  @default(ACTIVE)
   notes       String?
-  sortOrder   Int                 @default(0)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  household   Household           @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  plan        BudgetPlan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  household   Household            @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  plan        BudgetPlan           @relation(fields: [planId], references: [id], onDelete: Cascade)
   parts       CommitmentPart[]
 
   @@index([householdId, planId, status])
@@ -181,4 +184,22 @@ model CommitmentPart {
   commitment   Commitment @relation(fields: [commitmentId], references: [id], onDelete: Cascade)
 
   @@index([commitmentId, sortOrder])
+}
+
+model HouseholdInvitation {
+  id          String        @id @default(cuid())
+  householdId String
+  email       String
+  role        HouseholdRole @default(VIEWER)
+  tokenHash   String        @unique
+  createdById String?
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  household   Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdBy   User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([householdId, email])
 }

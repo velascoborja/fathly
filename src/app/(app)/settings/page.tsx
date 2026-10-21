@@ -5,15 +5,23 @@ import { HouseholdAccessForm } from "@/components/app/household-access-form"
 import { HouseholdNameForm } from "@/components/app/household-name-form"
 import { PlanSettingsForm } from "@/components/app/plan-settings-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { getServerDictionary } from "@/lib/i18n/server"
+import { getLocale, getServerDictionary } from "@/lib/i18n/server"
 import { prisma } from "@/lib/prisma"
-import { deleteUserAccount, shareHouseholdAccess, updateHouseholdName, updatePlanSettings } from "@/server/actions"
+import { deleteUserAccount, updateHouseholdName, updatePlanSettings } from "@/server/actions"
+import { createHouseholdInvitation } from "@/server/household-actions"
+import { getOwnershipTransfers } from "@/server/account"
 import { getActiveHouseholdContext } from "@/server/household"
 
 export const dynamic = "force-dynamic"
 
 export default async function SettingsPage() {
-  const [context, dictionary] = await Promise.all([getActiveHouseholdContext(), getServerDictionary()])
+  const [context, dictionary, locale, transfers] = await Promise.all([getActiveHouseholdContext(), getServerDictionary(), getLocale(), getOwnershipTransfers()])
+  const isOwner = context.membership.role === "OWNER"
+  const invitations = isOwner ? await prisma.householdInvitation.findMany({
+    where: { householdId: context.household.id, acceptedAt: null, cancelledAt: null },
+    select: { id: true, email: true, role: true, expiresAt: true },
+    orderBy: { createdAt: "desc" },
+  }) : []
   const members = await prisma.householdMember.findMany({
     where: {
       householdId: context.household.id,
@@ -29,7 +37,7 @@ export default async function SettingsPage() {
     },
     orderBy: [
       {
-        role: "desc",
+        role: "asc",
       },
       {
         createdAt: "asc",
@@ -55,7 +63,8 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <HouseholdNameForm
-            action={updateHouseholdName}
+            readOnly={!isOwner}
+            action={updateHouseholdName.bind(null, context.household.id)}
             dictionary={dictionary}
             householdName={context.household.name}
           />
@@ -72,7 +81,11 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <HouseholdAccessForm
-            action={shareHouseholdAccess}
+            key={context.household.id}
+            householdId={context.household.id}
+            locale={locale}
+            invitations={invitations.map((invitation) => ({ ...invitation, expiresAt: invitation.expiresAt.toISOString() }))}
+            action={createHouseholdInvitation.bind(null, context.household.id)}
             dictionary={dictionary}
             isOwner={context.membership.role === "OWNER"}
             members={members}
@@ -87,7 +100,8 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <PlanSettingsForm
-            action={updatePlanSettings}
+            readOnly={!isOwner}
+            action={updatePlanSettings.bind(null, context.household.id)}
             dictionary={dictionary}
             lowMonthlyMarginBasisPoints={context.plan.lowMonthlyMarginBasisPoints}
           />
@@ -103,7 +117,7 @@ export default async function SettingsPage() {
           <CardDescription>{dictionary.settings.accountDangerCardDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <AccountDeleteDialog action={deleteUserAccount} dictionary={dictionary} />
+          <AccountDeleteDialog action={deleteUserAccount} dictionary={dictionary} transfers={transfers} />
         </CardContent>
       </Card>
     </section>

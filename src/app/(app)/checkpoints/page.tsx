@@ -9,6 +9,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { calculateBudgetSummary } from "@/lib/budget/math"
 import { formatWholeCurrency } from "@/lib/budget/format"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
+import { canEditBudget } from "@/lib/household-access"
 import { deleteCheckpoint } from "@/server/actions"
 import { getCheckpoints } from "@/server/household"
 import type { Locale } from "@/lib/i18n/dictionaries"
@@ -80,12 +81,12 @@ export default async function CheckpointsPage() {
                       {dictionary.checkpoints.viewDetails}
                       <ArrowRightIcon data-icon="inline-end" />
                     </Button>
-                    <CheckpointDeleteDialog
-                      action={deleteCheckpoint.bind(null, checkpoint.id)}
+                    {canEditBudget(data.membership.role) ? <CheckpointDeleteDialog
+                      action={deleteCheckpoint.bind(null, data.household.id, checkpoint.id)}
                       checkpointName={checkpoint.name}
                       dictionary={dictionary}
                       iconOnly
-                    />
+                    /> : null}
                   </div>
                 </CardContent>
               </Card>

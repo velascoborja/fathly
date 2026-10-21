@@ -33,6 +33,7 @@ import { getCommitmentIconOption } from "@/lib/budget/commitment-icons"
 import { getDepositIconOption } from "@/lib/budget/deposit-icons"
 import { formatBudgetUsagePercent, formatWholeCurrency } from "@/lib/budget/format"
 import { getLocale, getServerDictionary } from "@/lib/i18n/server"
+import { canEditBudget } from "@/lib/household-access"
 import { cn } from "@/lib/utils"
 import {
   createCommitment,
@@ -57,16 +58,18 @@ export default async function DashboardPage() {
   const summary = calculateBudgetSummary(data.deposits, data.commitments)
   const outflows = getCommitmentBreakdown(data.commitments)
   const categoryOptions = getCategoryOptions(data.commitments)
+  const canEdit = canEditBudget(data.membership.role)
   const hasData = data.deposits.length > 0 || data.commitments.length > 0
 
-  if (!data.plan.onboardingCompletedAt && !hasData) {
+  if (canEdit && !data.plan.onboardingCompletedAt && !hasData) {
     redirect("/setup")
   }
 
   return (
     <>
       <section className="fathly-hero flex flex-col gap-6 p-5 max-sm:-mx-4 max-sm:gap-5 max-sm:rounded-none max-sm:border-0 max-sm:px-4 max-sm:py-0 max-sm:shadow-none max-sm:[background:transparent] md:p-6">
-        <DashboardHeader dictionary={dictionary} />
+        <DashboardHeader dictionary={dictionary} householdId={data.household.id} canEdit={canEdit} />
+        {!canEdit ? <p className="text-sm text-muted-foreground" role="status">{dictionary.sharing.readOnly}</p> : null}
 
         <MonthlySnapshot
           dictionary={dictionary}
@@ -78,7 +81,7 @@ export default async function DashboardPage() {
 
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(520px,1.55fr)]">
           <div className="flex flex-col gap-4">
-            <IncomePanel deposits={data.deposits} dictionary={dictionary} locale={locale} />
+            <IncomePanel householdId={data.household.id} canEdit={canEdit} deposits={data.deposits} dictionary={dictionary} locale={locale} />
 
             <Card className="fathly-card">
               <CardHeader>
@@ -116,16 +119,16 @@ export default async function DashboardPage() {
                   </CardTitle>
                   <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
                 </div>
-                <BudgetDialogForm
-                  action={createCommitment}
+                {canEdit ? <BudgetDialogForm
+                  action={createCommitment.bind(null, data.household.id)}
                   categoryOptions={categoryOptions}
                   dictionary={dictionary}
                   kind="commitment"
-                />
+                /> : null}
               </div>
             </CardHeader>
             <CardContent className="max-sm:px-2">
-              <OutflowTable commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
+              <OutflowTable householdId={data.household.id} canEdit={canEdit} commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
             </CardContent>
           </Card>
         </div>
@@ -147,14 +150,14 @@ export default async function DashboardPage() {
   )
 }
 
-function DashboardHeader({ dictionary }: { dictionary: Dictionary }) {
+function DashboardHeader({ dictionary, householdId, canEdit }: { dictionary: Dictionary; householdId: string; canEdit: boolean }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex min-w-0 flex-col gap-2">
         <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">{dictionary.dashboard.title}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">{dictionary.dashboard.subtitle}</p>
       </div>
-      <CheckpointDialogForm action={createCheckpoint} dictionary={dictionary} />
+      {canEdit ? <CheckpointDialogForm action={createCheckpoint.bind(null, householdId)} dictionary={dictionary} /> : null}
     </div>
   )
 }
@@ -297,10 +300,14 @@ function SnapshotMetric({
 function IncomePanel({
   deposits,
   dictionary,
+  householdId,
+  canEdit,
   locale,
 }: {
   deposits: Deposit[]
   dictionary: Dictionary
+  householdId: string
+  canEdit: boolean
   locale: Locale
 }) {
   const totalCents = deposits
@@ -319,7 +326,7 @@ function IncomePanel({
             </CardTitle>
             <CardDescription>{dictionary.dashboard.incomeBody}</CardDescription>
           </div>
-          <BudgetDialogForm action={createDeposit} dictionary={dictionary} kind="deposit" />
+          {canEdit ? <BudgetDialogForm action={createDeposit.bind(null, householdId)} dictionary={dictionary} kind="deposit" /> : null}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -329,23 +336,25 @@ function IncomePanel({
           ) : (
             sortedDeposits.map((deposit, depositIndex) => (
               <BudgetRowContextMenu
-                deleteAction={deleteDeposit.bind(null, deposit.id)}
+                readOnly={!canEdit}
+                deleteAction={deleteDeposit.bind(null, householdId, deposit.id)}
                 dictionary={dictionary}
                 item={deposit}
                 key={deposit.id}
                 kind="deposit"
-                updateAction={updateDeposit.bind(null, deposit.id)}
+                updateAction={updateDeposit.bind(null, householdId, deposit.id)}
               >
                 <div className={depositIndex === sortedDeposits.length - 1 ? "border-b-0" : "border-b border-border"}>
                   <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 -mx-2 rounded-xl px-2 py-3 transition-colors hover:bg-muted/35">
                     <DepositName deposit={deposit} />
                     <p className="font-mono font-semibold">{formatWholeCurrency(deposit.amountCents, locale)}</p>
                     <BudgetRowActions
-                      deleteAction={deleteDeposit.bind(null, deposit.id)}
+                      readOnly={!canEdit}
+                      deleteAction={deleteDeposit.bind(null, householdId, deposit.id)}
                       dictionary={dictionary}
                       item={deposit}
                       kind="deposit"
-                      updateAction={updateDeposit.bind(null, deposit.id)}
+                      updateAction={updateDeposit.bind(null, householdId, deposit.id)}
                     />
                   </div>
                 </div>
@@ -366,11 +375,15 @@ function OutflowTable({
   categoryOptions,
   commitments,
   dictionary,
+  householdId,
+  canEdit,
   locale,
 }: {
   categoryOptions: string[]
   commitments: (CommitmentWithParts & { monthlyAmountCents: number })[]
   dictionary: Dictionary
+  householdId: string
+  canEdit: boolean
   locale: Locale
 }) {
   const categoryGroups = groupCommitmentsForTable(commitments)
@@ -402,11 +415,11 @@ function OutflowTable({
                   actionColumn
                   category={group.category}
                   categoryAction={
-                    <CategoryRenameDialog
-                      action={renameCommitmentCategory.bind(null, group.category)}
+                    canEdit ? <CategoryRenameDialog
+                      action={renameCommitmentCategory.bind(null, householdId, group.category)}
                       category={group.category}
                       dictionary={dictionary}
-                    />
+                    /> : null
                   }
                   collapseLabel={dictionary.actions.collapseCategory}
                   expandLabel={dictionary.actions.expandCategory}
@@ -417,13 +430,14 @@ function OutflowTable({
                 >
                   {group.commitments.map((commitment, commitmentIndex) => (
                     <BudgetRowContextMenu
-                      deleteAction={deleteCommitment.bind(null, commitment.id)}
+                      readOnly={!canEdit}
+                      deleteAction={deleteCommitment.bind(null, householdId, commitment.id)}
                       categoryOptions={categoryOptions}
                       dictionary={dictionary}
                       item={commitment}
                       key={commitment.id}
                       kind="commitment"
-                      updateAction={updateCommitment.bind(null, commitment.id)}
+                      updateAction={updateCommitment.bind(null, householdId, commitment.id)}
                     >
                       <TableRow className={cn("hover:[&>td]:bg-muted/35", commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined)}>
                         <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
@@ -434,12 +448,13 @@ function OutflowTable({
                         </TableCell>
                         <TableCell className="w-9 p-0 text-right">
                           <BudgetRowActions
-                            deleteAction={deleteCommitment.bind(null, commitment.id)}
+                            readOnly={!canEdit}
+                            deleteAction={deleteCommitment.bind(null, householdId, commitment.id)}
                             categoryOptions={categoryOptions}
                             dictionary={dictionary}
                             item={commitment}
                             kind="commitment"
-                            updateAction={updateCommitment.bind(null, commitment.id)}
+                            updateAction={updateCommitment.bind(null, householdId, commitment.id)}
                           />
                         </TableCell>
                       </TableRow>

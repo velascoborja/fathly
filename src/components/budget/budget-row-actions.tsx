@@ -53,7 +53,7 @@ type CommitmentActionsProps = {
   updateAction: (formData: FormData) => Promise<void>
 }
 
-type BudgetRowActionProps = DepositActionsProps | CommitmentActionsProps
+type BudgetRowActionProps = (DepositActionsProps | CommitmentActionsProps) & { readOnly?: boolean }
 
 type BudgetRowContextMenuProps = BudgetRowActionProps & {
   children: ReactElement
@@ -62,6 +62,8 @@ type BudgetRowContextMenuProps = BudgetRowActionProps & {
 export function BudgetRowActions(props: BudgetRowActionProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+
+  if (props.readOnly) return null
 
   return (
     <>
@@ -90,6 +92,8 @@ export function BudgetRowActions(props: BudgetRowActionProps) {
 export function BudgetRowContextMenu({ children, ...props }: BudgetRowContextMenuProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+
+  if (props.readOnly) return children
 
   return (
     <ContextMenu>

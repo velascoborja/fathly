@@ -26,6 +26,8 @@ async function AuthenticatedAppShell({ children }: { children: React.ReactNode }
     <AppShell
       dictionary={dictionary}
       householdName={context.household.name}
+      householdId={context.household.id}
+      households={context.memberships.map((membership) => ({ id: membership.householdId, name: membership.household.name, role: membership.role }))}
       locale={locale}
       user={context.user}
     >

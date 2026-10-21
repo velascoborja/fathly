@@ -58,7 +58,7 @@ describe("initial loading", () => {
       expect(initialHTML).toContain(dictionaries.es.loading.ariaLabel)
       expect(initialHTML).not.toContain("Budget ready")
     } finally {
-      resolveContext({ household: { name: "Test household" }, user: { id: "test-user" } })
+      resolveContext({ household: { id: "household-1", name: "Test household" }, memberships: [{ householdId: "household-1", role: "OWNER", household: { name: "Test household" } }], user: { id: "test-user" } })
     }
 
     let completedHTML = ""

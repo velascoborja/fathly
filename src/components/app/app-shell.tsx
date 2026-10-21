@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation"
 import { useState, useTransition } from "react"
 import { ArchiveIcon, EllipsisIcon, HomeIcon, LanguagesIcon, Loader2Icon, LogOutIcon, SettingsIcon } from "lucide-react"
 
+import { HouseholdSelector } from "@/components/app/household-selector"
+import type { HouseholdRole } from "@prisma/client"
 import { AppIcon } from "@/components/app/app-icon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -36,6 +38,8 @@ type AppShellProps = {
   children: React.ReactNode
   dictionary: Dictionary
   householdName: string
+  householdId?: string
+  households?: { id: string; name: string; role: HouseholdRole }[]
   locale: Locale
   user: {
     name?: string | null
@@ -44,7 +48,7 @@ type AppShellProps = {
   }
 }
 
-export function AppShell({ children, dictionary, householdName, locale, user }: AppShellProps) {
+export function AppShell({ children, dictionary, householdName, householdId, households, locale, user }: AppShellProps) {
   const [isPending, startTransition] = useTransition()
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false)
   const pathname = usePathname()
@@ -64,9 +68,11 @@ export function AppShell({ children, dictionary, householdName, locale, user }: 
         <div className="mx-auto grid w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:px-6 lg:grid-cols-[minmax(220px,1fr)_auto_minmax(360px,1fr)]">
           <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
             <AppIcon className="size-10 shrink-0" size={40} />
-            <div className="min-w-0">
-              <p className="fathly-wordmark text-[0.68rem] leading-tight">{dictionary.appName}</p>
-              <p className="truncate text-lg font-bold leading-tight text-foreground">{householdName}</p>
+            <div className="flex min-w-0 items-center gap-4">
+              <p className="fathly-wordmark shrink-0 text-[0.68rem] leading-tight">{dictionary.appName}</p>
+              {householdId && households && households.length > 1
+                ? <HouseholdSelector householdId={householdId} households={households} dictionary={dictionary} />
+                : <p className="truncate text-lg font-bold leading-tight text-foreground">{householdName}</p>}
             </div>
           </div>
 

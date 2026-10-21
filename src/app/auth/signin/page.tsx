@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 
+import { safeReturnTo } from "@/lib/household-access"
 import { auth } from "@/auth"
 import { AppIcon } from "@/components/app/app-icon"
 import { Button } from "@/components/ui/button"
@@ -10,13 +11,15 @@ import { signInWithGoogle } from "@/server/actions"
 
 export const dynamic = "force-dynamic"
 
-export default async function SignInPage() {
+export default async function SignInPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string; error?: string }> }) {
+  const params = await searchParams
+  const returnTo = safeReturnTo(params.callbackUrl)
   const session = await auth()
   const dictionary = await getServerDictionary()
   const showMockDemo = process.env.NODE_ENV === "development"
 
   if (session?.user) {
-    redirect("/dashboard")
+    redirect(returnTo)
   }
 
   return (
@@ -30,7 +33,9 @@ export default async function SignInPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {params.error ? <p className="mb-3 text-sm text-destructive" role="alert">{dictionary.sharing.signInError}</p> : null}
           <form action={signInWithGoogle} className="flex flex-col gap-3">
+            <input type="hidden" name="returnTo" value={returnTo} />
             <Button className="w-full" size="lg" type="submit">
               <GoogleLogo />
               {dictionary.actions.signIn}
