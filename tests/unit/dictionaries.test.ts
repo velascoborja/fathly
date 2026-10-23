@@ -141,3 +141,14 @@ describe("household sharing copy", () => {
     expect(dictionaries.en.sharing.roles).toEqual({ OWNER: "Owner", EDITOR: "Editor", VIEWER: "Viewer" })
   })
 })
+
+describe("expense category drag copy", () => {
+  it.each(["es", "en"] as const)("provides instructions, saving, success and failure messages in %s", (locale) => {
+    const { actions, validation } = dictionaries[locale]
+    expect(actions.moveCommitmentHint).toContain(locale === "es" ? "Editar" : "Edit")
+    expect(actions.movingCommitment.length).toBeGreaterThan(0)
+    expect(actions.commitmentMoved).toContain("{category}")
+    expect(actions.moveCommitmentError.length).toBeGreaterThan(0)
+    expect(validation.categoryUnavailable.length).toBeGreaterThan(0)
+  })
+})

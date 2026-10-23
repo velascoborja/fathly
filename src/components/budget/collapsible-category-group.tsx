@@ -3,11 +3,13 @@
 import { ChevronDownIcon } from "lucide-react"
 import { type ReactNode, useId, useState } from "react"
 
+import { useCommitmentCategoryDrop } from "@/components/budget/commitment-category-drag"
 import { TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
 export function CollapsibleCategoryGroup({
   actionColumn = false,
+  acceptCommitmentDrop = false,
   category,
   categoryAction,
   children,
@@ -22,6 +24,7 @@ export function CollapsibleCategoryGroup({
   totalVariant = "badge",
 }: {
   actionColumn?: boolean
+  acceptCommitmentDrop?: boolean
   category: string
   categoryAction?: ReactNode
   children: ReactNode
@@ -37,6 +40,7 @@ export function CollapsibleCategoryGroup({
 }) {
   const contentId = useId()
   const [expanded, setExpanded] = useState(true)
+  const dropTarget = useCommitmentCategoryDrop(category, acceptCommitmentDrop)
   const toggleLabel = `${expanded ? collapseLabel : expandLabel} ${category}`
   const hasCategoryActionInTotal = Boolean(actionColumn && categoryAction)
   const totalColSpan = actionColumn ? 2 + extraTrailingCells : 1
@@ -46,8 +50,9 @@ export function CollapsibleCategoryGroup({
   return (
     <>
       <TableRow
+        {...dropTarget}
         aria-expanded={expanded}
-        className="fathly-row-hover-transparent border-0 bg-transparent"
+        className="fathly-row-hover-transparent border-0 bg-transparent data-[drop-active=true]:-outline-offset-2 data-[drop-active=true]:outline-2 data-[drop-active=true]:outline-primary data-[drop-active=true]:[&>td]:bg-primary/15"
       >
         <TableCell
           className="rounded-l-2xl bg-muted/70 py-2 pr-0 pl-2 font-semibold text-foreground"
@@ -104,7 +109,10 @@ export function CollapsibleCategoryGroup({
           />
         ))}
       </TableRow>
-      <TableRow className="fathly-row-hover-transparent border-0 bg-transparent">
+      <TableRow
+        {...dropTarget}
+        className="fathly-row-hover-transparent border-0 bg-transparent data-[drop-active=true]:[&>td]:bg-primary/5"
+      >
         <TableCell className="p-0" colSpan={groupColSpan}>
           <div
             aria-hidden={!expanded}

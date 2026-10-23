@@ -452,6 +452,39 @@ export async function updateCommitment(householdId: string, id: string, formData
   revalidateBudgetPaths()
 }
 
+export async function moveCommitmentCategory(householdId: string, id: string, targetCategory: string): Promise<void> {
+  const dictionary = await getServerDictionary()
+  const parsed = getCategoryNameSchema(dictionary.validation).safeParse(targetCategory)
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? dictionary.validation.genericCommitmentInvalid)
+  }
+
+  const context = await requireHouseholdPermission(householdId, "edit")
+  const scope = {
+    householdId: context.household.id,
+    planId: context.plan.id,
+    status: "ACTIVE" as const,
+  }
+  const [commitment, destination] = await Promise.all([
+    prisma.commitment.findFirst({ where: { ...scope, id }, select: { category: true } }),
+    prisma.commitment.findFirst({ where: { ...scope, category: parsed.data }, select: { id: true } }),
+  ])
+
+  if (!commitment) throw new Error(dictionary.validation.genericCommitmentInvalid)
+  if (commitment.category === parsed.data) return
+  if (!destination) throw new Error(dictionary.validation.categoryUnavailable)
+
+  const result = await prisma.commitment.updateMany({
+    where: { ...scope, id, category: commitment.category },
+    data: { category: parsed.data },
+  })
+
+  if (result.count !== 1) throw new Error(dictionary.actions.moveCommitmentError)
+
+  revalidateBudgetPaths()
+}
+
 export async function renameCommitmentCategory(householdId: string, oldCategory: string, formData: FormData) {
   const dictionary = await getServerDictionary()
   const parsed = getCategoryNameSchema(dictionary.validation).safeParse(formData.get("category"))

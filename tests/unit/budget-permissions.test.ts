@@ -26,6 +26,7 @@ const cases = [
   ["create commitment", "edit", () => actions.createCommitment("rendered-household", commitment())],
   ["update commitment", "edit", () => actions.updateCommitment("rendered-household", "bill", commitment())],
   ["delete commitment", "edit", () => actions.deleteCommitment("rendered-household", "bill")],
+  ["move commitment category", "edit", () => actions.moveCommitmentCategory("rendered-household", "bill", "Utilities")],
   [
     "rename category",
     "edit",

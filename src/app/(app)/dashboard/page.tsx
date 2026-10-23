@@ -15,6 +15,7 @@ import { CheckpointDialogForm } from "@/components/budget/checkpoint-dialog-form
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CategoryRenameDialog } from "@/components/budget/category-rename-dialog"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
+import { CommitmentCategoryDragProvider, DraggableCommitmentRow } from "@/components/budget/commitment-category-drag"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
 import { CoverageProgress } from "@/components/budget/coverage-progress"
@@ -41,6 +42,7 @@ import {
   createDeposit,
   deleteCommitment,
   deleteDeposit,
+  moveCommitmentCategory,
   renameCommitmentCategory,
   updateCommitment,
   updateDeposit,
@@ -389,7 +391,16 @@ function OutflowTable({
   const categoryGroups = groupCommitmentsForTable(commitments)
 
   return (
-    <div>
+    <CommitmentCategoryDragProvider
+      canEdit={canEdit}
+      labels={{
+        moveCommitmentHint: dictionary.actions.moveCommitmentHint,
+        movingCommitment: dictionary.actions.movingCommitment,
+        commitmentMoved: dictionary.actions.commitmentMoved,
+        moveCommitmentError: dictionary.actions.moveCommitmentError,
+      }}
+      moveAction={moveCommitmentCategory.bind(null, householdId)}
+    >
       <Table className="table-fixed">
         <colgroup>
           <col />
@@ -412,6 +423,7 @@ function OutflowTable({
                   </TableRow>
                 )}
                 <CollapsibleCategoryGroup
+                  acceptCommitmentDrop
                   actionColumn
                   category={group.category}
                   categoryAction={
@@ -439,7 +451,11 @@ function OutflowTable({
                       kind="commitment"
                       updateAction={updateCommitment.bind(null, householdId, commitment.id)}
                     >
-                      <TableRow className={cn("hover:[&>td]:bg-muted/35", commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined)}>
+                      <DraggableCommitmentRow
+                        category={commitment.category}
+                        commitmentId={commitment.id}
+                        className={cn("hover:[&>td]:bg-muted/35", commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined)}
+                      >
                         <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
                           <CommitmentName commitment={commitment} dictionary={dictionary} />
                         </TableCell>
@@ -457,7 +473,7 @@ function OutflowTable({
                             updateAction={updateCommitment.bind(null, householdId, commitment.id)}
                           />
                         </TableCell>
-                      </TableRow>
+                      </DraggableCommitmentRow>
                     </BudgetRowContextMenu>
                   ))}
                 </CollapsibleCategoryGroup>
@@ -466,7 +482,7 @@ function OutflowTable({
           )}
         </TableBody>
       </Table>
-    </div>
+    </CommitmentCategoryDragProvider>
   )
 }
 
