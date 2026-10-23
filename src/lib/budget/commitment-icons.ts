@@ -4,13 +4,19 @@ import {
   BanknoteIcon,
   BookOpenIcon,
   CarIcon,
+  CloudIcon,
   DropletsIcon,
+  DumbbellIcon,
+  FilmIcon,
   FlameIcon,
   Gamepad2Icon,
   GraduationCapIcon,
   HeartHandshakeIcon,
   HomeIcon,
+  MotorbikeIcon,
+  MusicIcon,
   PiggyBankIcon,
+  PlaneIcon,
   PlugZapIcon,
   ReceiptTextIcon,
   RouterIcon,
@@ -18,9 +24,10 @@ import {
   ShoppingCartIcon,
   SirenIcon,
   SparklesIcon,
+  WrenchIcon,
 } from "lucide-react"
 
-import type { Locale } from "@/lib/i18n/dictionaries"
+import { dictionaries, type Locale } from "@/lib/i18n/dictionaries"
 
 export const commitmentIconValues = [
   "home",
@@ -40,6 +47,13 @@ export const commitmentIconValues = [
   "cash",
   "books",
   "support",
+  "travel",
+  "gym",
+  "music",
+  "subscriptions",
+  "movies",
+  "motorbike",
+  "maintenance",
   "receipt",
 ] as const
 
@@ -68,6 +82,30 @@ const iconKeywordRules: { icon: CommitmentIcon; keywords: string[] }[] = [
     keywords: ["seguro", "insurance", "policy", "poliza"],
   },
   {
+    icon: "travel",
+    keywords: ["viaje", "vacaciones", "vuelo", "travel", "holiday", "flight"],
+  },
+  {
+    icon: "gym",
+    keywords: ["gimnasio", "gym", "fitness"],
+  },
+  {
+    icon: "music",
+    keywords: ["musica", "music", "spotify"],
+  },
+  {
+    icon: "movies",
+    keywords: ["pelicula", "cine", "movie", "film", "netflix"],
+  },
+  {
+    icon: "maintenance",
+    keywords: ["taller", "reparacion", "mantenimiento", "repair", "maintenance", "wrench"],
+  },
+  {
+    icon: "motorbike",
+    keywords: ["moto", "motorbike", "motorcycle"],
+  },
+  {
     icon: "home",
     keywords: ["hipoteca", "mortgage", "alquiler", "rent", "casa", "hogar", "comunidad", "ibi", "property"],
   },
@@ -93,7 +131,11 @@ const iconKeywordRules: { icon: CommitmentIcon; keywords: string[] }[] = [
   },
   {
     icon: "leisure",
-    keywords: ["ocio", "leisure", "netflix", "spotify", "cine", "restaurant", "restaurante", "viaje", "travel", "vacaciones"],
+    keywords: ["ocio", "leisure", "restaurant", "restaurante"],
+  },
+  {
+    icon: "subscriptions",
+    keywords: ["suscripcion", "subscription", "icloud", "dropbox"],
   },
   {
     icon: "gas",
@@ -143,6 +185,13 @@ export const commitmentIconOptions: CommitmentIconOption[] = [
   { value: "cash", label: { es: "Efectivo", en: "Cash" }, icon: BanknoteIcon, swatch: "bg-success/10 text-success" },
   { value: "books", label: { es: "Libros", en: "Books" }, icon: BookOpenIcon, swatch: "bg-warning/15 text-warning" },
   { value: "support", label: { es: "Familia", en: "Family" }, icon: HeartHandshakeIcon, swatch: "bg-accent-light text-accent-dark" },
+  { value: "travel", label: getIconLabel("travel"), icon: PlaneIcon, swatch: "bg-sky-blue/15 text-primary" },
+  { value: "gym", label: getIconLabel("gym"), icon: DumbbellIcon, swatch: "bg-success/10 text-success" },
+  { value: "music", label: getIconLabel("music"), icon: MusicIcon, swatch: "bg-accent-light text-accent-dark" },
+  { value: "subscriptions", label: getIconLabel("subscriptions"), icon: CloudIcon, swatch: "bg-primary/10 text-primary" },
+  { value: "movies", label: getIconLabel("movies"), icon: FilmIcon, swatch: "bg-coral-light/35 text-coral-dark" },
+  { value: "motorbike", label: getIconLabel("motorbike"), icon: MotorbikeIcon, swatch: "bg-secondary/10 text-secondary" },
+  { value: "maintenance", label: getIconLabel("maintenance"), icon: WrenchIcon, swatch: "bg-warning/15 text-warning" },
   { value: "receipt", label: { es: "Recibo", en: "Receipt" }, icon: ReceiptTextIcon, swatch: "bg-muted text-primary" },
 ]
 
@@ -155,6 +204,10 @@ export function inferCommitmentIcon(name: string): CommitmentIcon {
   const match = iconKeywordRules.find((rule) => rule.keywords.some((keyword) => normalizedName.includes(keyword)))
 
   return match?.icon ?? defaultCommitmentIcon
+}
+
+function getIconLabel(value: keyof typeof dictionaries.es.commitmentIcons): Record<Locale, string> {
+  return { es: dictionaries.es.commitmentIcons[value], en: dictionaries.en.commitmentIcons[value] }
 }
 
 function normalizeIconText(value: string) {

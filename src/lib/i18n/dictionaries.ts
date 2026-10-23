@@ -3,6 +3,15 @@ export type Locale = (typeof locales)[number]
 
 export const dictionaries = {
   es: {
+    commitmentIcons: {
+      travel: "Viajes",
+      gym: "Gimnasio",
+      music: "Música",
+      subscriptions: "Suscripciones",
+      movies: "Películas",
+      motorbike: "Moto",
+      maintenance: "Llave inglesa",
+    },
     appName: "Fathly",
     household: "Casa familiar",
     householdNameTemplate: "Hogar de {name}",
@@ -352,6 +361,15 @@ export const dictionaries = {
     },
   },
   en: {
+    commitmentIcons: {
+      travel: "Travel",
+      gym: "Gym",
+      music: "Music",
+      subscriptions: "Subscriptions",
+      movies: "Movies",
+      motorbike: "Motorbike",
+      maintenance: "Wrench",
+    },
     appName: "Fathly",
     household: "Household",
     householdNameTemplate: "{name}'s household",

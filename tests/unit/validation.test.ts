@@ -83,6 +83,31 @@ describe("budget validation", () => {
     ).toBe("receipt")
   })
 
+  it.each(["travel", "gym", "music", "subscriptions", "movies", "motorbike", "maintenance"])(
+    "accepts the %s commitment icon",
+    (icon) => {
+      expect(commitmentSchema.parse({
+        name: "Gasto",
+        amountMode: "FIXED",
+        amount: 40,
+        category: "Casa",
+        icon,
+        frequency: "MONTHLY",
+      }).icon).toBe(icon)
+    }
+  )
+
+  it("rejects unknown commitment icons", () => {
+    expect(commitmentSchema.safeParse({
+      name: "Gasto",
+      amountMode: "FIXED",
+      amount: 40,
+      category: "Casa",
+      icon: "unknown",
+      frequency: "MONTHLY",
+    }).success).toBe(false)
+  })
+
   it("validates itemized commitments and their limits", () => {
     const valid = {
       name: "Suministros",
