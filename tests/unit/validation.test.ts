@@ -83,7 +83,7 @@ describe("budget validation", () => {
     ).toBe("receipt")
   })
 
-  it.each(["travel", "gym", "music", "subscriptions", "movies", "motorbike", "maintenance"])(
+  it.each(["travel", "gym", "music", "subscriptions", "movies", "motorbike", "maintenance", "ai", "investment"])(
     "accepts the %s commitment icon",
     (icon) => {
       expect(commitmentSchema.parse({

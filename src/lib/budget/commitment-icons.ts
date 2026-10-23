@@ -3,6 +3,7 @@ import {
   BabyIcon,
   BanknoteIcon,
   BookOpenIcon,
+  BrainCircuitIcon,
   CarIcon,
   CloudIcon,
   DropletsIcon,
@@ -24,6 +25,7 @@ import {
   ShoppingCartIcon,
   SirenIcon,
   SparklesIcon,
+  TrendingUpIcon,
   WrenchIcon,
 } from "lucide-react"
 
@@ -54,6 +56,8 @@ export const commitmentIconValues = [
   "movies",
   "motorbike",
   "maintenance",
+  "ai",
+  "investment",
   "receipt",
 ] as const
 
@@ -68,7 +72,7 @@ type CommitmentIconOption = {
 
 export const defaultCommitmentIcon: CommitmentIcon = "receipt"
 
-const iconKeywordRules: { icon: CommitmentIcon; keywords: string[] }[] = [
+const iconKeywordRules: { icon: CommitmentIcon; keywords: string[]; wholeWords?: string[] }[] = [
   {
     icon: "security",
     keywords: ["alarma", "alarm", "seguridad", "security", "securitas", "prosegur", "verisure"],
@@ -80,6 +84,16 @@ const iconKeywordRules: { icon: CommitmentIcon; keywords: string[] }[] = [
   {
     icon: "insurance",
     keywords: ["seguro", "insurance", "policy", "poliza"],
+  },
+  {
+    icon: "ai",
+    keywords: ["inteligencia artificial", "artificial intelligence", "chatgpt", "claude", "gemini", "copilot", "openai"],
+    wholeWords: ["ia", "ai"],
+  },
+  {
+    icon: "investment",
+    keywords: ["inversion", "investment", "invertir", "acciones", "stocks"],
+    wholeWords: ["etf", "etfs"],
   },
   {
     icon: "travel",
@@ -192,6 +206,8 @@ export const commitmentIconOptions: CommitmentIconOption[] = [
   { value: "movies", label: getIconLabel("movies"), icon: FilmIcon, swatch: "bg-coral-light/35 text-coral-dark" },
   { value: "motorbike", label: getIconLabel("motorbike"), icon: MotorbikeIcon, swatch: "bg-secondary/10 text-secondary" },
   { value: "maintenance", label: getIconLabel("maintenance"), icon: WrenchIcon, swatch: "bg-warning/15 text-warning" },
+  { value: "ai", label: getIconLabel("ai"), icon: BrainCircuitIcon, swatch: "bg-primary/10 text-primary" },
+  { value: "investment", label: getIconLabel("investment"), icon: TrendingUpIcon, swatch: "bg-success/10 text-success" },
   { value: "receipt", label: { es: "Recibo", en: "Receipt" }, icon: ReceiptTextIcon, swatch: "bg-muted text-primary" },
 ]
 
@@ -201,7 +217,11 @@ export function getCommitmentIconOption(value: string | null | undefined) {
 
 export function inferCommitmentIcon(name: string): CommitmentIcon {
   const normalizedName = normalizeIconText(name)
-  const match = iconKeywordRules.find((rule) => rule.keywords.some((keyword) => normalizedName.includes(keyword)))
+  const words = normalizedName.split(/[^a-z0-9]+/)
+  const match = iconKeywordRules.find((rule) =>
+    rule.keywords.some((keyword) => normalizedName.includes(keyword)) ||
+    rule.wholeWords?.some((word) => words.includes(word))
+  )
 
   return match?.icon ?? defaultCommitmentIcon
 }
