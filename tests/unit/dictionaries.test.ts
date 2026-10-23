@@ -139,6 +139,11 @@ describe("household sharing copy", () => {
     expect(Object.keys(dictionaries.es.sharing).sort()).toEqual(Object.keys(dictionaries.en.sharing).sort())
     expect(dictionaries.es.sharing.roles).toEqual({ OWNER: "Propietario", EDITOR: "Editor", VIEWER: "Solo lectura" })
     expect(dictionaries.en.sharing.roles).toEqual({ OWNER: "Owner", EDITOR: "Editor", VIEWER: "Viewer" })
+    for (const locale of ["es", "en"] as const) {
+      expect(dictionaries[locale].sharing.createHousehold.length).toBeGreaterThan(0)
+      expect(dictionaries[locale].sharing.createHouseholdDescription.length).toBeGreaterThan(0)
+      expect(dictionaries[locale].sharing.createHouseholdError.length).toBeGreaterThan(0)
+    }
   })
 })
 

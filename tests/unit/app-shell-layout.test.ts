@@ -43,4 +43,10 @@ describe("AppShell layout", () => {
     expect(selectorSource).toContain("pl-3 pr-9")
     expect(selectorSource).toContain('<ChevronDownIcon aria-hidden="true" className="pointer-events-none absolute right-3')
   })
+
+  it("offers account creation in the selector even with one household", () => {
+    expect(source).toContain("households.length > 0")
+    expect(selectorSource).toContain("dictionary.sharing.createHousehold")
+    expect(selectorSource).toContain("setCreateOpen(true)")
+  })
 })

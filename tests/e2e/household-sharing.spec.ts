@@ -130,6 +130,109 @@ async function accept(recipient: Page, link: string) {
 test.describe("household sharing", () => {
   test.skip(process.env.FATHLY_E2E_DATABASE !== "1", "Enable isolated database fixtures with FATHLY_E2E_DATABASE=1")
 
+  test("creates an additional account from a single household and opens its empty dashboard", async ({ page, sharing }, testInfo) => {
+    await page.goto("/dashboard")
+    const selector = page.getByLabel("Switch household", { exact: true })
+    await selector.selectOption({ label: "Create account" })
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByLabel("Household name", { exact: true })).toBeFocused()
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    await testInfo.attach("create-account-dialog", { body: await page.screenshot(), contentType: "image/png" })
+    await dialog.getByLabel("Household name", { exact: true }).fill("  Holiday budget  ")
+    await dialog.getByRole("button", { name: "Create account", exact: true }).click()
+    await expect(dialog).not.toBeVisible()
+    await expect(page).toHaveURL(/\/dashboard$/)
+    await expect(page.getByRole("heading", { name: "Monthly summary", exact: true })).toBeVisible()
+    await expect(page.getByText("Shared income", { exact: true })).toHaveCount(0)
+    const membership = await sharing.prisma.householdMember.findFirstOrThrow({
+      where: { userId: sharing.ownerId, household: { name: "Holiday budget" } },
+      include: { household: { include: { budgetPlans: true, deposits: true, commitments: true } } },
+    })
+    expect(membership.role).toBe("OWNER")
+    expect(membership.household.budgetPlans).toHaveLength(1)
+    expect(membership.household.budgetPlans[0].status).toBe("ACTIVE")
+    expect(membership.household.budgetPlans[0].onboardingCompletedAt).not.toBeNull()
+    expect(membership.household.deposits).toHaveLength(0)
+    expect(membership.household.commitments).toHaveLength(0)
+    await expect(selector).toHaveValue(membership.householdId)
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    await testInfo.attach("new-account-dashboard", { body: await page.screenshot(), contentType: "image/png" })
+    await page.reload()
+    await expect(page).toHaveURL(/\/dashboard$/)
+    await expect(selector).toHaveValue(membership.householdId)
+    await page.goto("/setup")
+    await expect(page).toHaveURL(/\/dashboard$/)
+    await selector.selectOption(sharing.householdId)
+    await expect(page.getByText("Shared income", { exact: true })).toBeVisible()
+    expect(await sharing.prisma.householdMember.count({ where: { userId: sharing.ownerId } })).toBe(2)
+  })
+
+  test("lets a viewer create their own account without changing their shared permissions", async ({ sharing }) => {
+    await sharing.prisma.householdMember.create({
+      data: { userId: sharing.recipientId, householdId: sharing.householdId, role: "VIEWER" },
+    })
+    const page = sharing.recipient
+    await page.goto("/dashboard")
+    await expect(page.getByText("You have read-only access to this household.", { exact: true })).toBeVisible()
+    await page.getByLabel("Switch household", { exact: true }).selectOption({ label: "Create account" })
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("Household name", { exact: true }).fill("My own budget")
+    await dialog.getByRole("button", { name: "Create account", exact: true }).click()
+    await expect(dialog).not.toBeVisible()
+    await expect(page.getByText("You have read-only access to this household.", { exact: true })).toHaveCount(0)
+    const memberships = await sharing.prisma.householdMember.findMany({ where: { userId: sharing.recipientId } })
+    expect(memberships).toHaveLength(2)
+    expect(memberships.find((member) => member.householdId === sharing.householdId)?.role).toBe("VIEWER")
+    const ownMembership = memberships.find((member) => member.householdId !== sharing.householdId)!
+    expect(ownMembership.role).toBe("OWNER")
+    await expect(page.getByLabel("Switch household", { exact: true })).toHaveValue(ownMembership.householdId)
+  })
+
+  test("cancels creation and preserves input on failure with immediate pending feedback", async ({ page, sharing }) => {
+    await page.goto("/dashboard")
+    const selector = page.getByLabel("Switch household", { exact: true })
+    await selector.selectOption({ label: "Create account" })
+    const dialog = page.getByRole("dialog")
+    const name = dialog.getByLabel("Household name", { exact: true })
+    await name.fill("Cancelled budget")
+    await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+    await expect(dialog).not.toBeVisible()
+    await expect(selector).toHaveValue(sharing.householdId)
+    await expect(selector).toBeFocused()
+    await selector.selectOption({ label: "Create account" })
+    await expect(name).toHaveValue("")
+    await name.fill("   ")
+    await dialog.getByRole("button", { name: "Create account", exact: true }).click()
+    await expect(dialog.getByRole("alert")).toHaveText("Invalid household name.")
+    await name.fill("Retry budget")
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => { release = resolve })
+    await page.route("**/*", async (route) => {
+      if (route.request().method() === "POST" && route.request().headers()["next-action"]) {
+        await gate
+        await route.abort("failed")
+      } else {
+        await route.continue()
+      }
+    })
+    try {
+      await dialog.getByRole("button", { name: "Create account", exact: true }).click()
+      await expect(dialog.locator("form")).toHaveAttribute("aria-busy", "true")
+      await expect(dialog.getByRole("button", { name: "Creating…", exact: true })).toBeDisabled()
+      await expect(name).toBeDisabled()
+      await expect(dialog.getByRole("button", { name: "Cancel", exact: true })).toBeDisabled()
+      await page.keyboard.press("Escape")
+      await expect(dialog).toBeVisible()
+    } finally {
+      release()
+    }
+    await expect(dialog.getByRole("alert")).toHaveText("Could not create the account. Please try again.")
+    await expect(name).toHaveValue("Retry budget")
+    await expect(name).toBeEnabled()
+    await expect(selector).toHaveValue(sharing.householdId)
+    expect(await sharing.prisma.householdMember.count({ where: { userId: sharing.ownerId } })).toBe(1)
+  })
+
   test("creates only one unshared household across concurrent first visits and later sessions", async ({
     page,
     sharing,
@@ -156,13 +259,13 @@ test.describe("household sharing", () => {
         ])
       await sharing.recipient.goto("/settings")
       await sharing.recipient.reload()
-      await expect(sharing.recipient.getByLabel("Switch household", { exact: true })).toHaveCount(0)
+      await expect(sharing.recipient.getByLabel("Switch household", { exact: true })).toHaveValue(memberships[0].householdId)
       expect(await sharing.prisma.householdMember.findMany({ where: { userId: sharing.recipientId } })).toEqual(
         memberships
       )
       await page.goto("/dashboard")
       await page.reload()
-      await expect(page.getByLabel("Switch household", { exact: true })).toHaveCount(0)
+      await expect(page.getByLabel("Switch household", { exact: true })).toHaveValue(sharing.householdId)
       expect(await sharing.prisma.householdMember.count({ where: { userId: sharing.ownerId } })).toBe(1)
     } finally {
       await secondTab.close()

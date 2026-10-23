@@ -5,13 +5,42 @@ import { redirect } from "next/navigation"
 
 import { getServerDictionary } from "@/lib/i18n/server"
 import { prisma } from "@/lib/prisma"
-import { getHouseholdInviteSchema } from "@/lib/validations/household"
+import { getHouseholdInviteSchema, getHouseholdNameSchema } from "@/lib/validations/household"
 import { requireUser, requireHouseholdPermission, setActiveHousehold } from "@/server/household"
 import { acceptInvitation, cancelInvitation, createInvitation } from "@/server/invitations"
 
 export type InvitationResult =
   | { invitationPath: string; expiresAt: string; error?: never }
   | { error: string; invitationPath?: never; expiresAt?: never }
+
+export async function createHousehold(formData: FormData) {
+  const user = await requireUser()
+  const dictionary = await getServerDictionary()
+  const parsed = getHouseholdNameSchema(dictionary.validation).safeParse(formData.get("name"))
+  if (!parsed.success) return { error: dictionary.validation.genericHouseholdNameInvalid }
+
+  let householdId: string
+  try {
+    const household = await prisma.household.create({
+      data: {
+        name: parsed.data,
+        members: { create: { userId: user.id, role: "OWNER" } },
+        budgetPlans: {
+          create: { name: dictionary.activePlanName, status: "ACTIVE", onboardingCompletedAt: new Date() },
+        },
+      },
+      select: { id: true },
+    })
+    householdId = household.id
+  } catch (error) {
+    console.error("Household creation failed", error)
+    return { error: dictionary.sharing.createHouseholdError }
+  }
+
+  await setActiveHousehold(householdId)
+  revalidatePath("/", "layout")
+  redirect("/dashboard")
+}
 
 function publicError(error: unknown, dictionary: Awaited<ReturnType<typeof getServerDictionary>>) {
   const messages: string[] = [

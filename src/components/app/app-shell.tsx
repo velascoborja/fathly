@@ -70,7 +70,7 @@ export function AppShell({ children, dictionary, householdName, householdId, hou
             <AppIcon className="size-10 shrink-0" size={40} />
             <div className="flex min-w-0 items-center gap-4">
               <p className="fathly-wordmark shrink-0 text-[0.68rem] leading-tight">{dictionary.appName}</p>
-              {householdId && households && households.length > 1
+              {householdId && households && households.length > 0
                 ? <HouseholdSelector householdId={householdId} households={households} dictionary={dictionary} />
                 : <p className="truncate text-lg font-bold leading-tight text-foreground">{householdName}</p>}
             </div>
