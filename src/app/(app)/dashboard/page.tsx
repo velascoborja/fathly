@@ -14,6 +14,7 @@ import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-ind
 import { CheckpointDialogForm } from "@/components/budget/checkpoint-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CategoryRenameDialog } from "@/components/budget/category-rename-dialog"
+import { CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentCategoryDragProvider, DraggableCommitmentRow } from "@/components/budget/commitment-category-drag"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
@@ -401,87 +402,93 @@ function OutflowTable({
       }}
       moveAction={moveCommitmentCategory.bind(null, householdId)}
     >
-      <Table className="table-fixed">
-        <colgroup>
-          <col />
-          <col className="w-28 max-sm:w-18" />
-          <col className="w-9" />
-        </colgroup>
-        <TableBody>
-          {commitments.length === 0 ? (
-            <TableRow>
-              <TableCell className="text-muted-foreground" colSpan={3}>
-                {dictionary.dashboard.emptyBody}
-              </TableCell>
-            </TableRow>
-          ) : (
-            categoryGroups.map((group, index) => (
-              <Fragment key={group.category}>
-                {index > 0 && (
-                  <TableRow className="fathly-row-hover-transparent border-0">
-                    <TableCell colSpan={3} className="h-4 p-0" />
-                  </TableRow>
-                )}
-                <CollapsibleCategoryGroup
-                  acceptCommitmentDrop
-                  actionColumn
-                  category={group.category}
-                  categoryAction={
-                    canEdit ? <CategoryRenameDialog
-                      action={renameCommitmentCategory.bind(null, householdId, group.category)}
-                      category={group.category}
-                      dictionary={dictionary}
-                    /> : null
-                  }
-                  collapseLabel={dictionary.actions.collapseCategory}
-                  expandLabel={dictionary.actions.expandCategory}
-                  fixedTableLayout
-                  total={formatWholeCurrency(group.totalCents, locale)}
-                  totalClassName="text-destructive"
-                  totalLabel={dictionary.dashboard.categoryTotal}
-                >
-                  {group.commitments.map((commitment, commitmentIndex) => (
-                    <BudgetRowContextMenu
-                      readOnly={!canEdit}
-                      deleteAction={deleteCommitment.bind(null, householdId, commitment.id)}
-                      categoryOptions={categoryOptions}
-                      dictionary={dictionary}
-                      item={commitment}
-                      key={commitment.id}
-                      kind="commitment"
-                      updateAction={updateCommitment.bind(null, householdId, commitment.id)}
-                    >
-                      <DraggableCommitmentRow
-                        category={commitment.category}
-                        commitmentId={commitment.id}
-                        className={cn("hover:[&>td]:bg-muted/35", commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined)}
+      <CollapsibleCategoryList
+        categories={categoryGroups.map((group) => group.category)}
+        collapseAllLabel={dictionary.actions.collapseAllCategories}
+        expandAllLabel={dictionary.actions.expandAllCategories}
+      >
+        <Table className="table-fixed">
+          <colgroup>
+            <col />
+            <col className="w-28 max-sm:w-18" />
+            <col className="w-9" />
+          </colgroup>
+          <TableBody>
+            {commitments.length === 0 ? (
+              <TableRow>
+                <TableCell className="text-muted-foreground" colSpan={3}>
+                  {dictionary.dashboard.emptyBody}
+                </TableCell>
+              </TableRow>
+            ) : (
+              categoryGroups.map((group, index) => (
+                <Fragment key={group.category}>
+                  {index > 0 && (
+                    <TableRow className="fathly-row-hover-transparent border-0">
+                      <TableCell colSpan={3} className="h-4 p-0" />
+                    </TableRow>
+                  )}
+                  <CollapsibleCategoryGroup
+                    acceptCommitmentDrop
+                    actionColumn
+                    category={group.category}
+                    categoryAction={
+                      canEdit ? <CategoryRenameDialog
+                        action={renameCommitmentCategory.bind(null, householdId, group.category)}
+                        category={group.category}
+                        dictionary={dictionary}
+                      /> : null
+                    }
+                    collapseLabel={dictionary.actions.collapseCategory}
+                    expandLabel={dictionary.actions.expandCategory}
+                    fixedTableLayout
+                    total={formatWholeCurrency(group.totalCents, locale)}
+                    totalClassName="text-destructive"
+                    totalLabel={dictionary.dashboard.categoryTotal}
+                  >
+                    {group.commitments.map((commitment, commitmentIndex) => (
+                      <BudgetRowContextMenu
+                        readOnly={!canEdit}
+                        deleteAction={deleteCommitment.bind(null, householdId, commitment.id)}
+                        categoryOptions={categoryOptions}
+                        dictionary={dictionary}
+                        item={commitment}
+                        key={commitment.id}
+                        kind="commitment"
+                        updateAction={updateCommitment.bind(null, householdId, commitment.id)}
                       >
-                        <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
-                          <CommitmentName commitment={commitment} dictionary={dictionary} />
-                        </TableCell>
-                        <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
-                          {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
-                        </TableCell>
-                        <TableCell className="w-9 p-0 text-right">
-                          <BudgetRowActions
-                            readOnly={!canEdit}
-                            deleteAction={deleteCommitment.bind(null, householdId, commitment.id)}
-                            categoryOptions={categoryOptions}
-                            dictionary={dictionary}
-                            item={commitment}
-                            kind="commitment"
-                            updateAction={updateCommitment.bind(null, householdId, commitment.id)}
-                          />
-                        </TableCell>
-                      </DraggableCommitmentRow>
-                    </BudgetRowContextMenu>
-                  ))}
-                </CollapsibleCategoryGroup>
-              </Fragment>
-            ))
-          )}
-        </TableBody>
-      </Table>
+                        <DraggableCommitmentRow
+                          category={commitment.category}
+                          commitmentId={commitment.id}
+                          className={cn("hover:[&>td]:bg-muted/35", commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined)}
+                        >
+                          <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
+                            <CommitmentName commitment={commitment} dictionary={dictionary} />
+                          </TableCell>
+                          <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
+                            {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
+                          </TableCell>
+                          <TableCell className="w-9 p-0 text-right">
+                            <BudgetRowActions
+                              readOnly={!canEdit}
+                              deleteAction={deleteCommitment.bind(null, householdId, commitment.id)}
+                              categoryOptions={categoryOptions}
+                              dictionary={dictionary}
+                              item={commitment}
+                              kind="commitment"
+                              updateAction={updateCommitment.bind(null, householdId, commitment.id)}
+                            />
+                          </TableCell>
+                        </DraggableCommitmentRow>
+                      </BudgetRowContextMenu>
+                    ))}
+                  </CollapsibleCategoryGroup>
+                </Fragment>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CollapsibleCategoryList>
     </CommitmentCategoryDragProvider>
   )
 }

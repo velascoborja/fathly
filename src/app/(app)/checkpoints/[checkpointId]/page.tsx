@@ -14,6 +14,7 @@ import type { Commitment, Deposit } from "@prisma/client"
 import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { CheckpointDeleteDialog } from "@/components/budget/checkpoint-delete-dialog"
 import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
+import { CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -286,52 +287,58 @@ function CommitmentTable({
   const categoryGroups = groupCommitmentsForTable(outflows)
 
   return (
-    <Table className="table-fixed">
-      <colgroup>
-        <col />
-        <col className="w-28 max-sm:w-18" />
-      </colgroup>
-      <TableBody>
-        {outflows.length === 0 ? (
-          <TableRow>
-            <TableCell className="text-muted-foreground" colSpan={2}>
-              {dictionary.dashboard.emptyBody}
-            </TableCell>
-          </TableRow>
-        ) : (
-          categoryGroups.map((group, index) => (
-            <Fragment key={group.category}>
-              {index > 0 && (
-                <TableRow className="fathly-row-hover-transparent border-0">
-                  <TableCell colSpan={2} className="h-4 p-0" />
-                </TableRow>
-              )}
-              <CollapsibleCategoryGroup
-                category={group.category}
-                collapseLabel={dictionary.actions.collapseCategory}
-                expandLabel={dictionary.actions.expandCategory}
-                fixedTableLayout
-                total={formatWholeCurrency(group.totalCents, locale)}
-                totalClassName="text-destructive"
-                totalLabel={dictionary.dashboard.categoryTotal}
-                totalVariant="inline"
-              >
-                {group.commitments.map((commitment, commitmentIndex) => (
-                  <TableRow className={commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined} key={commitment.id}>
-                    <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
-                      <CommitmentName commitment={commitment} dictionary={dictionary} />
-                    </TableCell>
-                    <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
-                      {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
-                    </TableCell>
+    <CollapsibleCategoryList
+      categories={categoryGroups.map((group) => group.category)}
+      collapseAllLabel={dictionary.actions.collapseAllCategories}
+      expandAllLabel={dictionary.actions.expandAllCategories}
+    >
+      <Table className="table-fixed">
+        <colgroup>
+          <col />
+          <col className="w-28 max-sm:w-18" />
+        </colgroup>
+        <TableBody>
+          {outflows.length === 0 ? (
+            <TableRow>
+              <TableCell className="text-muted-foreground" colSpan={2}>
+                {dictionary.dashboard.emptyBody}
+              </TableCell>
+            </TableRow>
+          ) : (
+            categoryGroups.map((group, index) => (
+              <Fragment key={group.category}>
+                {index > 0 && (
+                  <TableRow className="fathly-row-hover-transparent border-0">
+                    <TableCell colSpan={2} className="h-4 p-0" />
                   </TableRow>
-                ))}
-              </CollapsibleCategoryGroup>
-            </Fragment>
-          ))
-        )}
-      </TableBody>
-    </Table>
+                )}
+                <CollapsibleCategoryGroup
+                  category={group.category}
+                  collapseLabel={dictionary.actions.collapseCategory}
+                  expandLabel={dictionary.actions.expandCategory}
+                  fixedTableLayout
+                  total={formatWholeCurrency(group.totalCents, locale)}
+                  totalClassName="text-destructive"
+                  totalLabel={dictionary.dashboard.categoryTotal}
+                  totalVariant="inline"
+                >
+                  {group.commitments.map((commitment, commitmentIndex) => (
+                    <TableRow className={commitmentIndex === group.commitments.length - 1 ? "border-b-0" : undefined} key={commitment.id}>
+                      <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
+                        <CommitmentName commitment={commitment} dictionary={dictionary} />
+                      </TableCell>
+                      <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
+                        {formatWholeCurrency(commitment.monthlyAmountCents, locale)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </CollapsibleCategoryGroup>
+              </Fragment>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </CollapsibleCategoryList>
   )
 }
 

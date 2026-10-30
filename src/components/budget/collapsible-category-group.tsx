@@ -3,6 +3,7 @@
 import { ChevronDownIcon } from "lucide-react"
 import { type ReactNode, useId, useState } from "react"
 
+import { useCategoryExpansion } from "@/components/budget/collapsible-category-list"
 import { useCommitmentCategoryDrop } from "@/components/budget/commitment-category-drag"
 import { TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
@@ -39,7 +40,9 @@ export function CollapsibleCategoryGroup({
   totalVariant?: "badge" | "inline"
 }) {
   const contentId = useId()
-  const [expanded, setExpanded] = useState(true)
+  const [locallyExpanded, setLocallyExpanded] = useState(true)
+  const expansion = useCategoryExpansion()
+  const expanded = expansion ? !expansion.collapsed.has(category) : locallyExpanded
   const dropTarget = useCommitmentCategoryDrop(category, acceptCommitmentDrop)
   const toggleLabel = `${expanded ? collapseLabel : expandLabel} ${category}`
   const hasCategoryActionInTotal = Boolean(actionColumn && categoryAction)
@@ -64,7 +67,7 @@ export function CollapsibleCategoryGroup({
               aria-expanded={expanded}
               aria-label={toggleLabel}
               className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-xl px-2 text-left outline-none transition-colors hover:bg-muted/80 hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/30"
-              onClick={() => setExpanded((current) => !current)}
+              onClick={() => expansion ? expansion.toggleCategory(category) : setLocallyExpanded((current) => !current)}
               type="button"
             >
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-muted text-primary">

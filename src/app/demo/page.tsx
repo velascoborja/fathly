@@ -11,6 +11,7 @@ import {
 
 import { AppIcon } from "@/components/app/app-icon"
 import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
+import { CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
@@ -308,46 +309,52 @@ function DemoOutflowTable({
 
   return (
     <div>
-      <Table className="table-fixed">
-        <TableBody>
-          {categoryGroups.map((group, index) => (
-            <Fragment key={group.category}>
-              {index > 0 && (
-                <TableRow className="fathly-row-hover-transparent border-0">
-                  <TableCell colSpan={2} className="h-4 p-0" />
-                </TableRow>
-              )}
-              <CollapsibleCategoryGroup
-                category={group.category}
-                collapseLabel={dictionary.actions.collapseCategory}
-                expandLabel={dictionary.actions.expandCategory}
-                fixedTableLayout
-                total={formatWholeCurrency(group.totalCents, locale)}
-                totalClassName="text-destructive"
-                totalLabel={dictionary.dashboard.categoryTotal}
-              >
-                {group.commitments.map((row, rowIndex) => (
-                  <TableRow
-                    className={
-                      rowIndex === group.commitments.length - 1
-                        ? "border-b-0 hover:[&>td]:bg-muted/35"
-                        : "hover:[&>td]:bg-muted/35"
-                    }
-                    key={row.id}
-                  >
-                    <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
-                      <DemoCommitmentName dictionary={dictionary} row={row} />
-                    </TableCell>
-                    <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
-                      {formatWholeCurrency(row.monthlyAmountCents, locale)}
-                    </TableCell>
+      <CollapsibleCategoryList
+        categories={categoryGroups.map((group) => group.category)}
+        collapseAllLabel={dictionary.actions.collapseAllCategories}
+        expandAllLabel={dictionary.actions.expandAllCategories}
+      >
+        <Table className="table-fixed">
+          <TableBody>
+            {categoryGroups.map((group, index) => (
+              <Fragment key={group.category}>
+                {index > 0 && (
+                  <TableRow className="fathly-row-hover-transparent border-0">
+                    <TableCell colSpan={2} className="h-4 p-0" />
                   </TableRow>
-                ))}
-              </CollapsibleCategoryGroup>
-            </Fragment>
-          ))}
-        </TableBody>
-      </Table>
+                )}
+                <CollapsibleCategoryGroup
+                  category={group.category}
+                  collapseLabel={dictionary.actions.collapseCategory}
+                  expandLabel={dictionary.actions.expandCategory}
+                  fixedTableLayout
+                  total={formatWholeCurrency(group.totalCents, locale)}
+                  totalClassName="text-destructive"
+                  totalLabel={dictionary.dashboard.categoryTotal}
+                >
+                  {group.commitments.map((row, rowIndex) => (
+                    <TableRow
+                      className={
+                        rowIndex === group.commitments.length - 1
+                          ? "border-b-0 hover:[&>td]:bg-muted/35"
+                          : "hover:[&>td]:bg-muted/35"
+                      }
+                      key={row.id}
+                    >
+                      <TableCell className="min-w-0 overflow-hidden pl-6 font-medium max-sm:pl-2">
+                        <DemoCommitmentName dictionary={dictionary} row={row} />
+                      </TableCell>
+                      <TableCell className="w-28 pr-1 text-right font-mono font-semibold whitespace-nowrap max-sm:w-18 max-sm:text-sm">
+                        {formatWholeCurrency(row.monthlyAmountCents, locale)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </CollapsibleCategoryGroup>
+              </Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </CollapsibleCategoryList>
     </div>
   )
 }
