@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useTransition } from "react"
-import { ChevronDownIcon } from "lucide-react"
+import { ChevronDownIcon, Loader2Icon } from "lucide-react"
 import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { toast } from "sonner"
 import type { HouseholdRole } from "@prisma/client"
@@ -41,6 +41,7 @@ export function HouseholdSelector({
               setCreateOpen(true)
               return
             }
+            if (id === householdId) return
             startTransition(async () => {
               try {
                 const result = await switchHousehold(id)
@@ -54,12 +55,19 @@ export function HouseholdSelector({
         >
           {households.map((household) => (
             <option key={household.id} value={household.id}>
-              {household.name} · {dictionary.sharing.roles[household.role]}
+              {pending && household.id === householdId
+                ? dictionary.sharing.switchingHousehold
+                : `${household.name} · ${dictionary.sharing.roles[household.role]}`}
             </option>
           ))}
           <option value="__create_household__">{dictionary.sharing.createHousehold}</option>
         </select>
-        <ChevronDownIcon aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2" />
+        {pending ? (
+          <Loader2Icon aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary motion-reduce:animate-none" />
+        ) : (
+          <ChevronDownIcon aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2" />
+        )}
+        <span role="status" className="sr-only">{pending ? dictionary.sharing.switchingHousehold : ""}</span>
       </div>
       <CreateHouseholdDialog
         dictionary={dictionary}

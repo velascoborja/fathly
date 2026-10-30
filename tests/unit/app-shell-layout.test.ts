@@ -49,4 +49,15 @@ describe("AppShell layout", () => {
     expect(selectorSource).toContain("dictionary.sharing.createHousehold")
     expect(selectorSource).toContain("setCreateOpen(true)")
   })
+
+  it("shows localized loading feedback and prevents repeated switches while pending", () => {
+    expect(selectorSource).toContain("aria-busy={pending}")
+    expect(selectorSource).toContain("disabled={pending}")
+    expect(selectorSource).toContain("pending && household.id === householdId")
+    expect(selectorSource).toContain("? dictionary.sharing.switchingHousehold")
+    expect(selectorSource).toContain("<Loader2Icon")
+    expect(selectorSource).toContain("motion-reduce:animate-none")
+    expect(selectorSource).toContain('<span role="status"')
+    expect(selectorSource).toContain("toast.error(dictionary.sharing.switchError)")
+  })
 })

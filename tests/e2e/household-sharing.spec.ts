@@ -162,8 +162,26 @@ test.describe("household sharing", () => {
     await expect(selector).toHaveValue(membership.householdId)
     await page.goto("/setup")
     await expect(page).toHaveURL(/\/dashboard$/)
-    await selector.selectOption(sharing.householdId)
+    let resumeSwitch!: () => void
+    const switchGate = new Promise<void>((resolve) => { resumeSwitch = resolve })
+    await page.route("**/dashboard", async (route) => {
+      if (route.request().headers()["next-action"]) await switchGate
+      await route.continue()
+    })
+    try {
+      await selector.selectOption(sharing.householdId)
+      await expect(selector).toBeDisabled()
+      await expect(selector).toHaveAttribute("aria-busy", "true")
+      await expect(selector.locator("option:checked")).toHaveText("Switching household…")
+      await expect(page.getByRole("status").filter({ hasText: "Switching household…" })).toHaveText("Switching household…")
+      await testInfo.attach("switching-household", { body: await page.screenshot(), contentType: "image/png" })
+    } finally {
+      resumeSwitch()
+    }
     await expect(page.getByText("Shared income", { exact: true })).toBeVisible()
+    await expect(selector).toBeEnabled()
+    await expect(selector).toHaveAttribute("aria-busy", "false")
+    await expect(selector).toHaveValue(sharing.householdId)
     expect(await sharing.prisma.householdMember.count({ where: { userId: sharing.ownerId } })).toBe(2)
   })
 
