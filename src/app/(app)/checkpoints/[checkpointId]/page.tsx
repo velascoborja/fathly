@@ -14,7 +14,7 @@ import type { Commitment, Deposit } from "@prisma/client"
 import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
 import { CheckpointDeleteDialog } from "@/components/budget/checkpoint-delete-dialog"
 import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
-import { CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
+import { CategoryExpansionContent, CategoryExpansionToggle, CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -136,15 +136,24 @@ export default async function CheckpointDetailPage({
           </CardContent>
         </Card>
 
-        <Card className="fathly-card border-destructive/35">
-          <CardHeader>
-            <CardTitle className="text-2xl">{dictionary.checkpoints.archivedExpenses}</CardTitle>
-            <CardDescription>{dictionary.checkpoints.readonlyHint}</CardDescription>
-          </CardHeader>
-          <CardContent className="max-sm:px-2">
-            <CommitmentTable commitments={data.checkpoint.commitments} dictionary={dictionary} locale={locale} />
-          </CardContent>
-        </Card>
+        <CollapsibleCategoryList
+          categories={groupCommitmentsForTable(getCommitmentBreakdown(data.checkpoint.commitments)).map((group) => group.category)}
+          collapseAllLabel={dictionary.actions.collapseAllCategories}
+          expandAllLabel={dictionary.actions.expandAllCategories}
+        >
+          <Card className="fathly-card border-destructive/35">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-2xl">{dictionary.checkpoints.archivedExpenses}</CardTitle>
+                <CategoryExpansionToggle />
+              </div>
+              <CardDescription>{dictionary.checkpoints.readonlyHint}</CardDescription>
+            </CardHeader>
+            <CardContent className="max-sm:px-2">
+              <CommitmentTable commitments={data.checkpoint.commitments} dictionary={dictionary} locale={locale} />
+            </CardContent>
+          </Card>
+        </CollapsibleCategoryList>
       </div>
     </section>
   )
@@ -287,11 +296,7 @@ function CommitmentTable({
   const categoryGroups = groupCommitmentsForTable(outflows)
 
   return (
-    <CollapsibleCategoryList
-      categories={categoryGroups.map((group) => group.category)}
-      collapseAllLabel={dictionary.actions.collapseAllCategories}
-      expandAllLabel={dictionary.actions.expandAllCategories}
-    >
+    <CategoryExpansionContent>
       <Table className="table-fixed">
         <colgroup>
           <col />
@@ -338,7 +343,7 @@ function CommitmentTable({
           )}
         </TableBody>
       </Table>
-    </CollapsibleCategoryList>
+    </CategoryExpansionContent>
   )
 }
 

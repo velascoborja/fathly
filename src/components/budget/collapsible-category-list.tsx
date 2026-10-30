@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button"
 const CategoryExpansionContext = createContext<{
   collapsed: Set<string>
   toggleCategory: (category: string) => void
+  toggleAll: () => void
+  allExpanded: boolean
+  hasCategories: boolean
+  contentId: string
+  label: string
 } | null>(null)
 
 export function useCategoryExpansion() {
@@ -28,7 +33,6 @@ export function CollapsibleCategoryList({
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set())
   const contentId = useId()
   const allExpanded = categories.every((category) => !collapsed.has(category))
-  const Icon = allExpanded ? ChevronsDownUpIcon : ChevronsUpDownIcon
 
   function toggleCategory(category: string) {
     setCollapsed((current) => {
@@ -40,22 +44,43 @@ export function CollapsibleCategoryList({
   }
 
   return (
-    <CategoryExpansionContext.Provider value={{ collapsed, toggleCategory }}>
-      {categories.length > 0 && (
-        <div className="mb-3 flex justify-end">
-          <Button
-            aria-controls={contentId}
-            className="min-h-11"
-            onClick={() => setCollapsed(allExpanded ? new Set(categories) : new Set())}
-            type="button"
-            variant="outline"
-          >
-            <Icon aria-hidden="true" />
-            {allExpanded ? collapseAllLabel : expandAllLabel}
-          </Button>
-        </div>
-      )}
-      <div id={contentId}>{children}</div>
+    <CategoryExpansionContext.Provider value={{
+      collapsed,
+      toggleCategory,
+      toggleAll: () => setCollapsed(allExpanded ? new Set(categories) : new Set()),
+      allExpanded,
+      hasCategories: categories.length > 0,
+      contentId,
+      label: allExpanded ? collapseAllLabel : expandAllLabel,
+    }}>
+      {children}
     </CategoryExpansionContext.Provider>
   )
+}
+
+export function CategoryExpansionToggle() {
+  const expansion = useCategoryExpansion()
+  if (!expansion?.hasCategories) return null
+  const Icon = expansion.allExpanded ? ChevronsDownUpIcon : ChevronsUpDownIcon
+
+  return (
+    <Button
+      aria-controls={expansion.contentId}
+      aria-label={expansion.label}
+      aria-pressed={expansion.allExpanded}
+      className="max-sm:size-11"
+      onClick={expansion.toggleAll}
+      size="icon"
+      title={expansion.label}
+      type="button"
+      variant="outline"
+    >
+      <Icon aria-hidden="true" />
+    </Button>
+  )
+}
+
+export function CategoryExpansionContent({ children }: { children: ReactNode }) {
+  const expansion = useCategoryExpansion()
+  return <div id={expansion?.contentId}>{children}</div>
 }

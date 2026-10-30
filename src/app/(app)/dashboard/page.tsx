@@ -14,7 +14,7 @@ import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-ind
 import { CheckpointDialogForm } from "@/components/budget/checkpoint-dialog-form"
 import { BudgetRowActions, BudgetRowContextMenu } from "@/components/budget/budget-row-actions"
 import { CategoryRenameDialog } from "@/components/budget/category-rename-dialog"
-import { CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
+import { CategoryExpansionContent, CategoryExpansionToggle, CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentCategoryDragProvider, DraggableCommitmentRow } from "@/components/budget/commitment-category-drag"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
@@ -112,28 +112,37 @@ export default async function DashboardPage() {
             </Card>
           </div>
 
-          <Card className="fathly-card border-destructive/35 max-lg:order-first">
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-2xl">
-                    <ActivityIcon className="size-5 text-destructive" />
-                    {dictionary.dashboard.monthOutflows}
-                  </CardTitle>
-                  <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
+          <CollapsibleCategoryList
+            categories={groupCommitmentsForTable(outflows).map((group) => group.category)}
+            collapseAllLabel={dictionary.actions.collapseAllCategories}
+            expandAllLabel={dictionary.actions.expandAllCategories}
+          >
+            <Card className="fathly-card border-destructive/35 max-lg:order-first">
+              <CardHeader>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-2xl">
+                      <ActivityIcon className="size-5 text-destructive" />
+                      {dictionary.dashboard.monthOutflows}
+                    </CardTitle>
+                    <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <CategoryExpansionToggle />
+                    {canEdit ? <BudgetDialogForm
+                      action={createCommitment.bind(null, data.household.id)}
+                      categoryOptions={categoryOptions}
+                      dictionary={dictionary}
+                      kind="commitment"
+                    /> : null}
+                  </div>
                 </div>
-                {canEdit ? <BudgetDialogForm
-                  action={createCommitment.bind(null, data.household.id)}
-                  categoryOptions={categoryOptions}
-                  dictionary={dictionary}
-                  kind="commitment"
-                /> : null}
-              </div>
-            </CardHeader>
-            <CardContent className="max-sm:px-2">
-              <OutflowTable householdId={data.household.id} canEdit={canEdit} commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="max-sm:px-2">
+                <OutflowTable householdId={data.household.id} canEdit={canEdit} commitments={outflows} categoryOptions={categoryOptions} dictionary={dictionary} locale={locale} />
+              </CardContent>
+            </Card>
+          </CollapsibleCategoryList>
         </div>
       </section>
 
@@ -402,11 +411,7 @@ function OutflowTable({
       }}
       moveAction={moveCommitmentCategory.bind(null, householdId)}
     >
-      <CollapsibleCategoryList
-        categories={categoryGroups.map((group) => group.category)}
-        collapseAllLabel={dictionary.actions.collapseAllCategories}
-        expandAllLabel={dictionary.actions.expandAllCategories}
-      >
+      <CategoryExpansionContent>
         <Table className="table-fixed">
           <colgroup>
             <col />
@@ -488,7 +493,7 @@ function OutflowTable({
             )}
           </TableBody>
         </Table>
-      </CollapsibleCategoryList>
+      </CategoryExpansionContent>
     </CommitmentCategoryDragProvider>
   )
 }

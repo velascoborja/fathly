@@ -2,7 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
+import { CategoryExpansionToggle, CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { dictionaries } from "@/lib/i18n/dictionaries"
 
@@ -22,18 +22,20 @@ describe("category expansion list", () => {
         categories: ["Casa"],
         collapseAllLabel: labels.collapseAllCategories,
         expandAllLabel: labels.expandAllCategories,
-        children: createElement(CollapsibleCategoryGroup, groupProps),
+        children: createElement("div", null, createElement(CategoryExpansionToggle), createElement(CollapsibleCategoryGroup, groupProps)),
       }
       const html = renderToStaticMarkup(createElement(CollapsibleCategoryList, props))
       expect(html).toContain(locale === "es" ? "Contraer todas" : "Collapse all")
       expect(html).toContain('aria-expanded="true"')
       expect(html).toContain("aria-controls=")
+      expect(html).toContain('aria-pressed="true"')
+      expect(html).toContain("aria-label=")
     })
   }
 
   it("hides the global action for an empty list", () => {
     const props = {
-      categories: [], collapseAllLabel: "Contraer todas", expandAllLabel: "Expandir todas", children: "Empty",
+      categories: [], collapseAllLabel: "Contraer todas", expandAllLabel: "Expandir todas", children: createElement("div", null, createElement(CategoryExpansionToggle), "Empty"),
     }
     const html = renderToStaticMarkup(createElement(CollapsibleCategoryList, props))
     expect(html).not.toContain("<button")

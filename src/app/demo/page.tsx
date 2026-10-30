@@ -11,7 +11,7 @@ import {
 
 import { AppIcon } from "@/components/app/app-icon"
 import { AnnualProratedIndicator } from "@/components/budget/annual-prorated-indicator"
-import { CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
+import { CategoryExpansionContent, CategoryExpansionToggle, CollapsibleCategoryList } from "@/components/budget/collapsible-category-list"
 import { CollapsibleCategoryGroup } from "@/components/budget/collapsible-category-group"
 import { CommitmentChart } from "@/components/budget/commitment-chart"
 import { ItemizedAmountIndicator } from "@/components/budget/itemized-amount-indicator"
@@ -108,23 +108,32 @@ export default async function DemoPage() {
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(520px,1.55fr)]">
             <DemoIncomePanel dictionary={dictionary} locale={locale} />
 
-            <Card className="fathly-card border-destructive/35 max-lg:order-first lg:row-span-2">
-              <CardHeader>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <ActivityIcon className="size-5 text-destructive" />
-                      {dictionary.dashboard.monthOutflows}
-                    </CardTitle>
-                    <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
+            <CollapsibleCategoryList
+              categories={groupCommitmentsForTable(outflows).map((group) => group.category)}
+              collapseAllLabel={dictionary.actions.collapseAllCategories}
+              expandAllLabel={dictionary.actions.expandAllCategories}
+            >
+              <Card className="fathly-card border-destructive/35 max-lg:order-first lg:row-span-2">
+                <CardHeader>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-2xl">
+                        <ActivityIcon className="size-5 text-destructive" />
+                        {dictionary.dashboard.monthOutflows}
+                      </CardTitle>
+                      <CardDescription>{dictionary.dashboard.outflowsBody}</CardDescription>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <CategoryExpansionToggle />
+                      <Button disabled>{dictionary.actions.addBill}</Button>
+                    </div>
                   </div>
-                  <Button disabled>{dictionary.actions.addBill}</Button>
-                </div>
-              </CardHeader>
-              <CardContent className="max-sm:px-2">
-                <DemoOutflowTable dictionary={dictionary} locale={locale} rows={outflows} />
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent className="max-sm:px-2">
+                  <DemoOutflowTable dictionary={dictionary} locale={locale} rows={outflows} />
+                </CardContent>
+              </Card>
+            </CollapsibleCategoryList>
 
             <Card className="fathly-card">
               <CardHeader>
@@ -309,11 +318,7 @@ function DemoOutflowTable({
 
   return (
     <div>
-      <CollapsibleCategoryList
-        categories={categoryGroups.map((group) => group.category)}
-        collapseAllLabel={dictionary.actions.collapseAllCategories}
-        expandAllLabel={dictionary.actions.expandAllCategories}
-      >
+      <CategoryExpansionContent>
         <Table className="table-fixed">
           <TableBody>
             {categoryGroups.map((group, index) => (
@@ -354,7 +359,7 @@ function DemoOutflowTable({
             ))}
           </TableBody>
         </Table>
-      </CollapsibleCategoryList>
+      </CategoryExpansionContent>
     </div>
   )
 }
