@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 const globals = readFileSync("src/app/globals.css", "utf8")
 const button = readFileSync("src/components/ui/button.tsx", "utf8")
 const card = readFileSync("src/components/ui/card.tsx", "utf8")
-const dashboard = readFileSync("src/app/(app)/dashboard/page.tsx", "utf8")
+const dashboard = readFileSync("src/components/budget/budget-view.tsx", "utf8")
 const shell = readFileSync("src/components/app/app-shell.tsx", "utf8")
 const design = readFileSync("DESIGN.md", "utf8")
 

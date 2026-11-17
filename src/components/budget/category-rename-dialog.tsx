@@ -1,5 +1,7 @@
 "use client"
 
+import { useSimulation } from "@/components/budget/simulation-context"
+
 import { Loader2Icon, PencilIcon } from "lucide-react"
 import { type FormEvent, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -29,6 +31,7 @@ export function CategoryRenameDialog({
   category: string
   dictionary: Dictionary
 }) {
+  const simulation = useSimulation()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
@@ -48,7 +51,7 @@ export function CategoryRenameDialog({
       try {
         setError(null)
         await action(formData)
-        toast.success(dictionary.actions.categoryRenamed)
+        toast.success(simulation ? dictionary.simulation.updated : dictionary.actions.categoryRenamed)
         setOpen(false)
       } catch (submitError) {
         const message = submitError instanceof Error ? submitError.message : dictionary.actions.saveError
@@ -99,7 +102,7 @@ export function CategoryRenameDialog({
             </Button>
             <Button disabled={isPending} type="submit">
               {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
-              {dictionary.actions.save}
+              {simulation ? dictionary.simulation.update : dictionary.actions.save}
             </Button>
           </DialogFooter>
         </form>

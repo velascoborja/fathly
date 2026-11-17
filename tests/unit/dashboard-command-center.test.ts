@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
-const source = readFileSync("src/app/(app)/dashboard/page.tsx", "utf8")
+const source = readFileSync("src/components/budget/budget-view.tsx", "utf8")
 const demoSource = readFileSync("src/app/demo/page.tsx", "utf8")
 
 describe("dashboard monthly overview", () => {

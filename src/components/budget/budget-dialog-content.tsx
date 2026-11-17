@@ -1,5 +1,7 @@
 "use client"
 
+import { useSimulation } from "@/components/budget/simulation-context"
+
 import { type ReactElement, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2Icon, PlusIcon, SigmaIcon, Trash2Icon } from "lucide-react"
@@ -74,6 +76,7 @@ export function BudgetDialogContent(props: BudgetDialogFormProps & ControlledDia
 }
 
 function DepositDialog(props: DepositDialogProps & ControlledDialogProps) {
+  const simulation = useSimulation()
   const [isPending, startTransition] = useTransition()
   const manualIconOverrideRef = useRef(false)
   const previousAutoNameRef = useRef("")
@@ -117,7 +120,7 @@ function DepositDialog(props: DepositDialogProps & ControlledDialogProps) {
           form.reset()
         }
         setOpen(false)
-        toast.success(mode === "edit" ? props.dictionary.actions.depositSaved : props.dictionary.actions.depositCreated)
+        toast.success(simulation ? props.dictionary.simulation.updated : mode === "edit" ? props.dictionary.actions.depositSaved : props.dictionary.actions.depositCreated)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : props.dictionary.actions.saveError)
       }
@@ -235,7 +238,7 @@ function DepositDialog(props: DepositDialogProps & ControlledDialogProps) {
         )}
         <Button className="sm:ml-auto" disabled={isPending} type="submit">
           {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
-          {props.dictionary.actions.save}
+          {simulation ? props.dictionary.simulation.update : props.dictionary.actions.save}
         </Button>
       </DialogFooter>
     </form>
@@ -243,6 +246,7 @@ function DepositDialog(props: DepositDialogProps & ControlledDialogProps) {
 }
 
 function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) {
+  const simulation = useSimulation()
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false)
   const [isPending, startTransition] = useTransition()
   const manualIconOverrideRef = useRef(false)
@@ -320,7 +324,7 @@ function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) 
           form.reset()
         }
         handleOpenChange(false)
-        toast.success(mode === "edit" ? props.dictionary.actions.commitmentSaved : props.dictionary.actions.commitmentCreated)
+        toast.success(simulation ? props.dictionary.simulation.updated : mode === "edit" ? props.dictionary.actions.commitmentSaved : props.dictionary.actions.commitmentCreated)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : props.dictionary.actions.saveError)
       }
@@ -649,7 +653,7 @@ function CommitmentDialog(props: CommitmentDialogProps & ControlledDialogProps) 
           type="submit"
         >
           {isPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
-          {isPending ? props.dictionary.actions.saving : props.dictionary.actions.save}
+          {simulation ? props.dictionary.simulation.update : isPending ? props.dictionary.actions.saving : props.dictionary.actions.save}
         </Button>
       </DialogFooter>
     </form>
@@ -759,6 +763,7 @@ function DeleteConfirmation({
   onDeleted: () => void
   successMessage: string
 }) {
+  const simulation = useSimulation()
   const [confirming, setConfirming] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -789,7 +794,7 @@ function DeleteConfirmation({
             startTransition(async () => {
               try {
                 await action()
-                toast.success(successMessage)
+                toast.success(simulation ? dictionary.simulation.updated : successMessage)
                 onDeleted()
               } catch (error) {
                 toast.error(error instanceof Error ? error.message : dictionary.actions.deleteError)

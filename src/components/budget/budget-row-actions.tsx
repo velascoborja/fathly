@@ -1,5 +1,7 @@
 "use client"
 
+import { useSimulation } from "@/components/budget/simulation-context"
+
 import type { Deposit } from "@prisma/client"
 import { EllipsisIcon, Loader2Icon, PencilIcon, Trash2Icon } from "lucide-react"
 import { type ReactElement, useState, useTransition } from "react"
@@ -181,6 +183,7 @@ function DeleteConfirmDialog({
   onOpenChange: (open: boolean) => void
   open: boolean
 }) {
+  const simulation = useSimulation()
   const [isPending, startTransition] = useTransition()
   const successMessage = kind === "deposit" ? dictionary.actions.depositDeleted : dictionary.actions.commitmentDeleted
 
@@ -201,7 +204,7 @@ function DeleteConfirmDialog({
               startTransition(async () => {
                 try {
                   await deleteAction()
-                  toast.success(successMessage)
+                  toast.success(simulation ? dictionary.simulation.updated : successMessage)
                   onOpenChange(false)
                 } catch (error) {
                   toast.error(error instanceof Error ? error.message : dictionary.actions.deleteError)

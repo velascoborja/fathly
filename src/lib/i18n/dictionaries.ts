@@ -3,6 +3,7 @@ export type Locale = (typeof locales)[number]
 
 export const dictionaries = {
   es: {
+    simulation: { start: "Simular presupuesto", title: "Simulación de presupuesto", notice: "Borrador privado. Los cambios no se guardan y se pierden al salir o recargar.", exit: "Salir y descartar", update: "Actualizar borrador", updated: "Borrador actualizado." },
     commitmentIcons: {
       travel: "Viajes",
       gym: "Gimnasio",
@@ -374,6 +375,7 @@ export const dictionaries = {
     },
   },
   en: {
+    simulation: { start: "Simulate budget", title: "Budget simulation", notice: "Private draft. Changes are not saved and are lost when leaving or reloading.", exit: "Exit and discard", update: "Update draft", updated: "Draft updated." },
     commitmentIcons: {
       travel: "Travel",
       gym: "Gym",
