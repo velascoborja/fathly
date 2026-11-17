@@ -94,6 +94,7 @@ test.describe("expense category drag", () => {
       await expect(row(page, ids.monthly)).toHaveAttribute("draggable", "true")
       await row(page, ids.monthly).locator("td").first().dragTo(categoryHeader(page, "Casa"))
 
+      await expect(page.getByRole("dialog")).toHaveCount(0)
       await expect(rowCategory(page, ids.monthly)).toHaveAttribute("data-category-drop-target", "Casa")
       await expect(categoryHeader(page, "Casa")).toContainText(/150\s*€/)
       await expect(categoryHeader(page, "Suministros")).toContainText(/20\s*€/)
@@ -236,6 +237,9 @@ test.describe("expense category drag", () => {
       data: { role: "VIEWER" },
     })
     await page.goto("/dashboard")
+    await row(page, dragBudget.ids.monthly).getByText("Internet", { exact: true }).click()
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+    await expect(row(page, dragBudget.ids.monthly)).not.toHaveAttribute("tabindex", "0")
     await expect(row(page, dragBudget.ids.monthly)).toHaveAttribute("draggable", "false")
     await expect(page.getByText(dictionaries.es.sharing.readOnly, { exact: true })).toBeVisible()
     await expect(page.getByText(dictionaries.es.actions.moveCommitmentHint, { exact: true })).toHaveCount(0)

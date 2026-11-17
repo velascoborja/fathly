@@ -104,12 +104,32 @@ test.describe("deferred budget editors", () => {
     }
   })
 
+  test("opens expenses directly with click, touch and keyboard", async ({ page, isMobile, household }) => {
+    expect(household.id).toBeTruthy()
+    await page.goto("/dashboard")
+    const row = page.locator("tr[data-commitment-id]").filter({ has: page.getByText("Gasto prueba", { exact: true }) })
+    if (isMobile) await row.getByText("Gasto prueba", { exact: true }).tap()
+    else await row.getByText("Gasto prueba", { exact: true }).click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByLabel("Nombre", { exact: true })).toHaveValue("Gasto prueba")
+    await expect(dialog.getByLabel("Importe", { exact: true })).toHaveValue("250")
+    await dialog.getByLabel("Nombre", { exact: true }).fill("Cambio sin guardar")
+    await page.keyboard.press("Escape")
+    await expect(dialog).toBeHidden()
+    for (const key of ["Enter", "Space"]) {
+      await row.focus()
+      await page.keyboard.press(key)
+      await expect(dialog.getByLabel("Nombre", { exact: true })).toHaveValue("Gasto prueba")
+      await page.keyboard.press("Escape")
+      await expect(dialog).toBeHidden()
+    }
+  })
+
   test("loads existing expense values and persists edits", async ({ page, household }) => {
     const { id: householdId, prisma } = household
     await page.goto("/dashboard")
     const row = page.getByRole("row").filter({ has: page.getByText("Gasto prueba", { exact: true }) })
-    await row.getByRole("button", { name: "Abrir acciones" }).click()
-    await page.getByRole("menuitem", { name: "Editar", exact: true }).click()
+    await row.getByText("Gasto prueba", { exact: true }).click()
 
     const dialog = page.getByRole("dialog")
     await expect(dialog.getByLabel("Nombre", { exact: true })).toHaveValue("Gasto prueba")

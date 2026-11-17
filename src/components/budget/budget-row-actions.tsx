@@ -4,7 +4,7 @@ import { useSimulation } from "@/components/budget/simulation-context"
 
 import type { Deposit } from "@prisma/client"
 import { EllipsisIcon, Loader2Icon, PencilIcon, Trash2Icon } from "lucide-react"
-import { type ReactElement, useState, useTransition } from "react"
+import { type ReactElement, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 
 import { BudgetDialogForm } from "@/components/budget/budget-dialog-form"
@@ -91,15 +91,48 @@ export function BudgetRowActions(props: BudgetRowActionProps) {
   )
 }
 
+const nestedControlSelector = "button, a, input, select, textarea, [role=button], [role=menuitem], [contenteditable=true]"
+
 export function BudgetRowContextMenu({ children, ...props }: BudgetRowContextMenuProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+
+  const gesture = useRef({ x: 0, y: 0, cancelled: false })
+  const editable = props.kind === "commitment"
 
   if (props.readOnly) return children
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger render={children} />
+      <ContextMenuTrigger
+        render={children}
+        tabIndex={editable ? 0 : undefined}
+        aria-label={editable ? `${props.dictionary.actions.editCommitment}: ${props.item.name}` : undefined}
+        className={editable ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-primary focus-visible:-outline-offset-2" : undefined}
+        onPointerDown={(event) => {
+          gesture.current = { x: event.clientX, y: event.clientY, cancelled: event.button !== 0 }
+        }}
+        onPointerMove={(event) => {
+          if (Math.hypot(event.clientX - gesture.current.x, event.clientY - gesture.current.y) > 8) {
+            gesture.current.cancelled = true
+          }
+        }}
+        onPointerCancel={() => { gesture.current.cancelled = true }}
+        onDragStart={() => { gesture.current.cancelled = true }}
+        onContextMenu={() => { gesture.current.cancelled = true }}
+        onClick={(event) => {
+          if (!editable || event.defaultPrevented || gesture.current.cancelled ||
+            !(event.target instanceof Element) || !event.currentTarget.contains(event.target) ||
+            event.target.closest(nestedControlSelector)) return
+          setEditOpen(true)
+        }}
+        onKeyDown={(event) => {
+          if (editable && event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault()
+            setEditOpen(true)
+          }
+        }}
+      />
       <ContextMenuContent className="w-36">
         <ContextMenuItem onClick={() => setEditOpen(true)}>
           <PencilIcon />
